@@ -1,0 +1,37 @@
+# Archivos de configuración del IDE
+.idea/
+*.iml
+
+# Archivos de configuración locales
+local.properties
+
+# Build system
+.gradle/
+build/
+**/build/
+**/captures/
+.externalNativeBuild/
+.cxx/
+
+# Mac OS
+.DS_Store
+
+# Archivos temporales
+*.log
+*.tmp
+
+# Firebase config
+**/google-services.json
+
+# Cache de Android Studio
+.idea/caches/
+.idea/libraries/
+.idea/modules.xml
+.idea/workspace.xml
+.idea/navEditor.xml
+.idea/assetWizardSettings.xml
+.idea/misc.xml
+
+# Otros
+/.gradle/
+/out/

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Theme.TrackMyRideApp" parent="android:Theme.Material.Light.NoActionBar">
+        <!-- tu configuración aquí -->
+    </style>
+
+    <style name="Theme.TrackMyRideApp.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/white</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/logo</item>
+        <item name="postSplashScreenTheme">@style/Theme.TrackMyRideApp</item>
+    </style>
+</resources>
