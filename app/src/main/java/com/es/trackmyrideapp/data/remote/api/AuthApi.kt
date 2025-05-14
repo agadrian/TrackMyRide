@@ -4,6 +4,7 @@ import com.es.trackmyrideapp.data.remote.dto.AuthResponseDTO
 import com.es.trackmyrideapp.data.remote.dto.UserRegistrationDTO
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
 
@@ -19,4 +20,14 @@ interface AuthApi {
     suspend fun login(
         @Header("Authorization") bearerToken: String
     ): Response<AuthResponseDTO>
+
+    @POST("auth/refresh")
+    suspend fun refresh(@Body request: RefreshTokenRequest): Response<AuthResponseDTO>
+
+    @GET("auth/validate")
+    suspend fun validateToken(@Header("Authorization") authHeader: String): Response<Map<String, String>>
 }
+
+data class RefreshTokenRequest(
+    val refreshToken: String
+)

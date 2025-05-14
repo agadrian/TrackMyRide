@@ -27,4 +27,9 @@ class FirebaseAuthService @Inject constructor(
     suspend fun sendPasswordResetEmail(email: String) {
         auth.sendPasswordResetEmail(email).await()
     }
+
+    suspend fun deleteCurrentUser() {
+        val user = FirebaseAuth.getInstance().currentUser
+        user?.delete()?.await()
+    }
 }

@@ -1,9 +1,11 @@
 package com.es.trackmyrideapp.ui
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.es.trackmyrideapp.data.local.AuthPreferences
 import com.es.trackmyrideapp.data.local.RememberMePreferences
+import com.es.trackmyrideapp.data.remote.dto.UserRegistrationDTO
 import com.es.trackmyrideapp.domain.usecase.RegisterUseCase
 import com.es.trackmyrideapp.domain.usecase.SendPasswordResetUseCase
 import com.es.trackmyrideapp.domain.usecase.SignInUseCase
@@ -53,8 +55,13 @@ class AuthViewModel @Inject constructor(
                     val user = authResult.apiUser
                     val jwt = authResult.apiUser.jwtToken
                     authPreferences.setJwtToken(jwt)
+                    authPreferences.setRefreshToken(user.refreshToken)
+
+                    Log.d("JWT Token", "Token recuperado usando getjwttoken(): ${authPreferences.getJwtToken()}")
 
                     _loginUiState.value = LoginUiState.Success(user, jwt)
+
+                    Log.d("JWT Token", "Login uisate: ${_loginUiState.value}")
                 },
                 onFailure = { exception ->
                     _loginUiState.value = LoginUiState.Idle
@@ -65,18 +72,20 @@ class AuthViewModel @Inject constructor(
     }
 
     // REGISTER
-    fun register(email: String, password: String) {
+    fun register(
+        email: String,
+        password: String,
+        userData: UserRegistrationDTO
+    ) {
         viewModelScope.launch {
             _registerUiState.value = RegisterUiState.Loading
-            val result = registerUseCase(email, password)
+            val result = registerUseCase(email, password, userData)
             _registerUiState.value = RegisterUiState.Idle
 
             result.fold(
                 onSuccess = { authResult ->
                     val user = authResult.apiUser
                     val jwt = authResult.apiUser.jwtToken
-                    authPreferences.setJwtToken(jwt)
-
                     _registerUiState.value = RegisterUiState.Success(user, jwt)
                 },
                 onFailure = { exception ->

@@ -36,31 +36,24 @@ fun RegisterScreen(
     navigateToLogin: () -> Unit,
     navigateToHome: () -> Unit
 ){
-    val authViewModel: AuthViewModel = hiltViewModel()
-    val uiState by authViewModel.registerUiState.collectAsState()
-    val errorMessage by authViewModel.showErrorMessage.collectAsState()
+    val registerViewModel: RegisterViewModel = hiltViewModel()
+    val uiState by registerViewModel.uiState.collectAsState()
+    val errorMessage by registerViewModel.errorMessage.collectAsState()
 
     val context = LocalContext.current
-    
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var password2 by remember { mutableStateOf("") }
-    var username by remember { mutableStateOf("") }
-    var phone by remember { mutableStateOf("") }
-    var passwordVisible by remember { mutableStateOf(false) }
-    var password2Visible by remember { mutableStateOf(false) }
 
-
+    // Navegar a Home si exitoso
     LaunchedEffect(uiState) {
         if (uiState is RegisterUiState.Success) {
             navigateToHome()
         }
     }
 
+    // Mostrar errores
     LaunchedEffect(errorMessage) {
-        authViewModel.showErrorMessage.value?.let { message ->
+        errorMessage?.let { message ->
             Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-            authViewModel.consumeErrorMessage()
+            registerViewModel.consumeErrorMessage()
         }
     }
 
@@ -84,20 +77,20 @@ fun RegisterScreen(
 
 
             Body(
-                email = email,
-                username = username,
-                phone = phone,
-                password = password,
-                password2 = password2,
-                onEmailChanged = { email = it },
-                onPasswordChanged = { password = it },
-                onPassword2Changed = { password2 = it },
-                onUsernameChanged = { username = it },
-                onPhoneChanged = { phone = it },
-                passwordVisible = passwordVisible,
-                password2Visible = password2Visible,
-                onPasswordVisibilityChanged = { passwordVisible = !passwordVisible },
-                onPassword2VisibilityChanged = { password2Visible = !password2Visible },
+                email = registerViewModel.email,
+                username = registerViewModel.username,
+                phone = registerViewModel.phone,
+                password = registerViewModel.password,
+                password2 = registerViewModel.password2,
+                onEmailChanged = { registerViewModel.updateEmail(it) },
+                onPasswordChanged = { registerViewModel.updatePassword(it) },
+                onPassword2Changed = { registerViewModel.updatePassword2(it) },
+                onUsernameChanged = { registerViewModel.updateUsername(it) },
+                onPhoneChanged = { registerViewModel.updatePhone(it) },
+                passwordVisible = registerViewModel.passwordVisible,
+                password2Visible = registerViewModel.password2Visible,
+                onPasswordVisibilityChanged = { registerViewModel.togglePasswordVisibility() },
+                onPassword2VisibilityChanged = { registerViewModel.togglePassword2Visibility() }
             )
 
             Spacer(modifier = Modifier.height(50.dp))
@@ -107,17 +100,12 @@ fun RegisterScreen(
 
         Footer(
             modifier = Modifier,
-            onRegisterButtonClicked = {
-                if (password != password2) {
-                    Toast.makeText(context, "Passwords are not the same", Toast.LENGTH_SHORT).show()
-                } else {
-                    authViewModel.register(email, password)
-                }
-            },
+            onRegisterButtonClicked = { registerViewModel.register() },
             onSingInClicked = navigateToLogin
         )
     }
 
+    // Indicador de carga
     if (uiState is RegisterUiState.Loading) {
         Box(
             modifier = Modifier

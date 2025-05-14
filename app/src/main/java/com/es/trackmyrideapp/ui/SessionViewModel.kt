@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.es.trackmyrideapp.data.local.RememberMePreferences
 import com.es.trackmyrideapp.domain.usecase.GetCurrentUserUseCase
 import com.es.trackmyrideapp.domain.usecase.SignOutUseCase
+import com.es.trackmyrideapp.domain.usecase.auth.CheckAndRefreshTokenUseCase
 import com.es.trackmyrideapp.ui.components.VehicleType
 import com.google.maps.android.compose.MapType
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -19,7 +20,8 @@ import javax.inject.Inject
 class SessionViewModel @Inject constructor(
     private val signOutUseCase: SignOutUseCase,
     private val rememberMePreferences: RememberMePreferences,
-    private val getCurrentUserUseCase: GetCurrentUserUseCase
+    private val getCurrentUserUseCase: GetCurrentUserUseCase,
+    private val checkAndRefreshTokenUseCase: CheckAndRefreshTokenUseCase
 ) : ViewModel() {
 
     private val _authState = MutableStateFlow<AuthState>(AuthState.Loading)
@@ -36,11 +38,24 @@ class SessionViewModel @Inject constructor(
 
     private fun checkAuthState() {
         viewModelScope.launch {
+            Log.d("SessionViewModel", "Verificando el estado de la autenticación...")
+            Log.d("FlujoTest", "Verificando el estado de la autenticación...")
             val shouldAutoLogin = rememberMePreferences.isRememberMe() && getCurrentUserUseCase() != null
-            _authState.value = if (shouldAutoLogin) {
-                AuthState.Authenticated
+
+
+            if (shouldAutoLogin) {
+                try {
+                    Log.d("FlujoTest", "sesionviewmodel -> shouldAutoLogin...")
+                    Log.d("SessionViewModel", "Intentando refrescar token si es necesario...")
+                    // Comprobar que el jwt guardado sea valido, y renovarlo en cado de que no
+                    checkAndRefreshTokenUseCase()
+                    _authState.value = AuthState.Authenticated
+                } catch (e: Exception) {
+                    _authState.value = AuthState.Unauthenticated
+                }
             } else {
-                AuthState.Unauthenticated
+                Log.d("FlujoTest", "sesionviewmodel -> shouldAutoLogin -> false...")
+                _authState.value = AuthState.Unauthenticated
             }
         }
     }

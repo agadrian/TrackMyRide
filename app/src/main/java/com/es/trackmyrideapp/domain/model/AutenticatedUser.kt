@@ -5,5 +5,6 @@ data class AuthenticatedUser(
     val email: String,
     val username: String,
     val role: String,
-    val jwtToken: String
+    val jwtToken: String,
+    val refreshToken: String
 )
