@@ -52,17 +52,4 @@ object NetworkModule {
             .client(client)
             .build()
     }
-
-    @Provides
-    @Singleton
-    fun provideRouteApi(retrofit: Retrofit): RouteApi {
-        return retrofit.create(RouteApi::class.java)
-    }
-
-    // Inyectar AuthAPI
-    @Provides
-    @Singleton
-    fun provideAuthApi(retrofit: Retrofit): AuthApi {
-        return retrofit.create(AuthApi::class.java)
-    }
 }

@@ -15,6 +15,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -24,18 +25,26 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.es.trackmyrideapp.R
 import com.es.trackmyrideapp.domain.model.Route
 import com.es.trackmyrideapp.ui.components.VehicleFilter
 import com.es.trackmyrideapp.ui.components.VehicleFilterSelector
 import com.es.trackmyrideapp.ui.components.VehicleType
+import okhttp3.internal.concurrent.formatDuration
 
+
+data class RouteWithVehicleType(
+    val route: Route,
+    val vehicleType: VehicleType
+)
 
 @Composable
 fun RoutesHistoryScreen(
     onViewDetailsClicked: () -> Unit,
     modifier: Modifier
 ){
+    val routesHistoryViewModel: RoutesHistoryViewModel = hiltViewModel()
     var selectedFilter by remember { mutableStateOf<VehicleFilter>(VehicleFilter.All) }
 
     val scrollState = rememberScrollState()
@@ -47,6 +56,15 @@ fun RoutesHistoryScreen(
     var routeToDelete by remember { mutableStateOf<Route?>(null) }
     var showDeleteDialog by remember { mutableStateOf(false) }
 
+    val allRoutes by routesHistoryViewModel.routes.collectAsState()
+
+    val filteredRoutes = when (selectedFilter) {
+        is VehicleFilter.All -> allRoutes
+        is VehicleFilter.Type -> allRoutes.filter {
+            it.vehicleType == (selectedFilter as VehicleFilter.Type).type
+        }
+    }
+
 
     // Cuando tenga el viewmodel usar el stateflow:
 
@@ -57,27 +75,6 @@ fun RoutesHistoryScreen(
     // Aqui:
     // val allRoutes by viewModel.routes.collectAsState()
 
-    val allRoutes = listOf(
-        Route(1, "Ruta 1", VehicleType.Car, "Today, 7:30AM", "222 Km", "2:34 Km/h", "1:35 h"),
-        Route(2, "Ruta 2", VehicleType.MotorCycle, "Yesterday, 6:00PM", "110 Km", "2:00 Km/h", "0:55 h"),
-        Route(3, "Ruta 3", VehicleType.Bike, "Today, 9:00AM", "12 Km", "4:00 Km/h", "0:18 h"),
-        Route(4, "Ruta 4", VehicleType.Car, "Last week", "300 Km", "3:10 Km/h", "1:36 h"),
-        Route(1, "Ruta 1", VehicleType.Car, "Today, 7:30AM", "222 Km", "2:34 Km/h", "1:35 h"),
-        Route(2, "Ruta 2", VehicleType.MotorCycle, "Yesterday, 6:00PM", "110 Km", "2:00 Km/h", "0:55 h"),
-        Route(3, "Ruta 3", VehicleType.Bike, "Today, 9:00AM", "12 Km", "4:00 Km/h", "0:18 h"),
-        Route(4, "Ruta 4", VehicleType.Car, "Last week", "300 Km", "3:10 Km/h", "1:36 h"),
-        Route(1, "Ruta 1", VehicleType.Car, "Today, 7:30AM", "222 Km", "2:34 Km/h", "1:35 h"),
-        Route(2, "Ruta 2", VehicleType.MotorCycle, "Yesterday, 6:00PM", "110 Km", "2:00 Km/h", "0:55 h"),
-        Route(3, "Ruta 3", VehicleType.Bike, "Today, 9:00AM", "12 Km", "4:00 Km/h", "0:18 h"),
-        Route(4, "Ruta 4", VehicleType.Car, "Last week", "300 Km", "3:10 Km/h", "1:36 h")
-    )
-
-    val filteredRoutes = when (selectedFilter) {
-        is VehicleFilter.All -> allRoutes
-        is VehicleFilter.Type -> allRoutes.filter {
-            it.vehicleType == (selectedFilter as VehicleFilter.Type).type
-        }
-    }
 
     Column(
         modifier = modifier
@@ -106,14 +103,22 @@ fun RoutesHistoryScreen(
         ) {
             Spacer(modifier = Modifier.height(8.dp))
 
-            filteredRoutes.forEach { route ->
+            filteredRoutes.forEach { item ->
+
+                val route = item.route
+
+                val title = route.name
+                val distance = "${route.distanceKm} Km"
+                val duration = formatDuration(route.movingTimeSec)
+                val pace = route.pace?.let { String.format("%.2f", it) + " Km/h" } ?: "-"
+                val date = route.startTime.toLocalDate().toString()
 
                 RouteCard(
-                    tittle = route.name,
-                    duration = route.duration,
-                    distance = route.distance,
-                    pace = route.pace,
-                    date = route.date,
+                    tittle = title,
+                    duration = duration,
+                    distance = distance,
+                    pace = pace,
+                    date = date,
                     onDeleteClicked = {
                         routeToDelete = route
                         showDeleteDialog = true

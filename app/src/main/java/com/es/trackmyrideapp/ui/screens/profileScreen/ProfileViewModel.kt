@@ -42,9 +42,4 @@ class ProfileViewModel @Inject constructor(
         }
     }
 }
-sealed class UserUiState {
-    object Loading : UserUiState()
-    data class Success(val user: User) : UserUiState()
-    data class Error(val message: String) : UserUiState()
-    object Idle : UserUiState()
-}
+

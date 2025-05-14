@@ -7,6 +7,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import retrofit2.Retrofit
 import javax.inject.Singleton
 
 @Module
@@ -19,5 +20,11 @@ object RouteModule {
         routeApi: RouteApi
     ): RouteRepository {
         return RouteRepositoryImpl(routeApi)
+    }
+
+    @Provides
+    @Singleton
+    fun provideRouteApi(retrofit: Retrofit): RouteApi {
+        return retrofit.create(RouteApi::class.java)
     }
 }

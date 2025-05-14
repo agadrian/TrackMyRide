@@ -14,6 +14,9 @@ interface VehicleApi {
     @POST("/vehicles/init")
     suspend fun createInitialVehicles(): List<VehicleResponseDTO>
 
+    @GET("vehicles")
+    suspend fun getAllVehicles(): List<VehicleResponseDTO>
+
     @GET("/vehicles/{type}")
     suspend fun getVehicleByType(@Path("type") type: String): VehicleResponseDTO
 

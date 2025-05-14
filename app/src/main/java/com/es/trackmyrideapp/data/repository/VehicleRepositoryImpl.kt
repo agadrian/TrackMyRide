@@ -17,6 +17,10 @@ class VehicleRepositoryImpl @Inject constructor(
         vehicleApi.createInitialVehicles().map { it.toDomainModel() }
     }
 
+    override suspend fun getAllVehicles(): Resource<List<Vehicle>> = safeApiCall {
+        vehicleApi.getAllVehicles().map { it.toDomainModel() }
+    }
+
     override suspend fun getVehicleByType(type: String): Resource<Vehicle> = safeApiCall {
         vehicleApi.getVehicleByType(type).toDomainModel()
     }
