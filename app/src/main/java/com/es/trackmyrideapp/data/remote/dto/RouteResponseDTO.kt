@@ -1,6 +1,6 @@
 package com.es.trackmyrideapp.data.remote.dto
 
-data class RouteDTO(
+data class RouteResponseDTO(
     val id: Long,
     val name: String,
     val description: String?,

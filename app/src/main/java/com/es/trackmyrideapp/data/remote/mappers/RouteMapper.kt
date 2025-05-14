@@ -2,12 +2,12 @@ package com.es.trackmyrideapp.data.remote.mappers
 
 import android.os.Build
 import androidx.annotation.RequiresApi
-import com.es.trackmyrideapp.data.remote.dto.RouteDTO
+import com.es.trackmyrideapp.data.remote.dto.RouteResponseDTO
 import com.es.trackmyrideapp.domain.model.Route
 import java.time.LocalDateTime
 
 @RequiresApi(Build.VERSION_CODES.O)
-fun RouteDTO.toDomainModel(): Route {
+fun RouteResponseDTO.toDomainModel(): Route {
     return Route(
         id = id,
         name = name,
