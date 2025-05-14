@@ -74,7 +74,7 @@ class AuthRepositoryImpl @Inject constructor(
                 val authenticatedUser = apiResponse.body()?.toDomain()
                     ?: throw Exception("API register response null")
 
-                // 4. Devolver AuthResult completo con Firebase + backend user
+                // Devolver AuthResult completo con Firebase + backend user
                 Result.success(AuthResult(firebaseUser, authenticatedUser))
 
 //                if (firebaseUser != null) {

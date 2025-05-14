@@ -20,6 +20,9 @@ interface RouteApi {
     @GET("/routes/{id}")
     suspend fun getRouteById(@Path("id") id: Long): RouteDTO
 
+    @GET("/routes/user/{userId}")
+    suspend fun getRoutesByUser(@Path("userId") userId: String): List<RouteDTO>
+
     // Actualizar una ruta existente
     @PUT("/routes/{id}")
     suspend fun updateRoute(

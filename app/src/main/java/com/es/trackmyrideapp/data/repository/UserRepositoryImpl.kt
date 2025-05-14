@@ -7,8 +7,6 @@ import com.es.trackmyrideapp.data.remote.mappers.toDomainModel
 import com.es.trackmyrideapp.domain.model.User
 import com.es.trackmyrideapp.domain.repository.UserRepository
 import com.es.trackmyrideapp.utils.safeApiCall
-import retrofit2.HttpException
-import java.io.IOException
 import javax.inject.Inject
 
 class UserRepositoryImpl @Inject constructor(
