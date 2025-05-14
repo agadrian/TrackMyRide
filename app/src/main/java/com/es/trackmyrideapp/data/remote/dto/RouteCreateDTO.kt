@@ -1,11 +1,12 @@
 package com.es.trackmyrideapp.data.remote.dto
 
-data class RouteDTO(
-    val id: Long,
+import java.time.LocalDateTime
+
+data class RouteCreateDTO(
     val name: String,
     val description: String?,
-    val startTime: String,
-    val endTime: String,
+    val startTime: LocalDateTime,
+    val endTime: LocalDateTime,
     val startPoint: String,
     val endPoint: String,
     val distanceKm: Double,
@@ -16,5 +17,5 @@ data class RouteDTO(
     val efficiency: Double?,
     val pace: Double?,
     val vehicleId: Long,
-    val userId: String
+    val compressedPath: String // Base64 del path comprimido
 )

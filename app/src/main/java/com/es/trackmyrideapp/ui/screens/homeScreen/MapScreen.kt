@@ -138,11 +138,11 @@ fun MapScreen(
                         }
 
 
-                        Polyline(
-                            points = testRoute,
-                            color = Color.Red, // O cualquier otro color
-                            width = 6f
-                        )
+//                        Polyline(
+//                            points = testRoute,
+//                            color = Color.Red, // O cualquier otro color
+//                            width = 6f
+//                        )
                     }
                 } else {
                     CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))

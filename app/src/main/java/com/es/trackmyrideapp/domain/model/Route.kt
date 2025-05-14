@@ -8,5 +8,6 @@ data class Route(
     val vehicleType: VehicleType,
     val date: String,
     val distance: String,
-    val pace: String, val duration: String
+    val pace: String,
+    val duration: String
 )

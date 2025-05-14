@@ -1,6 +1,7 @@
 package com.es.trackmyrideapp.di
 
 import android.content.Context
+import com.es.trackmyrideapp.data.local.AuthPreferences
 import com.es.trackmyrideapp.data.local.RememberMePreferences
 import com.es.trackmyrideapp.data.local.ThemePreferences
 import com.google.firebase.auth.FirebaseAuth
@@ -29,6 +30,15 @@ object AppModule {
     fun provideThemePreferences(@ApplicationContext context: Context): ThemePreferences {
         return ThemePreferences(context)
     }
+
+    @Provides
+    @Singleton
+    fun provideAuthPreferences(@ApplicationContext context: Context): AuthPreferences {
+        return AuthPreferences(context)
+    }
+
+
+
 
     // Aqui mas proveedores si fuera necesario
     // Ej

@@ -30,7 +30,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.es.trackmyrideapp.ui.AuthViewModel
 import com.es.trackmyrideapp.ui.components.CustomTextFieldWithoutIcon
-import com.es.trackmyrideapp.ui.screens.loginScreen.LoginViewModel
+
 @Composable
 fun ForgotPasswordScreen(
     modifier: Modifier,

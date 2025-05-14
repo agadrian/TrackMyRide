@@ -2,6 +2,7 @@ package com.es.trackmyrideapp.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.es.trackmyrideapp.data.local.AuthPreferences
 import com.es.trackmyrideapp.data.local.RememberMePreferences
 import com.es.trackmyrideapp.domain.usecase.RegisterUseCase
 import com.es.trackmyrideapp.domain.usecase.SendPasswordResetUseCase
@@ -21,7 +22,8 @@ class AuthViewModel @Inject constructor(
     private val signInUseCase: SignInUseCase,
     private val registerUseCase: RegisterUseCase,
     private val sendPasswordResetUseCase: SendPasswordResetUseCase,
-    private val rememberMePreferences: RememberMePreferences
+    private val rememberMePreferences: RememberMePreferences,
+    private val authPreferences: AuthPreferences
 ) : ViewModel() {
 
     // UI States
@@ -45,9 +47,14 @@ class AuthViewModel @Inject constructor(
             val result = signInUseCase(email, password)
 
             result.fold(
-                onSuccess = { user ->
+                onSuccess = { authResult  ->
                     if (rememberMe) rememberMePreferences.setRememberMe(true)
-                    _loginUiState.value = LoginUiState.Success(user)
+
+                    val user = authResult.apiUser
+                    val jwt = authResult.apiUser.jwtToken
+                    authPreferences.setJwtToken(jwt)
+
+                    _loginUiState.value = LoginUiState.Success(user, jwt)
                 },
                 onFailure = { exception ->
                     _loginUiState.value = LoginUiState.Idle
@@ -65,8 +72,12 @@ class AuthViewModel @Inject constructor(
             _registerUiState.value = RegisterUiState.Idle
 
             result.fold(
-                onSuccess = { user ->
-                    _registerUiState.value = RegisterUiState.Success(user)
+                onSuccess = { authResult ->
+                    val user = authResult.apiUser
+                    val jwt = authResult.apiUser.jwtToken
+                    authPreferences.setJwtToken(jwt)
+
+                    _registerUiState.value = RegisterUiState.Success(user, jwt)
                 },
                 onFailure = { exception ->
                     _showErrorMessage.value = exception.message ?: "Unknown error during registration"
