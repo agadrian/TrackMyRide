@@ -1,11 +1,13 @@
-package com.es.trackmyrideapp.ui
+package com.es.trackmyrideapp.ui.screens.loginScreen
 
 import android.util.Log
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.es.trackmyrideapp.data.local.AuthPreferences
 import com.es.trackmyrideapp.data.local.RememberMePreferences
-import com.es.trackmyrideapp.data.remote.dto.UserRegistrationDTO
 import com.es.trackmyrideapp.domain.usecase.RegisterUseCase
 import com.es.trackmyrideapp.domain.usecase.SendPasswordResetUseCase
 import com.es.trackmyrideapp.domain.usecase.SignInUseCase
@@ -15,12 +17,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import com.es.trackmyrideapp.ui.screens.loginScreen.LoginUiState
-import com.es.trackmyrideapp.ui.screens.registerScreen.RegisterUiState
-
 
 @HiltViewModel
-class AuthViewModel @Inject constructor(
+class LoginViewModel @Inject constructor(
     private val signInUseCase: SignInUseCase,
     private val registerUseCase: RegisterUseCase,
     private val sendPasswordResetUseCase: SendPasswordResetUseCase,
@@ -28,68 +27,67 @@ class AuthViewModel @Inject constructor(
     private val authPreferences: AuthPreferences
 ) : ViewModel() {
 
-    // UI States
-    private val _loginUiState = MutableStateFlow<LoginUiState>(LoginUiState.Idle)
-    val loginUiState: StateFlow<LoginUiState> = _loginUiState
+    // Estados del formulario
+    var email by mutableStateOf("")
+        private set
+    var password by mutableStateOf("")
+        private set
+    var passwordVisible by mutableStateOf(false)
+        private set
+    var rememberMe by mutableStateOf(false)
+        private set
 
-    private val _registerUiState = MutableStateFlow<RegisterUiState>(RegisterUiState.Idle)
-    val registerUiState: StateFlow<RegisterUiState> = _registerUiState
+    // UI State
+    private val _uiState = MutableStateFlow<LoginUiState>(LoginUiState.Idle)
+    val uiState: StateFlow<LoginUiState> = _uiState
+
+    // Error message
+    private val _errorMessage = MutableStateFlow<String?>(null)
+    val errorMessage: StateFlow<String?> = _errorMessage
 
     private val _forgotPasswordUiState = MutableStateFlow<ForgotPasswordUiState>(ForgotPasswordUiState.Idle)
     val forgotPasswordUiState: StateFlow<ForgotPasswordUiState> = _forgotPasswordUiState
 
-    // Estado de error
-    private val _showErrorMessage = MutableStateFlow<String?>(null)
-    val showErrorMessage: StateFlow<String?> = _showErrorMessage
+    // Funciones para actualizar los estados
+    fun updateEmail(newEmail: String) { email = newEmail }
+    fun updatePassword(newPassword: String) { password = newPassword }
+    fun togglePasswordVisibility() { passwordVisible = !passwordVisible }
+    fun toggleRememberMe() { rememberMe = !rememberMe }
 
     // LOGIN
-    fun signIn(email: String, password: String, rememberMe: Boolean) {
+    fun signIn() {
         viewModelScope.launch {
-            _loginUiState.value = LoginUiState.Loading
+            _uiState.value = LoginUiState.Loading
             val result = signInUseCase(email, password)
+
+            Log.d("FlujoTest", "authviewmodel: signInUseCase llamado")
 
             result.fold(
                 onSuccess = { authResult  ->
                     if (rememberMe) rememberMePreferences.setRememberMe(true)
+
+                    Log.d("FlujoTest", "authviewmodel: signInUseCase onsucces")
 
                     val user = authResult.apiUser
                     val jwt = authResult.apiUser.jwtToken
                     authPreferences.setJwtToken(jwt)
                     authPreferences.setRefreshToken(user.refreshToken)
 
+                    Log.d("FlujoTest", "authviewmodel: signInUseCase llamado osucces. user uid: ${user.uid} jwt: ${jwt}")
+                    Log.d("FlujoTest", "authviewmodel: signInUseCase llamado onsucces.setJwtToken y setrefresh llamados ")
+
                     Log.d("JWT Token", "Token recuperado usando getjwttoken(): ${authPreferences.getJwtToken()}")
 
-                    _loginUiState.value = LoginUiState.Success(user, jwt)
+                    _uiState.value = LoginUiState.Success(user, jwt)
 
-                    Log.d("JWT Token", "Login uisate: ${_loginUiState.value}")
+                    Log.d("FlujoTest", "authviewmodel: signInUseCase llamado onsucces. loginuiState: ${_uiState.value} ")
+
+                    Log.d("JWT Token", "Login uisate: ${_uiState.value}")
                 },
                 onFailure = { exception ->
-                    _loginUiState.value = LoginUiState.Idle
-                    _showErrorMessage.value = exception.message ?: "Unknown error. Try Again Later"
-                }
-            )
-        }
-    }
-
-    // REGISTER
-    fun register(
-        email: String,
-        password: String,
-        userData: UserRegistrationDTO
-    ) {
-        viewModelScope.launch {
-            _registerUiState.value = RegisterUiState.Loading
-            val result = registerUseCase(email, password, userData)
-            _registerUiState.value = RegisterUiState.Idle
-
-            result.fold(
-                onSuccess = { authResult ->
-                    val user = authResult.apiUser
-                    val jwt = authResult.apiUser.jwtToken
-                    _registerUiState.value = RegisterUiState.Success(user, jwt)
-                },
-                onFailure = { exception ->
-                    _showErrorMessage.value = exception.message ?: "Unknown error during registration"
+                    Log.d("FlujoTest", "authviewmodel: signInUseCase llamado onfailure. exception: ${exception.message} ")
+                    _uiState.value = LoginUiState.Idle
+                    _errorMessage.value = exception.message ?: "Unknown error. Try Again Later"
                 }
             )
         }
@@ -108,7 +106,7 @@ class AuthViewModel @Inject constructor(
                 },
                 onFailure = { exception ->
                     _forgotPasswordUiState.value = ForgotPasswordUiState.Idle
-                    _showErrorMessage.value = exception.message ?: "Unknown error during reseting your password"
+                    _errorMessage.value = exception.message ?: "Unknown error during reseting your password"
                 }
             )
         }
@@ -119,6 +117,6 @@ class AuthViewModel @Inject constructor(
     }
 
     fun consumeErrorMessage() {
-        _showErrorMessage.value = null
+        _errorMessage.value = null
     }
 }

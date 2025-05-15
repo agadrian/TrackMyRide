@@ -1,6 +1,7 @@
 package com.es.trackmyrideapp.domain.model
 
 import java.time.LocalDateTime
+import java.util.Date
 
 data class User(
     val id: String,
@@ -9,5 +10,5 @@ data class User(
     val phone: String?,
     val photoUrl: String? = null,
     val isPremium: Boolean,
-    val createdAt: LocalDateTime
+    val createdAt: Date
 )

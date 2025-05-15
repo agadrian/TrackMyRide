@@ -24,7 +24,9 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideGson(): Gson = GsonBuilder().create()
+    fun provideGson(): Gson = GsonBuilder()
+        .setDateFormat("yyyy-MM-dd'T'HH:mm:ss")
+        .create()
 
     @Provides
     @Singleton

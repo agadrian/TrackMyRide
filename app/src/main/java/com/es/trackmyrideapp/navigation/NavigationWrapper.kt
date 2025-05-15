@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -35,6 +37,7 @@ fun NavigationWrapper(
     val navController = rememberNavController()
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     val sessionViewModel = LocalSessionViewModel.current
 
@@ -106,6 +109,9 @@ fun NavigationWrapper(
             Scaffold(
                 // Quitar padding por defecto superior
                 contentWindowInsets = WindowInsets(0, 0, 0, 0),
+                snackbarHost = {
+                    SnackbarHost(snackbarHostState)
+                },
                 topBar = {
                     AppTopBar(
                         currentDestination = currentDestination,
@@ -138,14 +144,16 @@ fun NavigationWrapper(
                 MainNavHost(
                     navController = navController,
                     innerPadding = innerPadding,
-                    startDestination = startDestination
+                    startDestination = startDestination,
+                    snackbarHostState = snackbarHostState
                 )
             }
         }else{
             MainNavHost(
                 navController = navController,
                 innerPadding = PaddingValues(0.dp),
-                startDestination = startDestination
+                startDestination = startDestination,
+                snackbarHostState = snackbarHostState
             )
         }
 

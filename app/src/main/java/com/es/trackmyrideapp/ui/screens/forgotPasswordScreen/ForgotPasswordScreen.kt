@@ -28,17 +28,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.es.trackmyrideapp.ui.AuthViewModel
 import com.es.trackmyrideapp.ui.components.CustomTextFieldWithoutIcon
+import com.es.trackmyrideapp.ui.screens.loginScreen.LoginViewModel
 
 @Composable
 fun ForgotPasswordScreen(
     modifier: Modifier,
 ) {
-    val authViewModel: AuthViewModel = hiltViewModel()
+    val loginViewModel: LoginViewModel = hiltViewModel()
 
-    val errorMessage by authViewModel.showErrorMessage.collectAsState()
-    val forgotPasswordUiState by authViewModel.forgotPasswordUiState.collectAsState()
+    val errorMessage by loginViewModel.errorMessage.collectAsState()
+    val forgotPasswordUiState by loginViewModel.forgotPasswordUiState.collectAsState()
 
     var email by rememberSaveable { mutableStateOf("") }
     val context = LocalContext.current
@@ -47,7 +47,7 @@ fun ForgotPasswordScreen(
         when (forgotPasswordUiState) {
             is ForgotPasswordUiState.Success -> {
                 Toast.makeText(context, "Email sent", Toast.LENGTH_LONG).show()
-                authViewModel.resetForgotPasswordState()
+                loginViewModel.resetForgotPasswordState()
             }
             else -> Unit
         }
@@ -56,7 +56,7 @@ fun ForgotPasswordScreen(
     LaunchedEffect(errorMessage) {
         errorMessage?.let {
             Toast.makeText(context, it, Toast.LENGTH_LONG).show()
-            authViewModel.consumeErrorMessage()
+            loginViewModel.consumeErrorMessage()
         }
     }
 
@@ -91,9 +91,9 @@ fun ForgotPasswordScreen(
         Button(
             onClick = {
                 if (email.isNotBlank()) {
-                    authViewModel.sendPasswordReset(email)
+                    loginViewModel.sendPasswordReset(email)
                 } else {
-                    Toast.makeText(context, "Enter a valid email", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Enter a valid email", Toast.LENGTH_LONG).show()
                 }
             },
             enabled = forgotPasswordUiState != ForgotPasswordUiState.Loading,

@@ -3,6 +3,7 @@ package com.es.trackmyrideapp.ui
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.es.trackmyrideapp.data.local.AuthPreferences
 import com.es.trackmyrideapp.data.local.RememberMePreferences
 import com.es.trackmyrideapp.domain.usecase.GetCurrentUserUseCase
 import com.es.trackmyrideapp.domain.usecase.SignOutUseCase
@@ -21,6 +22,7 @@ class SessionViewModel @Inject constructor(
     private val signOutUseCase: SignOutUseCase,
     private val rememberMePreferences: RememberMePreferences,
     private val getCurrentUserUseCase: GetCurrentUserUseCase,
+    private val authPreferences: AuthPreferences,
     private val checkAndRefreshTokenUseCase: CheckAndRefreshTokenUseCase
 ) : ViewModel() {
 
@@ -33,6 +35,7 @@ class SessionViewModel @Inject constructor(
 
     fun logout() {
         rememberMePreferences.clearRememberMe()
+        authPreferences.clearJwtToken()
         signOutUseCase()
     }
 

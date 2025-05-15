@@ -1,5 +1,6 @@
 package com.es.trackmyrideapp.ui.screens.profileScreen
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -23,6 +24,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -31,12 +34,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.es.trackmyrideapp.R
 
 
@@ -45,11 +50,20 @@ fun ProfileScreen(
     modifier: Modifier = Modifier,
     onPremiumScreenClicked: () -> Unit
 ) {
-    var username by remember { mutableStateOf("AdriAG") }
-    var email by remember { mutableStateOf("test@gmail.com") }
-    var password by remember { mutableStateOf("test") }
-    var phone by remember { mutableStateOf("password") }
-    var passwordVisible by remember { mutableStateOf(false) }
+
+    val profileViewModel: ProfileViewModel = hiltViewModel()
+
+    val uiState by profileViewModel.uiState.collectAsState()
+    val context = LocalContext.current
+
+
+    // Mostrar errores
+    LaunchedEffect(uiState) {
+        if (uiState is ProfileViewModel.ProfileUiState.Error) {
+            val errorMessage = (uiState as ProfileViewModel.ProfileUiState.Error).message
+            Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show()
+        }
+    }
 
 
     Column(
@@ -132,16 +146,18 @@ fun ProfileScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         Body(
-            email = email,
-            username = username,
-            phone = phone,
-            password = password,
-            onEmailChanged = {email = it},
-            onUsernameChanged = {username = it},
-            onPhoneChanged = {phone = it},
-            onPasswordChanged = {password = it},
-            passwordVisible = passwordVisible,
-            onPasswordVisibilityChanged = { passwordVisible = !passwordVisible }
+            email = profileViewModel.email,
+            username = profileViewModel.username,
+            phone = profileViewModel.phone,
+            password = profileViewModel.password,
+            onEmailChanged = { /* No editable */ },
+            onUsernameChanged = { profileViewModel.updateUsername(it) },
+            onPhoneChanged = { profileViewModel.updatePhone(it) },
+            onPasswordChanged = { /* No usado directamente */ },
+            passwordVisible = profileViewModel.passwordVisible,
+            onPasswordVisibilityChanged = { profileViewModel.togglePasswordVisibility() },
+            onSaveButtonClicked = { if (profileViewModel.validateBeforeSave()) profileViewModel.updateProfile() }
+            //onPasswordEditClicked = { profileViewModel.openChangePasswordDialog() }
         )
 
 

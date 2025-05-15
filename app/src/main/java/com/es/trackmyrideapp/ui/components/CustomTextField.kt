@@ -48,7 +48,10 @@ fun CustomTextField(
             unfocusedContainerColor = Color.Transparent,
             focusedIndicatorColor = MaterialTheme.colorScheme.primary,
             unfocusedIndicatorColor = if (value.isEmpty()) Color.Gray else colorResource(R.color.greenTextFieldFilled),
-            cursorColor = MaterialTheme.colorScheme.primary
+            cursorColor = MaterialTheme.colorScheme.primary,
+            disabledTextColor = MaterialTheme.colorScheme.onSurface,
+            disabledLeadingIconColor = MaterialTheme.colorScheme.onSurface,
+            disabledLabelColor = MaterialTheme.colorScheme.onSurface
         )
     )
 }

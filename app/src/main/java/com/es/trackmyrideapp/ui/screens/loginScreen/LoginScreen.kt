@@ -1,6 +1,6 @@
 package com.es.trackmyrideapp.ui.screens.loginScreen
 
-import android.widget.Toast
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,21 +13,18 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.es.trackmyrideapp.ui.AuthViewModel
 
 
 @Composable
@@ -35,102 +32,96 @@ fun LoginScreen(
     modifier: Modifier = Modifier,
     navigateToRegister: () -> Unit,
     navigateToHome: () -> Unit,
-    navigateToForgotPassword: () -> Unit
+    navigateToForgotPassword: () -> Unit,
+    snackbarHostState: SnackbarHostState
 ) {
-    val authViewModel: AuthViewModel = hiltViewModel()
-    val uiState by authViewModel.loginUiState.collectAsState()
-    val errorMessage by authViewModel.showErrorMessage.collectAsState()
+    val loginViewModel: LoginViewModel = hiltViewModel()
+    val uiState by loginViewModel.uiState.collectAsState()
+    val errorMessage by loginViewModel.errorMessage.collectAsState()
 
-    val context = LocalContext.current
-
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var passwordVisible by remember { mutableStateOf(false) }
-    var rememberMe by remember { mutableStateOf(false) }
-
-
-
-
+    // Navegar a home si Login exitoso
     LaunchedEffect(uiState) {
         if (uiState is LoginUiState.Success) {
             navigateToHome()
         }
     }
 
+
+    // Mostrar errores
     LaunchedEffect(errorMessage) {
-        authViewModel.showErrorMessage.value?.let { message ->
-            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-            authViewModel.consumeErrorMessage()
+        Log.d("LoginScreen", "errorMessage: $errorMessage")
+        errorMessage?.let { message ->
+            snackbarHostState.showSnackbar(message)
+            loginViewModel.consumeErrorMessage()
         }
     }
 
-    Column(
-        modifier = modifier
-        .fillMaxSize()
-        .verticalScroll(rememberScrollState())
-        .systemBarsPadding() // Paddings status + navigation bar
-        .background(MaterialTheme.colorScheme.background)
+    Box(
+        modifier = modifier.fillMaxSize()
     ){
+
         Column(
             modifier = Modifier
-                .fillMaxHeight(),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-
-            Header(
-                lineColor = MaterialTheme.colorScheme.primary
-            )
-
-            Spacer(modifier = Modifier.height(30.dp))
-
-
-            Body(
-                email = email,
-                password = password,
-                onEmailChanged = { email = it },
-                onPasswordChanged = { password = it },
-                passwordVisible = passwordVisible,
-                onPasswordVisibilityChanged = { passwordVisible = !passwordVisible },
-                rememberMe = rememberMe,
-                onRememberMeChanged = { rememberMe = it },
-                onNavigateToForgotPassword = navigateToForgotPassword
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-        }
-
-        Spacer(modifier = Modifier.weight(1f))
-
-        Footer(
-            modifier = Modifier,
-            onLoginButtonClicked = {
-                authViewModel.signIn(email, password, rememberMe)
-                /*TODO: Hacer que inicie sesion. Mientra inicia, mostrar un circulo girando con el fondo grisaceo, y si esta bien, navegar al home */
-            },
-            onSingUpClicked = navigateToRegister,
-
-        )
-    }
-
-
-    if (uiState is LoginUiState.Loading) {
-        Box(
-            modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.4f)),
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator()
+                .verticalScroll(rememberScrollState())
+                .systemBarsPadding() // Paddings status + navigation bar
+                .background(MaterialTheme.colorScheme.background)
+        ){
+            Column(
+                modifier = Modifier
+                    .fillMaxHeight(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+
+                Header(
+                    lineColor = MaterialTheme.colorScheme.primary
+                )
+
+                Spacer(modifier = Modifier.height(30.dp))
+
+
+                Body(
+                    email = loginViewModel.email,
+                    password = loginViewModel.password,
+                    onEmailChanged = { loginViewModel.updateEmail(it) },
+                    onPasswordChanged = { loginViewModel.updatePassword(it) },
+                    passwordVisible = loginViewModel.passwordVisible,
+                    onPasswordVisibilityChanged = { loginViewModel.togglePasswordVisibility() },
+                    rememberMe = loginViewModel.rememberMe,
+                    onRememberMeChanged = { loginViewModel.toggleRememberMe() },
+                    onNavigateToForgotPassword = navigateToForgotPassword
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+            }
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            Footer(
+                modifier = Modifier,
+                onLoginButtonClicked = { loginViewModel.signIn() },
+                onSingUpClicked = navigateToRegister
+            )
+        }
+
+        // SnackbarHost para mostrar el snackbar
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter)
+        )
+
+        // Indicador de carga
+        if (uiState is LoginUiState.Loading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.4f)),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
         }
     }
 }
 
-
-@Preview
-@Composable
-fun dfd (){
-    LoginScreen(
-        modifier = Modifier, {}, {}, {}
-    )
-}

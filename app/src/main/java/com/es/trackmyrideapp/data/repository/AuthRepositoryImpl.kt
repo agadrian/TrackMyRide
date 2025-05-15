@@ -25,38 +25,23 @@ class AuthRepositoryImpl @Inject constructor(
 
     override suspend fun signIn(email: String, password: String): Result<AuthResult> {
         return try {
-            val firebaseUser = firebaseAuthService.signIn(email, password)
-            val idTokenResult = firebaseUser.getIdToken(true).await()
+            val idToken = getFirebaseIdToken(email, password)
 
-            // TODO: QUITAR
-            val user = FirebaseUser(
-                uid = firebaseUser.uid,
-                email = firebaseUser.email,
-                idToken = idTokenResult.token
-            )
-
-            val apiResponse = authAPI.login("Bearer ${idTokenResult.token}")
-            Log.d("Firebase", "token pasado a la api:  ${idTokenResult.token}")
-            Log.d("FlujoTest", "authrepoimpl: token pasado  a la api ${idTokenResult.token}")
+            // Llamar a la API para iniciar sesión
+            val apiResponse = authAPI.login("Bearer $idToken")
             if (!apiResponse.isSuccessful) throw Exception("API login failed")
 
-            Log.d("FlujoTest", "Si veo esto, api.LOGIN CORRECTO")
-
-            // Uusario autenticado del backend
             val authUser = apiResponse.body()?.toDomain()
                 ?: throw Exception("API login response body null")
 
-            // Almacenar JWT y refresh token
+            // Almacenar tokens
             authPreferences.setJwtToken(authUser.jwtToken)
             authPreferences.setRefreshToken(authUser.refreshToken)
 
+            Result.success(AuthResult(authUser))
+
             Log.d("FlujoTest", "authrepoimpl setJwtToken y setreefreshtoken llamados. jwt: ${authUser.jwtToken} refresh: ${authUser.refreshToken} ")
 
-
-            Log.d("Firebase", "User legged successfully: $user. Token: ${user.idToken}")
-            Log.d("Firebase", "Token: ${user.idToken}")
-
-            Log.d("FlujoTest", "User logged successfully: $user. Token: ${user.idToken}")
             Result.success(AuthResult(authUser))
         } catch (e: Exception) {
             Result.failure(Exception(ErrorMessageMapper.getMessage(e, AuthFlow.Login)))
@@ -74,50 +59,52 @@ class AuthRepositoryImpl @Inject constructor(
     ): Result<AuthResult> {
         return try {
             // Creo usuario en fireabse
+            Log.d("FlujoTest", "AuthRepositoryImpl. register llamado")
             firebaseAuthService.register(email, password)
 
-            Log.d("FlujoTest", "authrepoimpl firebase.register llamado ")
+            // Inicio sesion en el usuario de firebase para obtener el token real de firebase
+            val idToken = getFirebaseIdToken(email, password)
 
-            // Lo logeo para obetener el token de firebase
-            val firebaseAuthResult = signIn(email, password)
+            // Registrar en la API el usuario
+            Log.d("FlujoTest", "AuthRepositoryImpl. register. authapi.register llamado")
+            val apiResponse = authAPI.register("Bearer $idToken", registrationDTO)
+            if (!apiResponse.isSuccessful) {
+                Log.d("FlujoTest", "AuthRepositoryImpl. register. apiresponse no es successfull. haciendo rollback en firebase. codigo ${apiResponse.code()}")
+                firebaseAuthService.deleteCurrentUser() // Rollback si falla
+                throw Exception("API register failed: ${apiResponse.code()}")
 
-            Log.d("FlujoTest", "authrepoimpl llamada a sigin dentro de register: ${firebaseAuthResult.isSuccess} ")
-
-
-            if (firebaseAuthResult.isSuccess) {
-                val authResult = firebaseAuthResult.getOrThrow()
-                Log.d("FlujoTest", "authrepoimpl register. authresult uid: ${authResult.apiUser.uid} authresult email: ${authResult.apiUser.email} ")
-
-                // Token jwt
-                val idToken = authResult.apiUser.jwtToken
-
-                Log.d("FlujoTest", "authrepoimpl register. idToken: $idToken ")
-
-                // Registrarlo en la api
-                val apiResponse = authAPI.register("Bearer $idToken", registrationDTO)
-
-                // Si el registro en la api dalla, borrar el usuario en firebase automaticamente
-                if (!apiResponse.isSuccessful) {
-                    firebaseAuthService.deleteCurrentUser()
-                    throw Exception("API register failed: ${apiResponse.code()}")
-                }
-
-
-                // Obtener el usuario autenticado del backend
-                val authenticatedUser = apiResponse.body()?.toDomain()
-                    ?: throw Exception("API register response null")
-
-                // Devolver AuthResult completo con Firebase + backend user
-                Result.success(AuthResult(authenticatedUser))
-
-            } else {
-                Log.d("FlujoTest", "authrepoimpl login failed after register ")
-                Result.failure(Exception("Login failed after register"))
             }
+
+            // Obtener usuario autenticado del backend
+            val authenticatedUser = apiResponse.body()?.toDomain()
+                ?: throw Exception("API register response null")
+
+            Log.d("FlujoTest", "AuthRepositoryImpl. register. authenticated user ${authenticatedUser.uid} name: ${authenticatedUser.username} email: ${authenticatedUser.email}")
+
+            // Registrar tokens
+            Log.d("FlujoTest", "AuthRepositoryImpl. register. registrar tokens llamado")
+            authPreferences.setJwtToken(authenticatedUser.jwtToken)
+            authPreferences.setRefreshToken(authenticatedUser.refreshToken)
+            Log.d("FlujoTest", "AuthRepositoryImpl. register. tokens registrados. jwt: ${authenticatedUser.jwtToken} refresh: ${authenticatedUser.refreshToken} ")
+
+
+            // Devolver AuthResult completo con Firebase + backend user
+            Result.success(AuthResult(authenticatedUser))
+
+
         } catch (e: Exception) {
             Log.d("FlujoTest", "authrepoimpl register excepcion: ${e.message} ")
             Result.failure(Exception(ErrorMessageMapper.getMessage(e, AuthFlow.Register)))
         }
+    }
+
+    private suspend fun getFirebaseIdToken(email: String, password: String): String {
+        Log.d("FlujoTest", "AuthRepositoryImpl. getFirebaseIdToken llamado")
+        val firebaseUser = firebaseAuthService.signIn(email, password)
+        val idTokenResult = firebaseUser.getIdToken(true).await()
+
+        Log.d("FlujoTest", "AuthRepositoryImpl. getFirebaseIdToken. firebaseUser: ${firebaseUser.uid} idToken: ${idTokenResult.token}")
+        return idTokenResult.token ?: throw Exception("Failed to get Firebase ID token")
     }
 
 
@@ -150,6 +137,38 @@ class AuthRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             false
         }
+    }
+
+
+    private suspend fun registerInApi(idToken: String, registrationDTO: UserRegistrationDTO): Result<AuthResult> {
+        val apiResponse = authAPI.register("Bearer $idToken", registrationDTO)
+
+        if (!apiResponse.isSuccessful) {
+            throw Exception("API register failed: ${apiResponse.code()}")
+        }
+
+        // Obtener el usuario autenticado del backend
+        val authenticatedUser = apiResponse.body()?.toDomain()
+            ?: throw Exception("API register response null")
+
+        return Result.success(AuthResult(authenticatedUser))
+    }
+
+    private suspend fun loginWithApi(idToken: String): Result<AuthResult> {
+        val apiLoginResponse = authAPI.login("Bearer $idToken")
+
+        if (!apiLoginResponse.isSuccessful) {
+            throw Exception("API login failed")
+        }
+
+        val authUser = apiLoginResponse.body()?.toDomain()
+            ?: throw Exception("API login response body null")
+
+        // Almacenar el JWT y refresh token de la API
+        authPreferences.setJwtToken(authUser.jwtToken)
+        authPreferences.setRefreshToken(authUser.refreshToken)
+
+        return Result.success(AuthResult(authUser))
     }
 
 

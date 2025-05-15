@@ -50,7 +50,9 @@ fun Body(
     onPhoneChanged: (String) -> Unit,
     onPasswordChanged: (String) -> Unit,
     passwordVisible: Boolean,
-    onPasswordVisibilityChanged: () -> Unit
+    onPasswordVisibilityChanged: () -> Unit,
+    onSaveButtonClicked: () -> Unit,
+    //onPasswordEditClicked: () -> Unit
 ){
 
 
@@ -94,7 +96,8 @@ fun Body(
                 label = "Email",
                 icon = Icons.Default.Email,
                 value = email,
-                onValueChange = onEmailChanged
+                onValueChange = onEmailChanged,
+                enabled = false
             )
 
             // Phone
@@ -161,7 +164,7 @@ fun Body(
     Spacer(Modifier.height(32.dp))
 
     CustomButton(
-        onclick = {/* TODO: Accion de guardar la info */},
+        onclick = onSaveButtonClicked,
         text = "Save changes",
         buttonColor = MaterialTheme.colorScheme.primary,
         fontColor = colorResource(R.color.black)

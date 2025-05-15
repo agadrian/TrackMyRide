@@ -1,12 +1,13 @@
 package com.es.trackmyrideapp.ui.screens.registerScreen
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.es.trackmyrideapp.data.remote.dto.UserRegistrationDTO
-import com.es.trackmyrideapp.ui.AuthViewModel
+import com.es.trackmyrideapp.domain.usecase.RegisterUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -15,7 +16,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class RegisterViewModel @Inject constructor(
-    private val authViewModel: AuthViewModel
+    private val registerUseCase: RegisterUseCase,
 ) : ViewModel() {
 
     // Estados del formulario
@@ -51,27 +52,35 @@ class RegisterViewModel @Inject constructor(
     fun togglePasswordVisibility() { passwordVisible = !passwordVisible }
     fun togglePassword2Visibility() { password2Visible = !password2Visible }
 
+    // REGISTER
     fun register() {
-        if (password != password2) {
-            _errorMessage.value = "Passwords are not the same"
-            return
-        }
-
         viewModelScope.launch {
+            Log.d("FlujoTest", "authviewmodel: register llamado ")
             _uiState.value = RegisterUiState.Loading
-            authViewModel.register(
-                email = email,
-                password = password,
-                userData = UserRegistrationDTO(
-                    username = username,
-                    phone = phone
-                )
+
+            val userData = UserRegistrationDTO(
+                username = username,
+                phone = phone
             )
 
-            // Observamos el estado del AuthViewModel
-            authViewModel.registerUiState.collect { state ->
-                _uiState.value = state
-            }
+            val result = registerUseCase(email, password, userData)
+            _uiState.value = RegisterUiState.Idle
+
+            Log.d("FlujoTest", "authviewmodel: register llamado.")
+
+            result.fold(
+                onSuccess = { authResult ->
+                    val user = authResult.apiUser
+                    val jwt = authResult.apiUser.jwtToken
+                    _uiState.value = RegisterUiState.Success(user, jwt)
+
+                    Log.d("FlujoTest", "authviewmodel: register llamado. onsucces. user ${user.username} user uid ${user.uid} jwt: ${jwt}  registeruistatevalue ${_uiState.value}")
+                },
+                onFailure = { exception ->
+                    Log.d("FlujoTest", "authviewmodel: register llamado. onfailure. exception: ${exception.message} ")
+                    _errorMessage.value = exception.message ?: "Unknown error during registration"
+                }
+            )
         }
     }
 

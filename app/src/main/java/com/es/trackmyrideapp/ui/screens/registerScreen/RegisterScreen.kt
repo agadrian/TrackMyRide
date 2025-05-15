@@ -12,6 +12,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -26,7 +28,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.es.trackmyrideapp.ui.AuthViewModel
 import com.es.trackmyrideapp.ui.screens.loginScreen.LoginUiState
 
 
@@ -34,13 +35,13 @@ import com.es.trackmyrideapp.ui.screens.loginScreen.LoginUiState
 fun RegisterScreen(
     modifier: Modifier = Modifier,
     navigateToLogin: () -> Unit,
-    navigateToHome: () -> Unit
+    navigateToHome: () -> Unit,
+    snackbarHostState: SnackbarHostState
 ){
     val registerViewModel: RegisterViewModel = hiltViewModel()
     val uiState by registerViewModel.uiState.collectAsState()
     val errorMessage by registerViewModel.errorMessage.collectAsState()
 
-    val context = LocalContext.current
 
     // Navegar a Home si exitoso
     LaunchedEffect(uiState) {
@@ -52,76 +53,81 @@ fun RegisterScreen(
     // Mostrar errores
     LaunchedEffect(errorMessage) {
         errorMessage?.let { message ->
-            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+            snackbarHostState.showSnackbar(message)
             registerViewModel.consumeErrorMessage()
         }
     }
 
-    Column (
-        modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .systemBarsPadding()
-            .background(MaterialTheme.colorScheme.background)
+    Box(
+        modifier = modifier.fillMaxSize()
     ){
-        Column(
-            modifier = Modifier,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
 
-            Header(
-                lineColor = MaterialTheme.colorScheme.primary
-            )
-
-            Spacer(modifier = Modifier.height(25.dp))
-
-
-            Body(
-                email = registerViewModel.email,
-                username = registerViewModel.username,
-                phone = registerViewModel.phone,
-                password = registerViewModel.password,
-                password2 = registerViewModel.password2,
-                onEmailChanged = { registerViewModel.updateEmail(it) },
-                onPasswordChanged = { registerViewModel.updatePassword(it) },
-                onPassword2Changed = { registerViewModel.updatePassword2(it) },
-                onUsernameChanged = { registerViewModel.updateUsername(it) },
-                onPhoneChanged = { registerViewModel.updatePhone(it) },
-                passwordVisible = registerViewModel.passwordVisible,
-                password2Visible = registerViewModel.password2Visible,
-                onPasswordVisibilityChanged = { registerViewModel.togglePasswordVisibility() },
-                onPassword2VisibilityChanged = { registerViewModel.togglePassword2Visibility() }
-            )
-
-            Spacer(modifier = Modifier.height(50.dp))
-        }
-
-        Spacer(modifier = Modifier.weight(1f))
-
-        Footer(
-            modifier = Modifier,
-            onRegisterButtonClicked = { registerViewModel.register() },
-            onSingInClicked = navigateToLogin
-        )
-    }
-
-    // Indicador de carga
-    if (uiState is RegisterUiState.Loading) {
-        Box(
+        Column (
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.4f)),
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator()
+                .verticalScroll(rememberScrollState())
+                .systemBarsPadding()
+                .background(MaterialTheme.colorScheme.background)
+        ){
+            Column(
+                modifier = Modifier,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+
+                Header(
+                    lineColor = MaterialTheme.colorScheme.primary
+                )
+
+                Spacer(modifier = Modifier.height(25.dp))
+
+
+                Body(
+                    email = registerViewModel.email,
+                    username = registerViewModel.username,
+                    phone = registerViewModel.phone,
+                    password = registerViewModel.password,
+                    password2 = registerViewModel.password2,
+                    onEmailChanged = { registerViewModel.updateEmail(it) },
+                    onPasswordChanged = { registerViewModel.updatePassword(it) },
+                    onPassword2Changed = { registerViewModel.updatePassword2(it) },
+                    onUsernameChanged = { registerViewModel.updateUsername(it) },
+                    onPhoneChanged = { registerViewModel.updatePhone(it) },
+                    passwordVisible = registerViewModel.passwordVisible,
+                    password2Visible = registerViewModel.password2Visible,
+                    onPasswordVisibilityChanged = { registerViewModel.togglePasswordVisibility() },
+                    onPassword2VisibilityChanged = { registerViewModel.togglePassword2Visibility() }
+                )
+
+                Spacer(modifier = Modifier.height(50.dp))
+            }
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            Footer(
+                modifier = Modifier,
+                onRegisterButtonClicked = { registerViewModel.register() },
+                onSingInClicked = navigateToLogin
+            )
+        }
+
+        // SnackbarHost para mostrar el snackbar
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter)
+        )
+
+        // Indicador de carga
+        if (uiState is RegisterUiState.Loading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.4f)),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
         }
     }
 
 }
 
-
-@Preview
-@Composable
-fun sdf(){
-    RegisterScreen(Modifier,{},{})
-}

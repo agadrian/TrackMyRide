@@ -2,6 +2,7 @@ package com.es.trackmyrideapp.navigation
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
@@ -22,7 +23,8 @@ import com.es.trackmyrideapp.ui.screens.vehiclesScreen.VehiclesScreen
 fun MainNavHost(
     navController: NavHostController,
     innerPadding: PaddingValues,
-    startDestination: String
+    startDestination: String,
+    snackbarHostState: SnackbarHostState,
 ){
     NavHost(
         navController = navController,
@@ -47,7 +49,8 @@ fun MainNavHost(
                     navController.navigate(ForgotPassword){
                         launchSingleTop = true
                     }
-                }
+                },
+                snackbarHostState = snackbarHostState,
             )
         }
 
@@ -72,7 +75,8 @@ fun MainNavHost(
                         popUpTo(0)
                         launchSingleTop = true
                     }
-                }
+                },
+                snackbarHostState = snackbarHostState
             )
         }
 

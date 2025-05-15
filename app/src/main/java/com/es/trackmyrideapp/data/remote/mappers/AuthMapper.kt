@@ -8,7 +8,6 @@ fun AuthResponseDTO.toDomain(): AuthenticatedUser {
         uid = uid,
         email = email,
         username = username,
-        role = role,
         jwtToken = token,
         refreshToken = refreshToken
     )
