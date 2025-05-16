@@ -2,7 +2,6 @@ package com.es.trackmyrideapp.domain.repository
 
 import com.es.trackmyrideapp.data.remote.dto.UserRegistrationDTO
 import com.es.trackmyrideapp.data.repository.AuthResult
-import com.es.trackmyrideapp.domain.model.AuthenticatedUser
 import com.es.trackmyrideapp.domain.model.FirebaseUser
 
 interface AuthRepository {
@@ -12,6 +11,5 @@ interface AuthRepository {
     fun getCurrentUser(): FirebaseUser?
     suspend fun register(email: String, password: String, registrationDTO: UserRegistrationDTO): Result<AuthResult>
     suspend fun sendPasswordResetEmail(email: String): Result<Unit>
-    suspend fun refreshToken(): Result<AuthResult>
-    suspend fun isJwtTokenValid(): Boolean
+
 }

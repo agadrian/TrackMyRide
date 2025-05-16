@@ -1,5 +1,6 @@
 package com.es.trackmyrideapp.data.repository
 
+import android.media.session.MediaSession.Token
 import android.util.Log
 import com.es.trackmyrideapp.data.local.AuthPreferences
 import com.es.trackmyrideapp.data.remote.api.AuthApi
@@ -108,68 +109,7 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
 
-    override suspend fun refreshToken(): Result<AuthResult> {
-        return try {
-            val refreshToken = authPreferences.getRefreshToken() ?: throw Exception("No refresh token found")
 
-            val response = authAPI.refresh(RefreshTokenRequest(refreshToken))
-
-            if (!response.isSuccessful) throw Exception("API refresh failed")
-
-            val authUser = response.body()?.toDomain()
-                ?: throw Exception("API refresh response body null")
-
-            // Guardar los nuevos tokens
-            authPreferences.setJwtToken(authUser.jwtToken)
-            authPreferences.setRefreshToken(authUser.refreshToken)
-
-            Result.success(AuthResult(authUser))
-        } catch (e: Exception) {
-            Result.failure(Exception(ErrorMessageMapper.getMessage(e, AuthFlow.Refresh)))
-        }
-    }
-
-    override suspend fun isJwtTokenValid(): Boolean {
-        return try {
-            val jwt = authPreferences.getJwtToken() ?: return false
-            val response = authAPI.validateToken("Bearer $jwt")
-            response.isSuccessful
-        } catch (e: Exception) {
-            false
-        }
-    }
-
-
-//    private suspend fun registerInApi(idToken: String, registrationDTO: UserRegistrationDTO): Result<AuthResult> {
-//        val apiResponse = authAPI.register("Bearer $idToken", registrationDTO)
-//
-//        if (!apiResponse.isSuccessful) {
-//            throw Exception("API register failed: ${apiResponse.code()}")
-//        }
-//
-//        // Obtener el usuario autenticado del backend
-//        val authenticatedUser = apiResponse.body()?.toDomain()
-//            ?: throw Exception("API register response null")
-//
-//        return Result.success(AuthResult(authenticatedUser))
-//    }
-//
-//    private suspend fun loginWithApi(idToken: String): Result<AuthResult> {
-//        val apiLoginResponse = authAPI.login("Bearer $idToken")
-//
-//        if (!apiLoginResponse.isSuccessful) {
-//            throw Exception("API login failed")
-//        }
-//
-//        val authUser = apiLoginResponse.body()?.toDomain()
-//            ?: throw Exception("API login response body null")
-//
-//        // Almacenar el JWT y refresh token de la API
-//        authPreferences.setJwtToken(authUser.jwtToken)
-//        authPreferences.setRefreshToken(authUser.refreshToken)
-//
-//        return Result.success(AuthResult(authUser))
-//    }
 
 
 
@@ -193,10 +133,13 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
+
+
 }
 
 data class AuthResult(
     //val firebaseUser: FirebaseUser,
     val apiUser: AuthenticatedUser
 )
+
 

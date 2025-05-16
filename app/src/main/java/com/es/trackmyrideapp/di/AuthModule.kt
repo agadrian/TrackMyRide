@@ -2,6 +2,8 @@ package com.es.trackmyrideapp.di
 
 import com.es.trackmyrideapp.data.remote.api.AuthApi
 import com.es.trackmyrideapp.data.repository.AuthRepositoryImpl
+import com.es.trackmyrideapp.data.repository.TokenRepository
+import com.es.trackmyrideapp.data.repository.TokenRepositoryImpl
 import com.es.trackmyrideapp.domain.repository.AuthRepository
 import dagger.Module
 import dagger.Provides
@@ -26,4 +28,11 @@ object AuthModule {
     fun provideAuthApi(retrofit: Retrofit): AuthApi {
         return retrofit.create(AuthApi::class.java)
     }
+
+    @Provides
+    @Singleton
+    fun provideTokenRepository(
+        tokenRepositoryimpl: TokenRepositoryImpl
+    ): TokenRepository = tokenRepositoryimpl
+
 }

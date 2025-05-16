@@ -2,8 +2,8 @@ package com.es.trackmyrideapp.di
 
 import com.es.trackmyrideapp.data.local.AuthPreferences
 import com.es.trackmyrideapp.data.remote.AuthInterceptor
-import com.es.trackmyrideapp.data.remote.api.AuthApi
-import com.es.trackmyrideapp.data.remote.api.RouteApi
+import com.es.trackmyrideapp.data.remote.TokenAuthenticator
+import com.es.trackmyrideapp.data.repository.TokenRepository
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import dagger.Module
@@ -36,11 +36,29 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideOkHttpClient(authInterceptor: AuthInterceptor): OkHttpClient {
-        val logging = HttpLoggingInterceptor()
-        logging.setLevel(HttpLoggingInterceptor.Level.BODY)
+    fun provideTokenAuthenticator(
+        tokenRepository: dagger.Lazy<TokenRepository>
+    ): TokenAuthenticator {
+        return TokenAuthenticator(tokenRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideOkHttpClient(
+        authInterceptor: AuthInterceptor,
+        tokenAuthenticator: TokenAuthenticator
+    ): OkHttpClient {
+        val logging = HttpLoggingInterceptor().apply {
+            level = HttpLoggingInterceptor.Level.BODY
+        }
+
         return OkHttpClient.Builder()
-            .addInterceptor(authInterceptor)
+            // Timeouts para las peticiones a la API
+            .connectTimeout(10, java.util.concurrent.TimeUnit.SECONDS)
+            .readTimeout(10, java.util.concurrent.TimeUnit.SECONDS)
+            .writeTimeout(10, java.util.concurrent.TimeUnit.SECONDS)
+            .addInterceptor(authInterceptor) // Añade token si existe
+            .authenticator(tokenAuthenticator) // Refresca si hay 401
             .addInterceptor(logging)
             .build()
     }

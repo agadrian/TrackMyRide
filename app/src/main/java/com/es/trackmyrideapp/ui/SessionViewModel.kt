@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 import javax.inject.Inject
 
 @HiltViewModel
@@ -33,27 +34,39 @@ class SessionViewModel @Inject constructor(
         checkAuthState()
     }
 
+    // Borrar tokens de encryptedsharedpreferences, el rememberMe y hacer singout
     fun logout() {
+        Log.d("FlujoTest", "sesionviewmodel -> logout llamado...")
         rememberMePreferences.clearRememberMe()
-        authPreferences.clearJwtToken()
+        authPreferences.clearAllTokens()
         signOutUseCase()
+        Log.d("FlujoTest", "Token shared pref: ${authPreferences.getJwtToken()}. Refreshtoken prefs ${authPreferences.getRefreshToken()}")
     }
 
     private fun checkAuthState() {
         viewModelScope.launch {
             Log.d("SessionViewModel", "Verificando el estado de la autenticación...")
-            Log.d("FlujoTest", "Verificando el estado de la autenticación...")
+            Log.d("FlujoTest", "- Verificando el estado de la autenticación...")
             val shouldAutoLogin = rememberMePreferences.isRememberMe() && getCurrentUserUseCase() != null
+            Log.d("FlujoTest", "sesionviewmodel -> shouldAutoLogin: $shouldAutoLogin")
 
 
             if (shouldAutoLogin) {
                 try {
                     Log.d("FlujoTest", "sesionviewmodel -> shouldAutoLogin...")
-                    Log.d("SessionViewModel", "Intentando refrescar token si es necesario...")
+                    Log.d("FlujoTest", "Intentando refrescar token si es necesario...")
                     // Comprobar que el jwt guardado sea valido, y renovarlo en cado de que no
-                    checkAndRefreshTokenUseCase()
+                    withTimeout(5000) {
+                        Log.d("FlujoTest", "Dentro de timeout5000 checkAndRefreshTokenUseCase...")
+                        val newToken = checkAndRefreshTokenUseCase()
+                        Log.d("FlujoTest", "checkAndRefreshTokenUseCase completado correctamente con: $newToken")
+                    }
+
+
+                    Log.d("FlujoTest", "Saliendo del timeout de 5000 para el chekAndRefreshTokenUseCase...")
                     _authState.value = AuthState.Authenticated
-                } catch (e: Exception) {
+                } catch (e: Throwable) {
+                    Log.d("FlujoTest", "sesionviewmodel -> shouldAutoLogin.. catch. Se llama al logout Exception: ${e.message}")
                     logout() // TODO: TEST
                     _authState.value = AuthState.Unauthenticated
                 }

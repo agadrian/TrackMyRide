@@ -3,11 +3,23 @@ package com.es.trackmyrideapp.data.local
 import android.content.Context
 import android.util.Base64
 import android.util.Log
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKey
 import org.json.JSONObject
 
 class AuthPreferences(context: Context) {
 
-    private val prefs = context.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
+    private val masterKey = MasterKey.Builder(context)
+        .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+        .build()
+
+    private val prefs = EncryptedSharedPreferences.create(
+        context,
+        "auth_prefs_secure",
+        masterKey,
+        EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+        EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+    )
 
     // === JWT Token ===
 
