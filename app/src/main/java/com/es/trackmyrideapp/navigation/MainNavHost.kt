@@ -111,7 +111,8 @@ fun MainNavHost(
                         popUpTo<Profile> { inclusive = true }
                         launchSingleTop = true
                     }
-                }
+                },
+                snackbarHostState = snackbarHostState
             )
         }
 
@@ -132,7 +133,8 @@ fun MainNavHost(
         // MyVehicles Screen
         composable<Vehicles> {
             VehiclesScreen(
-                modifier = Modifier.padding(innerPadding)
+                modifier = Modifier.padding(innerPadding),
+                snackbarHostState = snackbarHostState
             )
         }
     }

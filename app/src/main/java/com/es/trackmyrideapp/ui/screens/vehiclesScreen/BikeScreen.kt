@@ -214,9 +214,3 @@ fun BodyBike(
 }
 
 
-
-@Composable
-@Preview
-fun testestedstt(){
-    VehiclesScreen ()
-}

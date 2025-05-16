@@ -2,7 +2,6 @@ package com.es.trackmyrideapp.ui.components
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DirectionsCar
-import androidx.compose.material.icons.filled.Motorcycle
 import androidx.compose.material.icons.filled.PedalBike
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -24,9 +23,9 @@ fun VehicleFilterSelector(
     // Mostrar el "All o no"
     val filterOptions = buildList {
         if (showAll) add(VehicleFilter.All)
-        add(VehicleFilter.Type(VehicleType.Car))
-        add(VehicleFilter.Type(VehicleType.MotorCycle))
-        add(VehicleFilter.Type(VehicleType.Bike))
+        add(VehicleFilter.Type(VehicleType.CAR))
+        add(VehicleFilter.Type(VehicleType.MOTORCYCLE))
+        add(VehicleFilter.Type(VehicleType.BIKE))
     }
 
     IconSelectorBar(
@@ -47,17 +46,17 @@ fun VehicleFilterSelector(
                     tint = iconTint
                 )
                 is VehicleFilter.Type -> when (filter.type) {
-                    VehicleType.Car -> Icon(
+                    VehicleType.CAR -> Icon(
                         Icons.Default.DirectionsCar,
                         contentDescription = "Car",
                         tint = iconTint
                     )
-                    VehicleType.MotorCycle -> Icon(
+                    VehicleType.MOTORCYCLE -> Icon(
                         painter = painterResource(R.drawable.motocicleta),
                         contentDescription = "Motorcycle",
                         tint = iconTint
                     )
-                    VehicleType.Bike -> Icon(
+                    VehicleType.BIKE -> Icon(
                         Icons.Default.PedalBike,
                         contentDescription = "Bike",
                         tint = iconTint

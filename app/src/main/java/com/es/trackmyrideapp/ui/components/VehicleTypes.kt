@@ -12,7 +12,7 @@ sealed class VehicleFilter {
 }
 
 enum class VehicleType {
-    Car, MotorCycle, Bike
+    CAR, MOTORCYCLE, BIKE
 }
 
 sealed class VehicleIcon {
@@ -22,24 +22,16 @@ sealed class VehicleIcon {
 
 fun VehicleType.getIcon(): VehicleIcon {
     return when (this) {
-        VehicleType.Car -> VehicleIcon.Vector(Icons.Default.DirectionsCar)
-        VehicleType.MotorCycle -> VehicleIcon.PainterIcon(R.drawable.motocicleta)
-        VehicleType.Bike -> VehicleIcon.Vector(Icons.AutoMirrored.Filled.DirectionsBike)
+        VehicleType.CAR -> VehicleIcon.Vector(Icons.Default.DirectionsCar)
+        VehicleType.MOTORCYCLE -> VehicleIcon.PainterIcon(R.drawable.motocicleta)
+        VehicleType.BIKE -> VehicleIcon.Vector(Icons.AutoMirrored.Filled.DirectionsBike)
     }
 }
-// Función de extensión para obtener el icono correspondiente al tipo de vehículo
-//fun VehicleType.getIcon(): ImageVector {
-//    return when (this) {
-//        VehicleType.Car -> Icons.Default.DirectionsCar
-//        VehicleType.MotorCycle -> painterResource(R.drawable.all_vehicles)
-//        VehicleType.Bike -> Icons.AutoMirrored.Filled.DirectionsBike
-//    }
-//}
 
 fun VehicleType.getLabel(): String {
     return when (this) {
-        VehicleType.Car -> "Car"
-        VehicleType.MotorCycle -> "Motorcycle"
-        VehicleType.Bike -> "Bicycle"
+        VehicleType.CAR -> "Car"
+        VehicleType.MOTORCYCLE -> "Motorcycle"
+        VehicleType.BIKE -> "Bicycle"
     }
 }

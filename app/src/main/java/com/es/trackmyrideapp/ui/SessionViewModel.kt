@@ -54,6 +54,7 @@ class SessionViewModel @Inject constructor(
                     checkAndRefreshTokenUseCase()
                     _authState.value = AuthState.Authenticated
                 } catch (e: Exception) {
+                    logout() // TODO: TEST
                     _authState.value = AuthState.Unauthenticated
                 }
             } else {
@@ -77,7 +78,7 @@ class SessionViewModel @Inject constructor(
 
 
     // Estado tipo vehiculo
-    private val _vehicleType = MutableStateFlow(VehicleType.Car)
+    private val _vehicleType = MutableStateFlow(VehicleType.CAR)
     val vehicleType: StateFlow<VehicleType> = _vehicleType.asStateFlow()
 
     fun setVehicleType(type: VehicleType) {

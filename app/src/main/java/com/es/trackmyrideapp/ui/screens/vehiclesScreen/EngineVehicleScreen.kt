@@ -261,10 +261,3 @@ fun Body(
         }
     }
 }
-
-
-@Composable
-@Preview
-fun testt(){
-    VehiclesScreen()
-}

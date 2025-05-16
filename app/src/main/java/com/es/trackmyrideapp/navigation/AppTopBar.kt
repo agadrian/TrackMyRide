@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
@@ -18,7 +17,6 @@ import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.TwoWheeler
-import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -40,7 +38,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.es.trackmyrideapp.LocalSessionViewModel
-import com.es.trackmyrideapp.ui.SessionViewModel
 import com.es.trackmyrideapp.ui.components.MapTypeDropdown
 import com.es.trackmyrideapp.ui.components.VehicleType
 import com.es.trackmyrideapp.ui.components.VehicleTypeDropdown
@@ -136,9 +133,9 @@ fun AppTopBar(
                                     )
                                 ) {
                                     val icon = when (selectedVehicle) {
-                                        VehicleType.Car -> Icons.Default.DirectionsCar
-                                        VehicleType.MotorCycle -> Icons.Default.TwoWheeler
-                                        VehicleType.Bike -> Icons.AutoMirrored.Filled.DirectionsBike
+                                        VehicleType.CAR -> Icons.Default.DirectionsCar
+                                        VehicleType.MOTORCYCLE -> Icons.Default.TwoWheeler
+                                        VehicleType.BIKE -> Icons.AutoMirrored.Filled.DirectionsBike
                                     }
 
                                     Row(
@@ -154,9 +151,9 @@ fun AppTopBar(
 
                                         Text(
                                             when (selectedVehicle) {
-                                                VehicleType.Car -> "Car"
-                                                VehicleType.MotorCycle -> "Motorcycle"
-                                                VehicleType.Bike -> "Bike"
+                                                VehicleType.CAR -> "Car"
+                                                VehicleType.MOTORCYCLE -> "Motorcycle"
+                                                VehicleType.BIKE -> "Bike"
                                             }
                                         )
                                     }

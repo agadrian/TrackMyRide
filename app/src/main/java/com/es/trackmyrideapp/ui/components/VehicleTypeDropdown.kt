@@ -16,9 +16,9 @@ fun VehicleTypeDropdown(
     modifier: Modifier = Modifier
 ) {
     val options = listOf(
-        DropdownOption(VehicleType.Car, "Car", Icons.Default.DirectionsCar),
-        DropdownOption(VehicleType.MotorCycle, "Motorcyle", Icons.Default.TwoWheeler),
-        DropdownOption(VehicleType.Bike, "Bike", Icons.AutoMirrored.Filled.DirectionsBike)
+        DropdownOption(VehicleType.CAR, "Car", Icons.Default.DirectionsCar),
+        DropdownOption(VehicleType.MOTORCYCLE, "Motorcyle", Icons.Default.TwoWheeler),
+        DropdownOption(VehicleType.BIKE, "Bike", Icons.AutoMirrored.Filled.DirectionsBike)
     )
 
     SelectableDropdown(

@@ -23,18 +23,18 @@ import androidx.compose.material.icons.filled.PedalBike
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.es.trackmyrideapp.R
 import com.es.trackmyrideapp.ui.components.CustomButton
 import com.es.trackmyrideapp.ui.components.VehicleFilter
@@ -44,25 +44,31 @@ import com.es.trackmyrideapp.ui.components.VehicleType
 
 @Composable
 fun VehiclesScreen(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    snackbarHostState: SnackbarHostState
 ){
-    var name by remember { mutableStateOf("") }
-    var brand by remember { mutableStateOf("") }
-    var model by remember { mutableStateOf("") }
-    var year by remember { mutableStateOf("") }
-    var fuelType by remember { mutableStateOf("") }
-    var tankCapacity by remember { mutableStateOf("") }
-    var efficiency by remember { mutableStateOf("") }
-    var notes by remember { mutableStateOf("") }
-    var bikeType by remember { mutableStateOf("") }
+    val vehicleViewModel: VehiclesViewModel = hiltViewModel()
+    val uiState by vehicleViewModel.uiState.collectAsState()
+    val confirmationMessage by vehicleViewModel.confirmationMessage.collectAsState()
 
-    // TODO: Obtenerlo del viewmodel
-    // val selectedFilter by viewModel.selectedFilter.collectAsState()
-    var selectedFilter by remember { mutableStateOf<VehicleFilter>(VehicleFilter.Type(VehicleType.Car)) }
+    val selectedFilter by vehicleViewModel.selectedFilter.collectAsState()
 
-    /*
-    Si después quiero que al seleccionar un tipo de vehículo se actualice otra info (ej. una lista filtrada, o los datos de un formulario), lo podés observar en el ViewModel usando un combine() o reaccionando a los cambios de selectedFilter.
-     */
+
+    // Mostrar errores
+    LaunchedEffect(uiState) {
+        if (uiState is VehicleUiState.Error) {
+            val errorMessage = (uiState as VehicleUiState.Error).message
+            snackbarHostState.showSnackbar(errorMessage)
+        }
+    }
+
+    // Mensajes de confirmacion
+    LaunchedEffect(confirmationMessage) {
+        confirmationMessage?.let { message ->
+            snackbarHostState.showSnackbar(message)
+            vehicleViewModel.consumeConfirmationMessage()
+        }
+    }
 
 
     Column(
@@ -77,72 +83,72 @@ fun VehiclesScreen(
 
         VehicleFilterSelector(
             selectedFilter = selectedFilter,
-            onFilterSelected = { selectedFilter = it },
+            onFilterSelected = { vehicleViewModel.updateSelectedFilter(it) },
             paddingScreen = 60.dp
         )
 
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        when (val filter = selectedFilter) {
-            is VehicleFilter.Type -> when (filter.type) {
-                VehicleType.Car -> EngineVehicleScreen(
+        when (selectedFilter) {
+            is VehicleFilter.Type -> when ((selectedFilter as VehicleFilter.Type).type) {
+                VehicleType.CAR -> EngineVehicleScreen(
                     icon = VehicleIcon.Vector(Icons.Default.DirectionsCar),
                     vehicleLabel = "Carro wey",
-                    name = name,
-                    brand = brand,
-                    model = model,
-                    year = year,
-                    fuelType = fuelType,
-                    tankCapacity = tankCapacity,
-                    efficiency = efficiency,
-                    notes = notes,
-                    onNameChange = { name = it },
-                    onBrandChange = { brand = it },
-                    onModelChange = { model = it },
-                    onYearChange = { year = it },
-                    onFuelTypeChange = { fuelType = it },
-                    onTankCapacityChange = { tankCapacity = it },
-                    onEfficiencyChange = { efficiency = it },
-                    onNotesChange = { notes = it }
+                    name = vehicleViewModel.name,
+                    brand = vehicleViewModel.brand,
+                    model = vehicleViewModel.model,
+                    year = vehicleViewModel.year,
+                    fuelType = vehicleViewModel.fuelType,
+                    tankCapacity = vehicleViewModel.tankCapacity,
+                    efficiency = vehicleViewModel.efficiency,
+                    notes = vehicleViewModel.notes,
+                    onNameChange = { vehicleViewModel.updateName(it) },
+                    onBrandChange = { vehicleViewModel.updateBrand(it) },
+                    onModelChange = { vehicleViewModel.updateModel(it) },
+                    onYearChange = { vehicleViewModel.updateYear(it) },
+                    onFuelTypeChange = { vehicleViewModel.updateFuelType(it) },
+                    onTankCapacityChange = { vehicleViewModel.updateTankCapacity(it) },
+                    onEfficiencyChange = { vehicleViewModel.updateEfficiency(it) },
+                    onNotesChange = { vehicleViewModel.updateNotes(it) }
                 )
 
-                VehicleType.MotorCycle -> EngineVehicleScreen(
+                VehicleType.MOTORCYCLE -> EngineVehicleScreen(
                     icon = VehicleIcon.PainterIcon(R.drawable.motocicleta),
                     vehicleLabel = "MotorCycle wey",
-                    name = name,
-                    brand = brand,
-                    model = model,
-                    year = year,
-                    fuelType = fuelType,
-                    tankCapacity = tankCapacity,
-                    efficiency = efficiency,
-                    notes = notes,
-                    onNameChange = { name = it },
-                    onBrandChange = { brand = it },
-                    onModelChange = { model = it },
-                    onYearChange = { year = it },
-                    onFuelTypeChange = { fuelType = it },
-                    onTankCapacityChange = { tankCapacity = it },
-                    onEfficiencyChange = { efficiency = it },
-                    onNotesChange = { notes = it }
+                    name = vehicleViewModel.name,
+                    brand = vehicleViewModel.brand,
+                    model = vehicleViewModel.model,
+                    year = vehicleViewModel.year,
+                    fuelType = vehicleViewModel.fuelType,
+                    tankCapacity = vehicleViewModel.tankCapacity,
+                    efficiency = vehicleViewModel.efficiency,
+                    notes = vehicleViewModel.notes,
+                    onNameChange = { vehicleViewModel.updateName(it) },
+                    onBrandChange = { vehicleViewModel.updateBrand(it) },
+                    onModelChange = { vehicleViewModel.updateModel(it) },
+                    onYearChange = { vehicleViewModel.updateYear(it) },
+                    onFuelTypeChange = { vehicleViewModel.updateFuelType(it) },
+                    onTankCapacityChange = { vehicleViewModel.updateTankCapacity(it) },
+                    onEfficiencyChange = { vehicleViewModel.updateEfficiency(it) },
+                    onNotesChange = { vehicleViewModel.updateNotes(it) }
                 )
 
-                VehicleType.Bike -> BikeScreen(
+                VehicleType.BIKE -> BikeScreen(
                     icon = Icons.Default.PedalBike,
                     vehicleLabel = "Bike",
-                    name = name,
-                    brand = brand,
-                    model = model,
-                    year = year,
-                    bikeType = bikeType,
-                    notes = notes,
-                    onNameChange = { name = it },
-                    onBrandChange = { brand = it },
-                    onModelChange = { model = it },
-                    onYearChange = { year = it },
-                    onBikeTypeChange = { bikeType = it },
-                    onNotesChange = { notes = it }
+                    name = vehicleViewModel.name,
+                    brand = vehicleViewModel.brand,
+                    model = vehicleViewModel.model,
+                    year = vehicleViewModel.year,
+                    bikeType = vehicleViewModel.bikeType,
+                    notes = vehicleViewModel.notes,
+                    onNameChange = { vehicleViewModel.updateName(it) },
+                    onBrandChange = { vehicleViewModel.updateBrand(it) },
+                    onModelChange = { vehicleViewModel.updateModel(it) },
+                    onYearChange = { vehicleViewModel.updateYear(it) },
+                    onBikeTypeChange = { vehicleViewModel.updateBikeType(it) },
+                    onNotesChange = { vehicleViewModel.updateNotes(it) }
                 )
             }
 
@@ -159,7 +165,11 @@ fun VehiclesScreen(
             Modifier.padding(vertical = 32.dp)
         ) {
             CustomButton(
-                onclick = {/*TODO: Save changes vehicle*/},
+                onclick = {
+                    if (vehicleViewModel.validateBeforeSave()) {
+                        vehicleViewModel.updateVehicle()
+                    }
+                },
                 text = "Save changes",
                 buttonColor = MaterialTheme.colorScheme.primary,
                 fontColor = MaterialTheme.colorScheme.onBackground
@@ -217,9 +227,3 @@ fun <T> IconSelectorBar(
 }
 
 
-
-@Composable
-@Preview
-fun testest(){
-    VehiclesScreen()
-}

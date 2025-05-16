@@ -116,7 +116,7 @@ fun RouteDetailScreen(
                 .padding(horizontal = 30.dp),
             title = "Route around the mountains",
             date = "1/1/1",
-            vehicleType = VehicleType.Car
+            vehicleType = VehicleType.CAR
         )
 
         Spacer(Modifier.height(24.dp))

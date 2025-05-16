@@ -1,6 +1,5 @@
 package com.es.trackmyrideapp.ui.screens.profileScreen
 
-import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -22,23 +21,19 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -48,20 +43,27 @@ import com.es.trackmyrideapp.R
 @Composable
 fun ProfileScreen(
     modifier: Modifier = Modifier,
-    onPremiumScreenClicked: () -> Unit
+    onPremiumScreenClicked: () -> Unit,
+    snackbarHostState: SnackbarHostState
 ) {
 
     val profileViewModel: ProfileViewModel = hiltViewModel()
-
+    val confirmationMessage by profileViewModel.confirmationMessage.collectAsState()
     val uiState by profileViewModel.uiState.collectAsState()
-    val context = LocalContext.current
-
 
     // Mostrar errores
     LaunchedEffect(uiState) {
-        if (uiState is ProfileViewModel.ProfileUiState.Error) {
-            val errorMessage = (uiState as ProfileViewModel.ProfileUiState.Error).message
-            Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show()
+        if (uiState is ProfileUiState.Error) {
+            val errorMessage = (uiState as ProfileUiState.Error).message
+            snackbarHostState.showSnackbar(errorMessage)
+        }
+    }
+
+    // Mensajes de confirmacion
+    LaunchedEffect(confirmationMessage) {
+        confirmationMessage?.let { message ->
+            snackbarHostState.showSnackbar(message)
+            profileViewModel.consumeConfirmationMessage()
         }
     }
 
@@ -108,7 +110,7 @@ fun ProfileScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Adrian Arroyo",
+                text = profileViewModel.username,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -136,7 +138,7 @@ fun ProfileScreen(
             }
 
             Text(
-                text = "Member since 2021",
+                text = "Member since ${profileViewModel.memberSince}",
                 fontSize = 14.sp,
                 color = MaterialTheme.colorScheme.secondary,
                 textAlign = TextAlign.Center
@@ -162,10 +164,4 @@ fun ProfileScreen(
 
 
     }
-}
-
-@Composable
-@Preview
-fun test2(){
-    ProfileScreen(Modifier, {})
 }

@@ -4,13 +4,14 @@ import com.es.trackmyrideapp.data.remote.dto.VehicleUpdateDTO
 import com.es.trackmyrideapp.data.remote.mappers.Resource
 import com.es.trackmyrideapp.domain.model.Vehicle
 import com.es.trackmyrideapp.domain.repository.VehicleRepository
+import com.es.trackmyrideapp.ui.components.VehicleType
 import javax.inject.Inject
 
 
 class UpdateVehicleUseCase @Inject constructor(
     private val vehicleRepository: VehicleRepository
 ) {
-    suspend operator fun invoke(type: String, updateDTO: VehicleUpdateDTO): Resource<Vehicle> {
+    suspend operator fun invoke(type: VehicleType, updateDTO: VehicleUpdateDTO): Resource<Vehicle> {
         return vehicleRepository.updateVehicle(type, updateDTO)
     }
 }

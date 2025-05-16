@@ -1,5 +1,6 @@
 package com.es.trackmyrideapp.utils
 
+import android.util.Log
 import com.es.trackmyrideapp.data.remote.mappers.Resource
 import retrofit2.HttpException
 import java.io.IOException
@@ -15,6 +16,8 @@ suspend fun <T> safeApiCall(
     } catch (e: IOException) {
         Resource.Error("Network error: check your connection")
     } catch (e: Exception) {
+        Log.d("safeApiCall", "Error: ${e.message}")
+        Log.d("safeApiCall", "Error: ${e.stackTraceToString()}")
         Resource.Error("Unknown error: ${e.localizedMessage ?: "Unexpected error"}")
     }
 }
