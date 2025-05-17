@@ -5,9 +5,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.es.trackmyrideapp.data.local.AuthPreferences
 import com.es.trackmyrideapp.data.local.RememberMePreferences
+import com.es.trackmyrideapp.data.remote.mappers.Resource
+import com.es.trackmyrideapp.data.repository.SessionRepository
 import com.es.trackmyrideapp.domain.usecase.GetCurrentUserUseCase
 import com.es.trackmyrideapp.domain.usecase.SignOutUseCase
 import com.es.trackmyrideapp.domain.usecase.auth.CheckAndRefreshTokenUseCase
+import com.es.trackmyrideapp.domain.usecase.vehicles.CreateInitialVehiclesUseCase
 import com.es.trackmyrideapp.ui.components.VehicleType
 import com.google.maps.android.compose.MapType
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -24,11 +27,14 @@ class SessionViewModel @Inject constructor(
     private val rememberMePreferences: RememberMePreferences,
     private val getCurrentUserUseCase: GetCurrentUserUseCase,
     private val authPreferences: AuthPreferences,
-    private val checkAndRefreshTokenUseCase: CheckAndRefreshTokenUseCase
+    private val checkAndRefreshTokenUseCase: CheckAndRefreshTokenUseCase,
+    private val sessionRepository: SessionRepository,
+    private val createInitialVehiclesUseCase: CreateInitialVehiclesUseCase
 ) : ViewModel() {
 
     private val _authState = MutableStateFlow<AuthState>(AuthState.Loading)
     val authState: StateFlow<AuthState> = _authState
+
 
     init {
         checkAuthState()
@@ -65,9 +71,10 @@ class SessionViewModel @Inject constructor(
 
                     Log.d("FlujoTest", "Saliendo del timeout de 5000 para el chekAndRefreshTokenUseCase...")
                     _authState.value = AuthState.Authenticated
+                    loadInitialVehicles()
                 } catch (e: Throwable) {
                     Log.d("FlujoTest", "sesionviewmodel -> shouldAutoLogin.. catch. Se llama al logout Exception: ${e.message}")
-                    logout() // TODO: TEST
+                    logout()
                     _authState.value = AuthState.Unauthenticated
                 }
             } else {
@@ -91,12 +98,33 @@ class SessionViewModel @Inject constructor(
 
 
     // Estado tipo vehiculo
-    private val _vehicleType = MutableStateFlow(VehicleType.CAR)
-    val vehicleType: StateFlow<VehicleType> = _vehicleType.asStateFlow()
+    val selectedVehicle = sessionRepository.selectedVehicle
+    fun selectVehicle(vehicle: VehicleType) {
+        sessionRepository.setSelectedVehicle(vehicle)
+    }
 
-    fun setVehicleType(type: VehicleType) {
-        _vehicleType.value = type
-        Log.d("SessionViewModel", "Cambiado tipo de vehiculo a: $type")
+    private suspend fun loadInitialVehicles() {
+        when (val result = createInitialVehiclesUseCase()) {
+            is Resource.Success -> {
+                // Verificar que los vehículos se crearon correctamente
+                if (result.data.isNotEmpty()) {
+                    sessionRepository.setSelectedVehicle(VehicleType.CAR)
+
+                } else {
+                    Log.e("SessionViewModel", "No se crearon vehículos iniciales")
+                }
+            }
+            is Resource.Error -> {
+                if (result.message.contains("already has initial vehicles", true)) {
+                    Log.i("SessionViewModel", "Los vehículos ya estaban creados")
+                } else {
+                    Log.e("SessionViewModel", "Error creando vehículos: ${result.message}")
+                }
+            }
+            Resource.Loading -> {
+               // Nada
+            }
+        }
     }
 }
 

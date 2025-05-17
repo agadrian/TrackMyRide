@@ -1,9 +1,12 @@
 package com.es.trackmyrideapp.di
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import com.es.trackmyrideapp.data.local.AuthPreferences
 import com.es.trackmyrideapp.data.remote.AuthInterceptor
 import com.es.trackmyrideapp.data.remote.TokenAuthenticator
 import com.es.trackmyrideapp.data.repository.TokenRepository
+import com.es.trackmyrideapp.utils.LocalDateTimeAdapter
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import dagger.Module
@@ -14,6 +17,7 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.time.LocalDateTime
 import javax.inject.Singleton
 
 @Module
@@ -22,9 +26,11 @@ object NetworkModule {
 
     private const val BASE_URL = "http://10.0.2.2:8080" // TODO
 
+    @RequiresApi(Build.VERSION_CODES.O)
     @Provides
     @Singleton
     fun provideGson(): Gson = GsonBuilder()
+        .registerTypeAdapter(LocalDateTime::class.java, LocalDateTimeAdapter())
         .setDateFormat("yyyy-MM-dd'T'HH:mm:ss")
         .create()
 

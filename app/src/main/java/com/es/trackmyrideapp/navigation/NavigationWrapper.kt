@@ -22,7 +22,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.es.trackmyrideapp.LocalSessionViewModel
@@ -133,10 +132,10 @@ fun NavigationWrapper(
                             sessionViewModel.setMapType(mapType)
                         },
                         currentMapType = sessionViewModel.mapType.collectAsState().value,
-                        onVehicleTypeChanged = { vehicleType ->
-                            sessionViewModel.setVehicleType(vehicleType)
+                        onVehicleTypeChanged = { vehicle ->
+                            sessionViewModel.selectVehicle(vehicle)
                         },
-                        currentVehicleType = sessionViewModel.vehicleType.collectAsState().value
+                        currentVehicleType = sessionViewModel.selectedVehicle.collectAsState().value
                     )
                 }
             ) { innerPadding ->

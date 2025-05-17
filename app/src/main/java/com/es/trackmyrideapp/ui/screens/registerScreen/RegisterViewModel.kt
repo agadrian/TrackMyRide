@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.es.trackmyrideapp.data.remote.dto.UserRegistrationDTO
 import com.es.trackmyrideapp.domain.usecase.RegisterUseCase
+import com.es.trackmyrideapp.domain.usecase.vehicles.CreateInitialVehiclesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,6 +18,7 @@ import javax.inject.Inject
 @HiltViewModel
 class RegisterViewModel @Inject constructor(
     private val registerUseCase: RegisterUseCase,
+    private val createInitialVehiclesUseCase: CreateInitialVehiclesUseCase
 ) : ViewModel() {
 
     // Estados del formulario
@@ -75,6 +77,12 @@ class RegisterViewModel @Inject constructor(
                     _uiState.value = RegisterUiState.Success(user, jwt)
 
                     Log.d("FlujoTest", "authviewmodel: register llamado. onsucces. user ${user.username} user uid ${user.uid} jwt: ${jwt}  registeruistatevalue ${_uiState.value}")
+
+                    // Crear los vehiculos iniciales
+                    launch {
+                        val vehiclesResult = createInitialVehiclesUseCase()
+                        Log.d("FlujoTest", "Registerviewmodel. Resultado de createInitialVehicles: $vehiclesResult")
+                    }
                 },
                 onFailure = { exception ->
                     Log.d("FlujoTest", "authviewmodel: register llamado. onfailure. exception: ${exception.message} ")

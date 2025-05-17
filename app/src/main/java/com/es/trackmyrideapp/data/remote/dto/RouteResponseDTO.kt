@@ -1,11 +1,14 @@
 package com.es.trackmyrideapp.data.remote.dto
 
+import com.es.trackmyrideapp.ui.components.VehicleType
+import java.time.LocalDateTime
+
 data class RouteResponseDTO(
     val id: Long,
     val name: String,
     val description: String?,
-    val startTime: String,
-    val endTime: String,
+    val startTime: LocalDateTime,
+    val endTime: LocalDateTime,
     val startPoint: String,
     val endPoint: String,
     val distanceKm: Double,
@@ -15,6 +18,6 @@ data class RouteResponseDTO(
     val fuelConsumed: Double?,
     val efficiency: Double?,
     val pace: Double?,
-    val vehicleId: Long,
+    val vehicleType: VehicleType,
     val userId: String
 )

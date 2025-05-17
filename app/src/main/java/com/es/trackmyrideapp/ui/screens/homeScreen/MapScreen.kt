@@ -1,6 +1,8 @@
 package com.es.trackmyrideapp.ui.screens.homeScreen
 import android.annotation.SuppressLint
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -206,6 +208,7 @@ fun formatTime(millis: Long): String {
 }
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun TrackingButton(
     modifier: Modifier = Modifier,
@@ -221,6 +224,7 @@ fun TrackingButton(
         contentAlignment = Alignment.Center
     ) {
         val icon = if (trackingState) Icons.Default.Stop else Icons.Default.FiberManualRecord
+
         Icon(
             imageVector = icon,
             contentDescription = null,

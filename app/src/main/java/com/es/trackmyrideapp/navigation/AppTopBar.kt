@@ -63,7 +63,7 @@ fun AppTopBar(
 
     var showMapTypeMenu by remember { mutableStateOf(false) }
     var showVehicleTypeMenu by remember { mutableStateOf(false) }
-    val selectedVehicle = LocalSessionViewModel.current.vehicleType.collectAsState().value
+    val selectedVehicle = LocalSessionViewModel.current.selectedVehicle.collectAsState().value
 
     val title = when (currentDestination) {
         Home::class.qualifiedName -> "Home"

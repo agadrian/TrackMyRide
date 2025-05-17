@@ -2,7 +2,6 @@ package com.es.trackmyrideapp.ui.screens.routesHistoryScreen
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.es.trackmyrideapp.data.remote.mappers.Resource
 import com.es.trackmyrideapp.domain.usecase.routes.GetRoutesByUserUseCase
 import com.es.trackmyrideapp.domain.usecase.vehicles.GetAllVehiclesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -25,19 +24,19 @@ class RoutesHistoryViewModel @Inject constructor(
             val routesResult = getRoutesByUserUseCase(userId)
             val vehiclesResult = getAllVehiclesUseCase()
 
-            if (routesResult is Resource.Success && vehiclesResult is Resource.Success) {
-                val vehicleMap = vehiclesResult.data.associateBy { it.id }
-
-                val enrichedRoutes = routesResult.data.mapNotNull { route ->
-                    vehicleMap[route.vehicleId]?.let { vehicle ->
-                        RouteWithVehicleType(route, vehicle.type)
-                    }
-                }
-
-                _routes.value = enrichedRoutes
-            } else {
-                // TODO: Manejo de errores
-            }
+//            if (routesResult is Resource.Success && vehiclesResult is Resource.Success) {
+//                val vehicleMap = vehiclesResult.data.associateBy { it.id }
+//
+//                val enrichedRoutes = routesResult.data.mapNotNull { route ->
+//                    vehicleMap[route.vehicleType]?.let { vehicle ->
+//                        RouteWithVehicleType(route, vehicle.type)
+//                    }
+//                }
+//
+//                _routes.value = enrichedRoutes
+//            } else {
+//                // TODO: Manejo de errores
+//            }
         }
     }
 }

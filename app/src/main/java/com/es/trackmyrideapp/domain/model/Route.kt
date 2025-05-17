@@ -1,5 +1,6 @@
 package com.es.trackmyrideapp.domain.model
 
+import com.es.trackmyrideapp.ui.components.VehicleType
 import java.time.LocalDateTime
 
 data class Route(
@@ -17,6 +18,6 @@ data class Route(
     val fuelConsumed: Double?,
     val efficiency: Double?,
     val pace: Double?,
-    val vehicleId: Long,
+    val vehicleType: VehicleType,
     val userId: String
 )

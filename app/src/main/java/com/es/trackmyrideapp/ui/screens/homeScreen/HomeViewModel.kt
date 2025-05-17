@@ -3,15 +3,22 @@ package com.es.trackmyrideapp.ui.screens.homeScreen
 import android.annotation.SuppressLint
 import android.content.Context
 import android.location.Geocoder
+import android.os.Build
 import android.os.Looper
 import android.util.Base64
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.es.trackmyrideapp.R
+import com.es.trackmyrideapp.data.remote.dto.RouteCreateDTO
+import com.es.trackmyrideapp.data.remote.mappers.Resource
+import com.es.trackmyrideapp.data.repository.SessionRepository
 import com.es.trackmyrideapp.domain.tracker.RouteTracker
+import com.es.trackmyrideapp.domain.usecase.routes.CreateRouteUseCase
+import com.es.trackmyrideapp.domain.usecase.vehicles.GetVehicleByTypeUseCase
 import com.es.trackmyrideapp.utils.GPXParser.parseWikilocGpx
 import com.es.trackmyrideapp.utils.RouteCompress.compressRouteWithDelta
 import com.es.trackmyrideapp.utils.RouteCompress.decompressRoute
@@ -25,13 +32,19 @@ import com.google.android.gms.location.Priority
 import com.google.android.gms.maps.model.LatLng
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
 import java.util.Locale
 import javax.inject.Inject
 import kotlin.random.Random
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    val fusedLocationProviderClient: FusedLocationProviderClient
+    private val fusedLocationProviderClient: FusedLocationProviderClient,
+    private val createRouteUseCase: CreateRouteUseCase,
+    private val sessionRepository: SessionRepository,
+    private val getVehicleByTypeUseCase: GetVehicleByTypeUseCase
 ) : ViewModel() {
 
     private val routeTracker = RouteTracker()
@@ -61,63 +74,11 @@ class HomeViewModel @Inject constructor(
     val routePointsTest: State<List<LatLng>> = _routePointsTest
 
 
-    /**
-     * Comprimir ruta:
-     * - 1º RouteSimplifier.simplify(points, 0.00005) -> Simplified
-     * - 2º compressRouteWithDelta(simplifiedPoints) -> BinaryData
-     * - 3º Base64.encodeToString(binaryData, Base64.NO_WRAP) -> Base 64
-     */
-    fun loadGpxRoute(context: Context) {
-        viewModelScope.launch {
-            val points = parseWikilocGpx(context, R.raw.miruta)
-            val startPoint = points.firstOrNull()
-            val endPoint = points.lastOrNull()
-
-            val startStreet = startPoint?.let { getStreetAndNumber(context, it.latitude, it.longitude) }
-            val endStreet = endPoint?.let { getStreetAndNumber(context, it.latitude, it.longitude) }
-
-            val simpli = RouteSimplifier.simplify(points, 0.00005)
-            val binaryData = compressRouteWithDelta(simpli)
-            val base64ForApi = Base64.encodeToString(binaryData, Base64.NO_WRAP)
-            _routePointsTest.value = simpli
-            Log.d("Tracking", "Puntos cargados: ${points.size}. Puntos simplificados: ${simpli.size}. Puntos binarydata:  ${binaryData.size}. Base64: ${base64ForApi.length}. Start street: $startStreet. End street: $endStreet")
-            Log.d("Tracking", "Base64: $base64ForApi")
-
-            val binaryDecompressed = Base64.decode(base64ForApi, Base64.NO_WRAP)
-            val pointsDecompressed = decompressRoute(binaryDecompressed)
-            Log.d("Tracking", "Puntos descomprimidos: ${pointsDecompressed.size}")
-
-        }
-    }
-
-    private fun getStreetAndNumber(context: Context, lat: Double, lon: Double): String? {
-        return try {
-            val geocoder = Geocoder(context, Locale.getDefault())
-            val addresses = geocoder.getFromLocation(lat, lon, 1)
-            val address = addresses?.firstOrNull()
-            if (address != null) {
-                val street = address.thoroughfare ?: ""
-                val number = address.subThoroughfare ?: ""
-                if (street.isNotBlank() && number.isNotBlank()) {
-                    "$street, $number"
-                } else {
-                    street.ifBlank { address.getAddressLine(0) } // fallback
-                }
-            } else null
-        } catch (e: Exception) {
-            Log.e("Geocoding", "Error getting street name and number: ${e.message}")
-            null
-        }
-    }
-
-
-
     init {
         getLastKnownLocation()
         //generateMockRouteFromStartPoint()
         //generateSampleRoute()
     }
-
 
 
     override fun onCleared() {
@@ -170,6 +131,7 @@ class HomeViewModel @Inject constructor(
     }
 
 
+    @RequiresApi(Build.VERSION_CODES.O)
     fun toggleTracking() {
         if (_trackingState.value) {
             stopLocationUpdates()
@@ -178,31 +140,12 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    private fun saveCurrentRoute() {
-        if (_routePoints.value.size > 1) {
-            // TODO: Esto en el futuro en la BD
-//            val route = Route(
-//                points = _routePoints.value,
-//                distance = calculateTotalDistance(),
-//                timestamp = System.currentTimeMillis()
-//            )
-//            viewModelScope.launch {
-//                routeRepository.saveRoute(route)
-//            }
-            _routePointsSaved.value = _routePoints.value
-            Log.d("Tracking", "Ruta guardada: ${_routePointsSaved.value}")
-           // simplifyCurrentRoute()
-            val simplified = RouteSimplifier.simplify(_routePoints.value, tolerance =0.2)
-            _simplifiedRoutePoints.value = simplified
-        }
-        clearRoute()
-    }
 
-    // Función para iniciar actualizaciones de ubicación
+
+    // Iniciar actualizaciones de ubicación
     @SuppressLint("MissingPermission")
     private fun startLocationUpdates() {
         val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 2000).apply {
-
             setMinUpdateDistanceMeters(5f)  // Distancia mínima de 5 metros entre actualizaciones
             setWaitForAccurateLocation(true)
         }.build()
@@ -236,26 +179,137 @@ class HomeViewModel @Inject constructor(
         _trackingState.value = true
     }
 
-    // Función para detener las actualizaciones de ubicación
+    // Detener las actualizaciones de ubicación
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun stopLocationUpdates() {
         locationCallback?.let {
             fusedLocationProviderClient.removeLocationUpdates(it)
         }
+        // Parar timer
+        routeTracker.stopTimer()
         Log.d("Tracking", "Timer detenido. Ruta acabada. Info: \n- Tiempo: ${formatTime(elapsedTime.value)}\n- Distancia: ${getRouteDistance()}\n- Velocidad media: ${getRouteAverageSpeed()}\n-Time: ${getElapsedTime()}")
-        _trackingState.value = false
 
+        // Guardar ruta
+        _trackingState.value = false
         saveCurrentRoute()
 
         Log.d("Tracking", "Timer detenido 2. Ruta acabada. Info: \n- Tiempo: ${formatTime(elapsedTime.value)}\n- Distancia: ${getRouteDistance()}\n- Velocidad media: ${getRouteAverageSpeed()}\n-Time: ${getElapsedTime()}")
-        routeTracker.stopTimer()
+    }
 
+
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun saveCurrentRoute() {
+        // Si no hay puntos, no hacer nada
+        val points = _routePoints.value
+        if (points.size <= 1) return
+
+        val selectedVehicle = sessionRepository.selectedVehicle.value
+
+        viewModelScope.launch {
+            when (val result = getVehicleByTypeUseCase(selectedVehicle)) {
+                is Resource.Success -> {
+                    val vehicle = result.data
+                    val stats = routeTracker.getCalculatedStats(points, vehicle.efficiency)
+
+                    Log.d("Tracking", "Stats: ${stats.toString()}")
+
+                    // Crear DTO ruta
+                    val routeCreateDTO = RouteCreateDTO(
+                        name = "Route day ${LocalDateTime.now()}",
+                        description = null,
+                        startTime = Instant.ofEpochMilli(routeTracker.startTimeMillis)
+                            .atZone(ZoneId.systemDefault()).toLocalDateTime(),
+                        endTime = Instant.ofEpochMilli(System.currentTimeMillis())
+                            .atZone(ZoneId.systemDefault()).toLocalDateTime(),
+                        startPoint = "${points.first().latitude},${points.first().longitude}",
+                        endPoint = "${points.last().latitude},${points.last().longitude}",
+                        distanceKm = stats.distanceMeters / 1000.0,
+                        movingTimeSec = stats.elapsedTimeMillis / 1000,
+                        avgSpeed = stats.averageSpeedKmh,
+                        maxSpeed = stats.maxSpeed,
+                        fuelConsumed = stats.fuelConsumed,
+                        efficiency = vehicle.efficiency,
+                        pace = stats.paceSecondsPerKm,
+                        vehicleType = selectedVehicle,
+                        compressedPath = simplifyCurrentRoute(points)
+                    )
+                    val createResult = createRouteUseCase(routeCreateDTO)
+                    if (createResult is Resource.Success) {
+                        Log.d("Tracking", "Ruta enviada correctamente.")
+                    } else {
+                        Log.e("Tracking", "Error al guardar ruta: ${createResult}")
+                        if (createResult is Resource.Error){
+                            Log.e("Tracking", "Error al guardar ruta: ${createResult.message}. Code: ${createResult.code}")
+
+                        }
+                    }
+                }
+                is Resource.Error -> {
+                    Log.e("Tracking", "Error obteniendo datos del vehículo: ${result.message}")
+                }
+                Resource.Loading -> TODO()
+            }
+        }
+        clearRoute()
+    }
+
+
+    /**
+     * Comprimir ruta:
+     * - 1º RouteSimplifier.simplify(points, 0.00005) -> Simplified
+     * - 2º compressRouteWithDelta(simplifiedPoints) -> BinaryData
+     * - 3º Base64.encodeToString(binaryData, Base64.NO_WRAP) -> Base 64
+     */
+    fun loadGpxRoute(context: Context) {
+        viewModelScope.launch {
+            val points = parseWikilocGpx(context, R.raw.miruta)
+            val startPoint = points.firstOrNull()
+            val endPoint = points.lastOrNull()
+
+            val startStreet = startPoint?.let { getStreetAndNumber(context, it.latitude, it.longitude) }
+            val endStreet = endPoint?.let { getStreetAndNumber(context, it.latitude, it.longitude) }
+
+            val simpli = RouteSimplifier.simplify(points, 0.00005)
+            val binaryData = compressRouteWithDelta(simpli)
+            val base64ForApi = Base64.encodeToString(binaryData, Base64.NO_WRAP)
+
+            _routePointsTest.value = simpli
+            Log.d("Tracking", "Puntos cargados: ${points.size}. Puntos simplificados: ${simpli.size}. Puntos binarydata:  ${binaryData.size}. Base64: ${base64ForApi.length}. Start street: $startStreet. End street: $endStreet")
+            Log.d("Tracking", "Base64: $base64ForApi")
+
+            val binaryDecompressed = Base64.decode(base64ForApi, Base64.NO_WRAP)
+            val pointsDecompressed = decompressRoute(binaryDecompressed)
+            Log.d("Tracking", "Puntos descomprimidos: ${pointsDecompressed.size}")
+
+        }
+    }
+
+    private fun getStreetAndNumber(context: Context, lat: Double, lon: Double): String? {
+        return try {
+            val geocoder = Geocoder(context, Locale.getDefault())
+            val addresses = geocoder.getFromLocation(lat, lon, 1)
+            val address = addresses?.firstOrNull()
+            if (address != null) {
+                val street = address.thoroughfare ?: ""
+                val number = address.subThoroughfare ?: ""
+                if (street.isNotBlank() && number.isNotBlank()) {
+                    "$street, $number"
+                } else {
+                    street.ifBlank { address.getAddressLine(0) } // fallback
+                }
+            } else null
+        } catch (e: Exception) {
+            Log.e("Tracking", "Error getting street name and number: ${e.message}")
+            null
+        }
     }
 
     private fun updateRoutePoints(latLng: LatLng) {
-        val currentList = _routePoints.value.toMutableList()
-
-        currentList.add(latLng)
-        _routePoints.value = currentList // Asignamos nueva lista para notificar el cambio
+        val currentPointsList = _routePoints.value.toMutableList()
+        routeTracker.updateLocation(latLng)
+        currentPointsList.add(latLng)
+        _routePoints.value = currentPointsList // Asignamos nueva lista para notificar el cambio
     }
 
 
@@ -292,12 +346,14 @@ class HomeViewModel @Inject constructor(
         _routePoints.value = sampleRoute
     }
 
-    fun simplifyCurrentRoute(
-        tolerance: Double = 0.2
-    ): List<LatLng> {
-        val simplified = RouteSimplifier.simplify(_routePointsSaved.value, tolerance)
-        Log.d("Tracking", "Puntos antes: ${_routePointsSaved.value.size}, después: ${simplified.size}")
-        return simplified
+    private fun simplifyCurrentRoute(
+        points: List<LatLng>
+    ): String {
+        val simpli = RouteSimplifier.simplify(points, 0.00005)
+        val binaryData = compressRouteWithDelta(simpli)
+        val base64ForApi = Base64.encodeToString(binaryData, Base64.NO_WRAP)
+
+        return base64ForApi
     }
 
     fun generateMockRouteFromStartPoint() {

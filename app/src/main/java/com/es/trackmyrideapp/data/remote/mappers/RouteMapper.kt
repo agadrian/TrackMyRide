@@ -1,19 +1,16 @@
 package com.es.trackmyrideapp.data.remote.mappers
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import com.es.trackmyrideapp.data.remote.dto.RouteResponseDTO
 import com.es.trackmyrideapp.domain.model.Route
-import java.time.LocalDateTime
 
-@RequiresApi(Build.VERSION_CODES.O)
+
 fun RouteResponseDTO.toDomainModel(): Route {
     return Route(
         id = id,
         name = name,
         description = description,
-        startTime = LocalDateTime.parse(startTime),
-        endTime = LocalDateTime.parse(endTime),
+        startTime = startTime,
+        endTime = endTime,
         startPoint = startPoint,
         endPoint = endPoint,
         distanceKm = distanceKm,
@@ -23,7 +20,7 @@ fun RouteResponseDTO.toDomainModel(): Route {
         fuelConsumed = fuelConsumed,
         efficiency = efficiency,
         pace = pace,
-        vehicleId = vehicleId,
+        vehicleType = vehicleType,
         userId = userId
     )
 }
