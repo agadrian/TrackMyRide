@@ -47,6 +47,8 @@ fun RouteDetailScreen(
 
     val scrollState = rememberScrollState()
 
+    val title by routeDetailViewModel.name
+    val date by routeDetailViewModel.startDateTime
     val description by routeDetailViewModel.description
     val startTime by routeDetailViewModel.startTime
     val endTime by routeDetailViewModel.endTime
@@ -60,6 +62,11 @@ fun RouteDetailScreen(
     val fuelConsumed by routeDetailViewModel.fuelConsumed
     val efficiency by routeDetailViewModel.efficiency
     val vehicleType by routeDetailViewModel.vehicleType
+
+    val routePoints by routeDetailViewModel.routePoints
+    val startPointName by routeDetailViewModel.startPoint
+    val endPointName by routeDetailViewModel.endPoint
+
 
     val (permissionState, requestPermission) = rememberPermissionHandler(
         permission = AppPermission.ReadImages
@@ -121,9 +128,9 @@ fun RouteDetailScreen(
             modifier = Modifier
                 .background(colorResource(R.color.lightGray))
                 .padding(horizontal = 30.dp),
-            title = routeDetailViewModel.name.value,
-            date = routeDetailViewModel.startDateTime.value,
-            vehicleType = routeDetailViewModel.vehicleType.value ?: VehicleType.CAR
+            title = title,
+            date = date,
+            vehicleType = vehicleType ?: VehicleType.CAR
         )
 
         Spacer(Modifier.height(24.dp))
@@ -171,7 +178,9 @@ fun RouteDetailScreen(
             )
 
             PremiumCard(
-                onUpdateToPremiumClicked = {/*TODO: Navegar a premium screen o al pago directamente*/}
+                onUpdateToPremiumClicked = {
+                /*TODO: Navegar a premium screen o al pago directamente*/
+                }
             )
 
             FooterButtons(
@@ -193,9 +202,9 @@ fun RouteDetailScreen(
     if (showMapDialog) {
         DialogMap(
             onDismissRequest = { showMapDialog = false },
-            routePoints = routeDetailViewModel.routePoints.value,
-            startPointName = routeDetailViewModel.startPoint.value,
-            endPointName = routeDetailViewModel.endPoint.value
+            routePoints = routePoints,
+            startPointName = startPointName,
+            endPointName = endPointName
         )
     }
 

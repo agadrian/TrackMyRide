@@ -48,7 +48,7 @@ fun NavigationWrapper(
     val (isAuthScreen, isSubScreen, isHomeScreen) = remember(currentDestination) {
         Triple(
             currentDestination in listOf(Login::class.qualifiedName, Register::class.qualifiedName),
-            currentDestination in listOf(RouteDetails::class.qualifiedName, ForgotPassword::class.qualifiedName),
+            currentDestination?.startsWith(RouteDetails::class.qualifiedName ?: "") == true || currentDestination == ForgotPassword::class.qualifiedName,
             currentDestination == Home::class.qualifiedName
         )
     }
