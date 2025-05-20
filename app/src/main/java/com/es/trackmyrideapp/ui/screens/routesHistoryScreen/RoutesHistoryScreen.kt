@@ -1,6 +1,9 @@
 package com.es.trackmyrideapp.ui.screens.routesHistoryScreen
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,7 +13,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -22,11 +28,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.es.trackmyrideapp.R
+import com.es.trackmyrideapp.core.states.MessageType
 import com.es.trackmyrideapp.domain.model.Route
 import com.es.trackmyrideapp.ui.components.VehicleFilter
 import com.es.trackmyrideapp.ui.components.VehicleFilterSelector
@@ -39,14 +46,17 @@ data class RouteWithVehicleType(
     val vehicleType: VehicleType
 )
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun RoutesHistoryScreen(
-    onViewDetailsClicked: () -> Unit,
-    modifier: Modifier
+    onViewDetailsClicked: (Long) -> Unit,
+    modifier: Modifier,
+    snackbarHostState: SnackbarHostState
 ){
     val routesHistoryViewModel: RoutesHistoryViewModel = hiltViewModel()
     var selectedFilter by remember { mutableStateOf<VehicleFilter>(VehicleFilter.All) }
-
+    val uiMessage by routesHistoryViewModel.uiMessage.collectAsState()
+    val uiState by routesHistoryViewModel.uiState.collectAsState()
     val scrollState = rememberScrollState()
 
     LaunchedEffect(selectedFilter) {
@@ -66,20 +76,20 @@ fun RoutesHistoryScreen(
     }
 
 
-    // Cuando tenga el viewmodel usar el stateflow:
-
-    // En el viewmodel:
-    // private val _routes = MutableStateFlow<List<Route>>(emptyList())
-    // val routes: StateFlow<List<Route>> = _routes.asStateFlow()
-
-    // Aqui:
-    // val allRoutes by viewModel.routes.collectAsState()
-
+    LaunchedEffect(uiMessage) {
+        uiMessage?.let { message ->
+            snackbarHostState.showSnackbar(
+                message = message.message,
+                withDismissAction = message.type == MessageType.ERROR,
+                duration = SnackbarDuration.Short
+            )
+            routesHistoryViewModel.consumeUiMessage()
+        }
+    }
 
     Column(
         modifier = modifier
             .fillMaxSize()
-            //.verticalScroll(rememberScrollState())
             .background(MaterialTheme.colorScheme.background)
             .padding(horizontal = 30.dp)
             .padding(top = 16.dp)
@@ -106,7 +116,6 @@ fun RoutesHistoryScreen(
             filteredRoutes.forEach { item ->
 
                 val route = item.route
-
                 val title = route.name
                 val distance = "${route.distanceKm} Km"
                 val duration = formatDuration(route.movingTimeSec)
@@ -123,7 +132,7 @@ fun RoutesHistoryScreen(
                         routeToDelete = route
                         showDeleteDialog = true
                     },
-                    onViewDetailsClicked = onViewDetailsClicked
+                    onViewDetailsClicked = { onViewDetailsClicked(route.id) }
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -138,8 +147,7 @@ fun RoutesHistoryScreen(
                 text = { Text("Are you sure you want to delete \"${routeToDelete?.name}\"?") },
                 confirmButton = {
                     TextButton(onClick = {
-                        // TODO: Aquí llamar a una función del ViewModel para borrar
-                        // viewModel.deleteRoute(routeToDelete!!.id)
+                        routesHistoryViewModel.deleteRoute(routeToDelete!!.id)
                         showDeleteDialog = false
                         routeToDelete = null
                     }) {
@@ -162,34 +170,17 @@ fun RoutesHistoryScreen(
                 }
             )
         }
-
-
-        /* Cuando tenga el viewmodel, para mostrar circulo de carga
-        when {
-            uiState.isLoading -> CircularProgressIndicator()
-            uiState.error != null -> Text("Error: ${uiState.error}")
-            filteredRoutes.isEmpty() -> Text("No hay rutas para este filtro")
-            else -> {
-                Column {
-                    filteredRoutes.forEach { route ->
-                        Text(route.name)
-                        // O poné acá un Card si querés que se vea más pro
-                    }
-                }
-            }
-        }
-
-         */
     }
-}
 
-
-
-
-
-@Preview
-@Composable
-fun PDF(
-){
-    RoutesHistoryScreen({},Modifier)
+    // Indicador de carga
+    if (uiState is RoutesHistoryUiState.Loading) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.4f)),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
+    }
 }

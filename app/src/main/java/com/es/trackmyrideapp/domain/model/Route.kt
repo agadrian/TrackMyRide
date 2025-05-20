@@ -19,5 +19,6 @@ data class Route(
     val efficiency: Double?,
     val pace: Double?,
     val vehicleType: VehicleType,
-    val userId: String
+    val userId: String,
+    val compressedRoute: String
 )

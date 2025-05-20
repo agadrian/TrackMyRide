@@ -22,12 +22,15 @@ import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.PedalBike
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
@@ -36,6 +39,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.es.trackmyrideapp.R
+import com.es.trackmyrideapp.core.states.MessageType
 import com.es.trackmyrideapp.ui.components.CustomButton
 import com.es.trackmyrideapp.ui.components.VehicleFilter
 import com.es.trackmyrideapp.ui.components.VehicleFilterSelector
@@ -48,27 +52,23 @@ fun VehiclesScreen(
     snackbarHostState: SnackbarHostState
 ){
     val vehicleViewModel: VehiclesViewModel = hiltViewModel()
+    val uiMessage by vehicleViewModel.uiMessage.collectAsState()
     val uiState by vehicleViewModel.uiState.collectAsState()
-    val confirmationMessage by vehicleViewModel.confirmationMessage.collectAsState()
-
     val selectedFilter by vehicleViewModel.selectedFilter.collectAsState()
 
 
-    // Mostrar errores
-    LaunchedEffect(uiState) {
-        if (uiState is VehicleUiState.Error) {
-            val errorMessage = (uiState as VehicleUiState.Error).message
-            snackbarHostState.showSnackbar(errorMessage)
+    // Mostrar info  en snackbar
+    LaunchedEffect(uiMessage) {
+        uiMessage?.let { message ->
+            snackbarHostState.showSnackbar(
+                message = message.message,
+                withDismissAction = message.type == MessageType.ERROR,
+                duration = SnackbarDuration.Short
+            )
+            vehicleViewModel.consumeUiMessage()
         }
     }
 
-    // Mensajes de confirmacion
-    LaunchedEffect(confirmationMessage) {
-        confirmationMessage?.let { message ->
-            snackbarHostState.showSnackbar(message)
-            vehicleViewModel.consumeConfirmationMessage()
-        }
-    }
 
 
     Column(
@@ -94,7 +94,7 @@ fun VehiclesScreen(
             is VehicleFilter.Type -> when ((selectedFilter as VehicleFilter.Type).type) {
                 VehicleType.CAR -> EngineVehicleScreen(
                     icon = VehicleIcon.Vector(Icons.Default.DirectionsCar),
-                    vehicleLabel = "Carro wey",
+                    vehicleLabel = "Car",
                     name = vehicleViewModel.name,
                     brand = vehicleViewModel.brand,
                     model = vehicleViewModel.model,
@@ -115,7 +115,7 @@ fun VehiclesScreen(
 
                 VehicleType.MOTORCYCLE -> EngineVehicleScreen(
                     icon = VehicleIcon.PainterIcon(R.drawable.motocicleta),
-                    vehicleLabel = "MotorCycle wey",
+                    vehicleLabel = "MotorCycle",
                     name = vehicleViewModel.name,
                     brand = vehicleViewModel.brand,
                     model = vehicleViewModel.model,
@@ -174,6 +174,18 @@ fun VehiclesScreen(
                 buttonColor = MaterialTheme.colorScheme.primary,
                 fontColor = MaterialTheme.colorScheme.onBackground
             )
+        }
+    }
+
+    // Indicador de carga
+    if (uiState is VehicleUiState.Loading) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.4f)),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
         }
     }
 }

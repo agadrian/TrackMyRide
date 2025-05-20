@@ -11,5 +11,5 @@ interface RouteRepository {
     suspend fun getRouteById(id: Long): Resource<Route>
     suspend fun updateRoute(id: Long, routeUpdateDTO: RouteUpdateDTO): Resource<Route>
     suspend fun deleteRoute(id: Long): Resource<Unit>
-    suspend fun getRoutesByUser(userId: String): Resource<List<Route>>
+    suspend fun getRoutesByUser(): Resource<List<Route>>
 }

@@ -111,15 +111,11 @@ class SessionViewModel @Inject constructor(
                     sessionRepository.setSelectedVehicle(VehicleType.CAR)
 
                 } else {
-                    Log.e("SessionViewModel", "No se crearon vehículos iniciales")
+                    Log.e("SessionViewModel", "Los vehículos ya estaban creados")
                 }
             }
             is Resource.Error -> {
-                if (result.message.contains("already has initial vehicles", true)) {
-                    Log.i("SessionViewModel", "Los vehículos ya estaban creados")
-                } else {
-                    Log.e("SessionViewModel", "Error creando vehículos: ${result.message}")
-                }
+                Log.e("SessionViewModel", "Error creando vehículos: ${result.message}")
             }
             Resource.Loading -> {
                // Nada

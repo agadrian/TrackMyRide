@@ -8,6 +8,7 @@ import com.es.trackmyrideapp.data.remote.mappers.toDomainModel
 import com.es.trackmyrideapp.domain.model.Route
 import com.es.trackmyrideapp.domain.repository.RouteRepository
 import com.es.trackmyrideapp.utils.safeApiCall
+import retrofit2.HttpException
 import javax.inject.Inject
 
 class RouteRepositoryImpl @Inject constructor(
@@ -25,9 +26,9 @@ class RouteRepositoryImpl @Inject constructor(
             routeApi.getRouteById(id).toDomainModel()
         }
 
-    override suspend fun getRoutesByUser(userId: String): Resource<List<Route>> =
+    override suspend fun getRoutesByUser(): Resource<List<Route>> =
         safeApiCall {
-            routeApi.getRoutesByUser(userId).map { it.toDomainModel() }
+            routeApi.getRoutesByUser().map { it.toDomainModel() }
         }
 
 
@@ -38,6 +39,10 @@ class RouteRepositoryImpl @Inject constructor(
 
     override suspend fun deleteRoute(id: Long): Resource<Unit> =
         safeApiCall {
-            routeApi.deleteRoute(id)
+            val response = routeApi.deleteRoute(id)
+            if (!response.isSuccessful) {
+                throw HttpException(response)
+            }
+            Unit // Exito
         }
 }

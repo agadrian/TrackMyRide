@@ -51,7 +51,7 @@ fun ProfileScreen(
     val confirmationMessage by profileViewModel.confirmationMessage.collectAsState()
     val uiState by profileViewModel.uiState.collectAsState()
 
-    // Mostrar errores
+    // Mensajes informativos
     LaunchedEffect(uiState) {
         if (uiState is ProfileUiState.Error) {
             val errorMessage = (uiState as ProfileUiState.Error).message

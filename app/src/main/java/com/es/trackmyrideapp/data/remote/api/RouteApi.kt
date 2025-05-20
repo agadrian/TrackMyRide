@@ -3,6 +3,7 @@ package com.es.trackmyrideapp.data.remote.api
 import com.es.trackmyrideapp.data.remote.dto.RouteCreateDTO
 import com.es.trackmyrideapp.data.remote.dto.RouteResponseDTO
 import com.es.trackmyrideapp.data.remote.dto.RouteUpdateDTO
+import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -20,8 +21,9 @@ interface RouteApi {
     @GET("/routes/{id}")
     suspend fun getRouteById(@Path("id") id: Long): RouteResponseDTO
 
-    @GET("/routes/user/{userId}")
-    suspend fun getRoutesByUser(@Path("userId") userId: String): List<RouteResponseDTO>
+    // Obtener todas las rutas de un usuario
+    @GET("/routes/user")
+    suspend fun getRoutesByUser(): List<RouteResponseDTO>
 
     // Actualizar una ruta existente
     @PUT("/routes/{id}")
@@ -32,5 +34,5 @@ interface RouteApi {
 
     // Eliminar una ruta por su ID
     @DELETE("/routes/{id}")
-    suspend fun deleteRoute(@Path("id") id: Long)
+    suspend fun deleteRoute(@Path("id") id: Long): Response<Unit>
 }

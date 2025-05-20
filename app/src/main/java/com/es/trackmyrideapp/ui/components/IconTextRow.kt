@@ -1,6 +1,5 @@
 package com.es.trackmyrideapp.ui.components
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,11 +18,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.es.trackmyrideapp.ui.screens.routeDetailsScreen.RouteDetailScreen
 
 
 @Composable
@@ -94,9 +91,3 @@ fun IconTextRow(
     }
 }
 
-
-@Composable
-@Preview
-fun dfdsd(){
-    RouteDetailScreen()
-}

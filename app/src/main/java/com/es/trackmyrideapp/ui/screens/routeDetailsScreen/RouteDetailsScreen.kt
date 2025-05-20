@@ -1,8 +1,10 @@
 package com.es.trackmyrideapp.ui.screens.routeDetailsScreen
 
 import FullscreenImageDialog
+import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -24,8 +26,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.es.trackmyrideapp.R
 import com.es.trackmyrideapp.ui.components.VehicleType
 import com.es.trackmyrideapp.ui.permissions.AppPermission
@@ -34,25 +36,30 @@ import com.es.trackmyrideapp.ui.permissions.RationaleDialog
 import com.es.trackmyrideapp.ui.permissions.rememberPermissionHandler
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun RouteDetailScreen(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    idRoute: Long
 ){
+
+    val routeDetailViewModel: RouteDetailViewModel = hiltViewModel()
 
     val scrollState = rememberScrollState()
 
-    var description by remember { mutableStateOf("test") }
-    val startTime by remember { mutableStateOf("15:34") }
-    val endTime by remember { mutableStateOf("12:54") }
-    val startPoint by remember { mutableStateOf("C/ lamielo 2") }
-    val endPoint by remember { mutableStateOf("C/ marquitos 55") }
+    val description by routeDetailViewModel.description
+    val startTime by routeDetailViewModel.startTime
+    val endTime by routeDetailViewModel.endTime
+    val startPoint by routeDetailViewModel.startPoint
+    val endPoint by routeDetailViewModel.endPoint
 
-    val totalDistance by remember { mutableStateOf("C/ mar") }
-    val movingTime by remember { mutableStateOf("C/ mar") }
-    val avgSpeed by remember { mutableStateOf("C/ mar") }
-    val maxSpeed by remember { mutableStateOf("C/ mar") }
-    val fuelConsumed by remember { mutableStateOf("C/ mar") }
-    val efficiency by remember { mutableStateOf("C/ mar") }
+    val totalDistance by routeDetailViewModel.distanceKm
+    val movingTime by routeDetailViewModel.movingTimeSec
+    val avgSpeed by routeDetailViewModel.avgSpeed
+    val maxSpeed by routeDetailViewModel.maxSpeed
+    val fuelConsumed by routeDetailViewModel.fuelConsumed
+    val efficiency by routeDetailViewModel.efficiency
+    val vehicleType by routeDetailViewModel.vehicleType
 
     val (permissionState, requestPermission) = rememberPermissionHandler(
         permission = AppPermission.ReadImages
@@ -114,9 +121,9 @@ fun RouteDetailScreen(
             modifier = Modifier
                 .background(colorResource(R.color.lightGray))
                 .padding(horizontal = 30.dp),
-            title = "Route around the mountains",
-            date = "1/1/1",
-            vehicleType = VehicleType.CAR
+            title = routeDetailViewModel.name.value,
+            date = routeDetailViewModel.startDateTime.value,
+            vehicleType = routeDetailViewModel.vehicleType.value ?: VehicleType.CAR
         )
 
         Spacer(Modifier.height(24.dp))
@@ -132,21 +139,21 @@ fun RouteDetailScreen(
             // Card general Info
             GeneralInfoCard(
                 description = description,
-                startTime = startTime,
-                endTime = endTime,
+                startTime = "$startTime h",
+                endTime = "$endTime h",
                 startPoint = startPoint,
                 endPoint = endPoint,
-                onDescriptionChanged = { description = it }
+                onDescriptionChanged = { routeDetailViewModel.onDescriptionChanged(it) },
             )
 
             // Card Stats
             StatsCard(
-                totalDistance = totalDistance,
-                movingTime = movingTime,
-                avgSpeed = avgSpeed,
-                maxSpeed = maxSpeed,
-                fuelConsumed = fuelConsumed,
-                efficiency = efficiency
+                totalDistance = "$totalDistance Km",
+                movingTime = "$movingTime h",
+                avgSpeed = "$avgSpeed Km/h",
+                maxSpeed = "$maxSpeed Km/h",
+                fuelConsumed = "$fuelConsumed L",
+                efficiency = "$efficiency Km/L"
             )
 
             // Card images
@@ -184,7 +191,12 @@ fun RouteDetailScreen(
     }
 
     if (showMapDialog) {
-        DialogMap { showMapDialog = false }
+        DialogMap(
+            onDismissRequest = { showMapDialog = false },
+            routePoints = routeDetailViewModel.routePoints.value,
+            startPointName = routeDetailViewModel.startPoint.value,
+            endPointName = routeDetailViewModel.endPoint.value
+        )
     }
 
     when {
@@ -211,10 +223,3 @@ fun RouteDetailScreen(
 
 
 
-
-
-@Composable
-@Preview
-fun dfs(){
-    RouteDetailScreen()
-}

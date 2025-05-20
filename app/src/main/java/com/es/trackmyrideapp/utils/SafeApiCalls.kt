@@ -1,32 +1,20 @@
 package com.es.trackmyrideapp.utils
 
-import android.util.Log
 import com.es.trackmyrideapp.data.remote.mappers.Resource
-import org.json.JSONObject
 import retrofit2.HttpException
 import java.io.IOException
 
 suspend fun <T> safeApiCall(apiCall: suspend () -> T): Resource<T> {
     return try {
-        val result = apiCall()
-        Resource.Success(result)
+        Resource.Success(apiCall())
     } catch (e: HttpException) {
-        val errorMessage = try {
-            val errorJson = e.response()?.errorBody()?.string()
-            val message = JSONObject(errorJson ?: "").optString("message", "HTTP ${e.code()} error")
-            message
-        } catch (parseError: Exception) {
-            "HTTP ${e.code()} error"
-        }
-        Log.e("safeApiCall", "HttpException: $errorMessage")
+        val errorMessage = e.response()?.errorBody()?.use {
+            it.string().takeIf { str -> str.isNotBlank() } ?: "HTTP ${e.code()}"
+        } ?: "HTTP ${e.code()}"
         Resource.Error(errorMessage, e.code())
     } catch (e: IOException) {
-        val msg = "Network error: check your connection"
-        Log.e("safeApiCall", msg, e)
-        Resource.Error(msg)
+        Resource.Error("Network error: ${e.message ?: "Unknown"}")
     } catch (e: Exception) {
-        val msg = "Unknown error: ${e.localizedMessage ?: "Unexpected error"}"
-        Log.e("safeApiCall", msg, e)
-        Resource.Error(msg)
+        Resource.Error("Unexpected error: ${e.message ?: "Unknown"}")
     }
 }

@@ -6,6 +6,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.es.trackmyrideapp.core.states.MessageType
+import com.es.trackmyrideapp.core.states.UiMessage
 import com.es.trackmyrideapp.data.remote.dto.VehicleUpdateDTO
 import com.es.trackmyrideapp.data.remote.mappers.Resource
 import com.es.trackmyrideapp.domain.model.Vehicle
@@ -28,7 +30,6 @@ class VehiclesViewModel @Inject constructor(
     private val updateVehicleUseCase: UpdateVehicleUseCase
 ) : ViewModel() {
 
-    // Estados del formulario
     var name by mutableStateOf("")
         private set
     var brand by mutableStateOf("")
@@ -59,12 +60,12 @@ class VehiclesViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<VehicleUiState>(VehicleUiState.Idle)
     val uiState: StateFlow<VehicleUiState> = _uiState
 
-    // Mensaje de confirmación
-    private val _confirmationMessage = MutableStateFlow<String?>(null)
-    val confirmationMessage: StateFlow<String?> = _confirmationMessage
 
-    fun consumeConfirmationMessage() {
-        _confirmationMessage.value = null
+    private val _uiMessage = MutableStateFlow<UiMessage?>(null)
+    val uiMessage: StateFlow<UiMessage?> = _uiMessage
+
+    fun consumeUiMessage() {
+        _uiMessage.value = null
     }
 
     // Funciones para actualizar estados
@@ -108,7 +109,7 @@ class VehiclesViewModel @Inject constructor(
                         }
                     }
                     is Resource.Error -> {
-                        _uiState.value = VehicleUiState.Error(result.message ?: "Error loading vehicles")
+                        _uiState.value = VehicleUiState.Error(result.message )
                     }
                     Resource.Loading -> Unit // Ya estamos en estado loading
                 }
@@ -162,7 +163,7 @@ class VehiclesViewModel @Inject constructor(
                 }
             }
             VehicleFilter.All -> {
-                // No hacemos nada para el filtro "All" en este caso
+                // No hacer nada en este caso
             }
         }
     }
@@ -217,10 +218,10 @@ class VehiclesViewModel @Inject constructor(
                         if (it.id == vehicleId) result.data else it
                     }
                     _uiState.value = VehicleUiState.Success
-                    _confirmationMessage.value = "Vehicle updated successfully"
+                    _uiMessage.value = UiMessage("Vehicle updated successfully", MessageType.INFO)
                 }
                 is Resource.Error -> {
-                    _uiState.value = VehicleUiState.Error(result.message ?: "Error updating vehicle")
+                    _uiState.value = VehicleUiState.Error(result.message )
                 }
                 Resource.Loading -> Unit // Ya estamos en estado loading
             }
@@ -232,7 +233,7 @@ class VehiclesViewModel @Inject constructor(
         val currentFilter = selectedFilter.value
         return when {
             name.isBlank() -> {
-                _uiState.value = VehicleUiState.Error("Name cannot be empty")
+                _uiMessage.value = UiMessage("Name cannot be empty", MessageType.ERROR)
                 false
             }
             brand.isBlank() -> {

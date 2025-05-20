@@ -21,19 +21,15 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.es.trackmyrideapp.LocalIsDarkTheme
 import com.es.trackmyrideapp.R
 import com.es.trackmyrideapp.ui.components.CustomTextFieldWithoutIcon
 import com.es.trackmyrideapp.ui.components.VehicleIcon
-
 
 @Composable
 fun EngineVehicleScreen(

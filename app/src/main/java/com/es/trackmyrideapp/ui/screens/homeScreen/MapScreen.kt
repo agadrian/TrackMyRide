@@ -28,7 +28,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -62,12 +61,11 @@ fun MapScreen(
     val distance = homeViewModel.getRouteDistance()  // Distancia total de la ruta
     val averageSpeed = homeViewModel.getRouteAverageSpeed()  // Velocidad promedio
 
-    val context = LocalContext.current
 
 
-    LaunchedEffect(Unit) {
-        homeViewModel.loadGpxRoute(context)
-    }
+//    LaunchedEffect(Unit) {
+//        homeViewModel.loadGpxRoute()
+//    }
 
 
     // Efecto para obtener ubicación inicial si no hay ninguna

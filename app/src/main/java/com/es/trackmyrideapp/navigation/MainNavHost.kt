@@ -1,5 +1,7 @@
 package com.es.trackmyrideapp.navigation
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.SnackbarHostState
@@ -8,9 +10,10 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.toRoute
 import com.es.trackmyrideapp.ui.screens.aboutUsScreen.AboutUsScreen
-import com.es.trackmyrideapp.ui.screens.homeScreen.HomeScreen
 import com.es.trackmyrideapp.ui.screens.forgotPasswordScreen.ForgotPasswordScreen
+import com.es.trackmyrideapp.ui.screens.homeScreen.HomeScreen
 import com.es.trackmyrideapp.ui.screens.loginScreen.LoginScreen
 import com.es.trackmyrideapp.ui.screens.premiumScreen.PremiumScreen
 import com.es.trackmyrideapp.ui.screens.profileScreen.ProfileScreen
@@ -19,6 +22,7 @@ import com.es.trackmyrideapp.ui.screens.routeDetailsScreen.RouteDetailScreen
 import com.es.trackmyrideapp.ui.screens.routesHistoryScreen.RoutesHistoryScreen
 import com.es.trackmyrideapp.ui.screens.vehiclesScreen.VehiclesScreen
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun MainNavHost(
     navController: NavHostController,
@@ -90,15 +94,18 @@ fun MainNavHost(
         // Routes History Screen
         composable<RoutesHistory> {
             RoutesHistoryScreen(
-                onViewDetailsClicked = { navController.navigate(RouteDetails) },
-                modifier = Modifier.padding(innerPadding)
+                onViewDetailsClicked = { routeId -> navController.navigate(RouteDetails(routeId = routeId)) },
+                modifier = Modifier.padding(innerPadding),
+                snackbarHostState = snackbarHostState
             )
         }
 
         // Routes Details Screen
-        composable<RouteDetails> {
+        composable<RouteDetails> { backStackEntry ->
+            val routeDetail = backStackEntry.toRoute<RouteDetails>()
             RouteDetailScreen(
-                modifier = Modifier.padding(innerPadding)
+                modifier = Modifier.padding(innerPadding),
+                idRoute = routeDetail.routeId
             )
         }
 

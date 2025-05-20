@@ -1,6 +1,9 @@
 package com.es.trackmyrideapp.domain.tracker
 
 
+import android.util.Log
+import com.es.trackmyrideapp.core.extensions.round
+import com.es.trackmyrideapp.domain.model.RouteStats
 import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -10,6 +13,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import java.util.Date
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.pow
@@ -43,15 +47,25 @@ class RouteTracker {
     }
 
     fun stopTimer() {
+        Log.d("Tracking", "Timer detenido. ${_elapsedTime.value}")
         endTimeMillis = System.currentTimeMillis()
         timerJob?.cancel()
         timerJob = null
-        reset()
+        Log.d("Tracking", "Timer detenido final. ${_elapsedTime.value}")
     }
 
     fun getElapsedTimeMillis(): Long {
-        return if (endTimeMillis > 0) endTimeMillis - startTimeMillis
-        else System.currentTimeMillis() - startTimeMillis
+        val now = System.currentTimeMillis()
+        val elapsed = if (endTimeMillis > 0) endTimeMillis - startTimeMillis
+        else now - startTimeMillis
+
+        Log.d("Tracking", """
+        startTimeMillis: $startTimeMillis (${Date(startTimeMillis)})
+        ${if (endTimeMillis > 0) "endTimeMillis: $endTimeMillis (${Date(endTimeMillis)})" else "now: $now (${Date(now)})"}
+        elapsed: $elapsed ms
+    """.trimIndent())
+
+        return elapsed
     }
 
     fun getDistanceMeters(points: List<LatLng>): Double {
@@ -79,7 +93,7 @@ class RouteTracker {
         return earthRadius * c
     }
 
-    private fun reset() {
+    fun reset() {
         _elapsedTime.value = 0
         startTimeMillis = 0
         endTimeMillis = 0
@@ -102,7 +116,11 @@ class RouteTracker {
                 val speedKmh = (distance / 1000.0) / timeDeltaHours
                 if (speedKmh > maxSpeedKmh) {
                     maxSpeedKmh = speedKmh
+                }else{
+                    Log.d("Tracking", "No se puede calcular la velocidad max. Distancia: $distance, tiempo: $timeDeltaHours")
                 }
+            }else{
+                Log.d("Tracking", "No se puede calcular la velocidad max. Tiempo delta: $timeDeltaHours")
             }
         }
 
@@ -113,6 +131,7 @@ class RouteTracker {
 
     fun getCalculatedStats(points: List<LatLng>, efficiency: Double?): RouteStats {
         val elapsed = getElapsedTimeMillis()
+        Log.d("Tracking", "getCalculatedStats: ${elapsed}")
         val distance = getDistanceMeters(points)
         val avgSpeed = if (elapsed > 0) distance / (elapsed / 1000.0 / 3600.0) else 0.0
         val distanceKm = distance / 1000.0
@@ -135,37 +154,4 @@ class RouteTracker {
             maxSpeed = maxSpeedKmh
         )
     }
-
-
-}
-fun Double.round(decimals: Int = 2): Double = "%.${decimals}f".format(this).toDouble()
-
-data class RouteStats(
-    val elapsedTimeMillis: Long,
-    val distanceMeters: Double,
-    val averageSpeedKmh: Double,
-    val fuelConsumed: Double?,
-    val efficiency: Double?,
-    val maxSpeed: Double,
-    val paceSecondsPerKm: Double?
-){
-    override fun toString(): String {
-        return """
-        RouteStats:
-        - Tiempo transcurrido: ${elapsedTimeMillis.msToFormattedTime()}
-        - Distancia: ${"%.2f".format(distanceMeters/1000)} km
-        - Velocidad promedio: ${"%.1f".format(averageSpeedKmh)} km/h
-        - Velocidad máxima: ${"%.1f".format(maxSpeed)} km/h
-        - Combustible consumido: ${fuelConsumed?.let { "%.2f L".format(it) } ?: "N/A"}
-        - Eficiencia: ${efficiency?.let { "%.2f km/L".format(it) } ?: "N/A"}
-        - Ritmo: ${paceSecondsPerKm?.let { "${it.toInt()} min/km" } ?: "N/A"}
-        """.trimIndent()
-    }
-}
-
-fun Long.msToFormattedTime(): String {
-    val seconds = this / 1000
-    val minutes = seconds / 60
-    val hours = minutes / 60
-    return String.format("%02d:%02d:%02d", hours, minutes % 60, seconds % 60)
 }

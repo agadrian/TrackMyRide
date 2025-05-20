@@ -37,7 +37,7 @@ object Home
 object RoutesHistory
 
 @Serializable
-object RouteDetails
+data class RouteDetails(val routeId: Long)
 
 @Serializable
 object Profile

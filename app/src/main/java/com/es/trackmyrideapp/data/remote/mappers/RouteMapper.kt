@@ -21,6 +21,7 @@ fun RouteResponseDTO.toDomainModel(): Route {
         efficiency = efficiency,
         pace = pace,
         vehicleType = vehicleType,
-        userId = userId
+        userId = userId,
+        compressedRoute = compressedRoute
     )
 }

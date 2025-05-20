@@ -8,7 +8,7 @@ import javax.inject.Inject
 class GetRoutesByUserUseCase @Inject constructor(
     private val routeRepository: RouteRepository
 ) {
-    suspend operator fun invoke(userId: String): Resource<List<Route>> {
-        return routeRepository.getRoutesByUser(userId)
+    suspend operator fun invoke(): Resource<List<Route>> {
+        return routeRepository.getRoutesByUser()
     }
 }
