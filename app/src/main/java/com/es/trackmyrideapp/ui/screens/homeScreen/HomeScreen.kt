@@ -5,8 +5,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -21,15 +23,25 @@ import com.es.trackmyrideapp.ui.permissions.rememberPermissionHandler
 @Composable
 fun HomeScreen(
     modifier: Modifier = Modifier,
+    snackbarHostState: SnackbarHostState
 ){
     val homeViewModel: HomeViewModel = hiltViewModel()
     val tracking = homeViewModel.trackingState.value
+    val uiMessage = homeViewModel.uiMessage.value
     val bottomPadding = if (tracking) 108.dp else 32.dp
-
 
     val (permissionState, requestPermission) = rememberPermissionHandler(
         permission = AppPermission.Location
     )
+
+
+    LaunchedEffect(uiMessage) {
+        uiMessage?.let { msg ->
+            snackbarHostState.showSnackbar(msg.message)
+            homeViewModel.clearUiMessage()
+        }
+    }
+
 
     when {
         permissionState.isGranted -> {

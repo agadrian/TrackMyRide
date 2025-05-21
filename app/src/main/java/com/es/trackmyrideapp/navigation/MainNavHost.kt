@@ -87,7 +87,8 @@ fun MainNavHost(
         // Home Screen
         composable<Home> {
             HomeScreen(
-                modifier = Modifier.padding(innerPadding)
+                modifier = Modifier.padding(innerPadding),
+                snackbarHostState = snackbarHostState
             )
         }
 

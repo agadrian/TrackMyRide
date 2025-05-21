@@ -12,6 +12,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.es.trackmyrideapp.core.extensions.round
+import com.es.trackmyrideapp.core.states.MessageType
+import com.es.trackmyrideapp.core.states.UiMessage
 import com.es.trackmyrideapp.data.remote.dto.RouteCreateDTO
 import com.es.trackmyrideapp.data.remote.mappers.Resource
 import com.es.trackmyrideapp.data.repository.SessionRepository
@@ -69,6 +71,13 @@ class HomeViewModel @Inject constructor(
 
     private var _routePointsTest = mutableStateOf<List<LatLng>>(emptyList())
     val routePointsTest: State<List<LatLng>> = _routePointsTest
+
+    private val _uiMessage = mutableStateOf<UiMessage?>(null)
+    val uiMessage: State<UiMessage?> = _uiMessage
+
+    fun clearUiMessage() {
+        _uiMessage.value = null
+    }
 
 
     init {
@@ -246,10 +255,12 @@ class HomeViewModel @Inject constructor(
 
                     onComplete()
                     if (createResult is Resource.Success) {
+                        _uiMessage.value = UiMessage("Route saved successfully", MessageType.INFO)
                         Log.d("Tracking", "Ruta enviada correctamente.")
                     } else {
                         Log.e("Tracking", "Error al guardar ruta: ${createResult}")
                         if (createResult is Resource.Error){
+                            _uiMessage.value = UiMessage("Error saving route", MessageType.ERROR)
                             Log.e("Tracking", "Error al guardar ruta: ${createResult.message}. Code: ${createResult.code}")
 
                         }
