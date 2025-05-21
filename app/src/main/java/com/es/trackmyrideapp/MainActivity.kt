@@ -1,6 +1,7 @@
 package com.es.trackmyrideapp
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -15,6 +16,7 @@ import androidx.compose.runtime.setValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.es.trackmyrideapp.data.local.ThemePreferences
+import com.es.trackmyrideapp.navigation.AdminScreen
 import com.es.trackmyrideapp.navigation.Home
 import com.es.trackmyrideapp.navigation.Login
 import com.es.trackmyrideapp.navigation.NavigationWrapper
@@ -56,6 +58,9 @@ class MainActivity : ComponentActivity() {
             }
 
             val authState by sessionViewModel.authState.collectAsStateWithLifecycle()
+            val userRole by sessionViewModel.userRole.collectAsStateWithLifecycle( null)
+
+            Log.d("FlujoTest", "userRole: $userRole .")
 
             CompositionLocalProvider(
                 LocalIsDarkTheme provides isDarkTheme,
@@ -65,10 +70,13 @@ class MainActivity : ComponentActivity() {
                     NavigationWrapper(
                         isDarkTheme = isDarkTheme,
                         onThemeChanged = { isDarkTheme = it },
-                        startDestination = if (authState == AuthState.Authenticated) {
-                            Home::class.qualifiedName!!
-                        } else {
-                            Login::class.qualifiedName!!
+                        startDestination = when {
+                            authState != AuthState.Authenticated -> Login::class.qualifiedName!!
+                            userRole == "ADMIN" ->{
+                                Log.d("FlujoTest", "userRole: $userRole . Adminn screen deberian aparecer")
+                                AdminScreen::class.qualifiedName!!
+                            }
+                            else -> Home::class.qualifiedName!!
                         }
                     )
                 }

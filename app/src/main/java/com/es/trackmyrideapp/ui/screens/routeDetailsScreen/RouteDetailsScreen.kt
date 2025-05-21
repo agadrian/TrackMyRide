@@ -19,7 +19,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -29,6 +28,7 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.es.trackmyrideapp.R
+import com.es.trackmyrideapp.domain.model.RouteImage
 import com.es.trackmyrideapp.ui.components.VehicleType
 import com.es.trackmyrideapp.ui.permissions.AppPermission
 import com.es.trackmyrideapp.ui.permissions.ClosableBlockedDialog
@@ -67,34 +67,47 @@ fun RouteDetailScreen(
     val startPointName by routeDetailViewModel.startPoint
     val endPointName by routeDetailViewModel.endPoint
 
+    val images = routeDetailViewModel.uploadedImages
 
     val (permissionState, requestPermission) = rememberPermissionHandler(
         permission = AppPermission.ReadImages
     )
 
-    // Controlar estado de imagenes
-    val images = remember { mutableStateListOf<String>() }
-    // Es la que se muestra en grande
-    val selectedImage = remember { mutableStateOf<String?>(null) }
+    // Imagen del dialog grande
+    val selectedImage = remember { mutableStateOf<RouteImage?>(null) }
 
     // Controlar estado dialogo mapa
     var showMapDialog by remember { mutableStateOf(false) }
     var showPermDialog by remember { mutableStateOf(false) }
 
-    // Lanzador para seleccionar imagen
+    var shouldLaunchPicker by remember { mutableStateOf(false) }
+
+    // Lanzador para seleccionar imagen y enviarla al viewmodel
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
         uri?.let {
-            images.add(it.toString())
-            // Enviar la imagen al viewmodel, guardarla, etc.
+            routeDetailViewModel.uploadImage(it)
         }
     }
+
+    // Control flujo permiso + picker
+    LaunchedEffect(shouldLaunchPicker, permissionState.isGranted) {
+        if (shouldLaunchPicker) {
+            if (permissionState.isGranted) {
+                imagePickerLauncher.launch("image/*")
+                shouldLaunchPicker = false
+            } else {
+                requestPermission()
+            }
+        }
+    }
+
 
     LaunchedEffect(permissionState.isGranted) {
         if (permissionState.isGranted) {
             // Cuando el permiso es concedido, actualizamos el estado
-            showPermDialog = false // Cerrar el diálogo
+            showPermDialog = false
         }
     }
 
@@ -167,12 +180,7 @@ fun RouteDetailScreen(
             ImagesCard(
                 images = images,
                 onAddImage = {
-                    if (permissionState.isGranted) {
-                        imagePickerLauncher.launch("image/*")
-                    } else {
-                        requestPermission()
-                    }
-                    //images.add("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQy526UfRatqvWkQaponozTmdlhig4eh6aIXA&s")
+                    shouldLaunchPicker = true
                 },
                 onImageClick = { selectedImage.value = it }
             )
@@ -192,10 +200,15 @@ fun RouteDetailScreen(
         }
     }
 
-    selectedImage.value?.let { imageUrl ->
+    selectedImage.value?.let { image ->
         FullscreenImageDialog(
-            imageUrl = imageUrl,
-            onDismiss = { selectedImage.value = null }
+            image = image,
+            onDismiss = { selectedImage.value = null },
+            onDelete = { imageId ->
+                routeDetailViewModel.deleteImage(imageId)
+                selectedImage.value = null
+
+            }
         )
     }
 

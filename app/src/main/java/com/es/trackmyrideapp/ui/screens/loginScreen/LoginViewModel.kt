@@ -8,7 +8,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.es.trackmyrideapp.data.local.AuthPreferences
 import com.es.trackmyrideapp.data.local.RememberMePreferences
-import com.es.trackmyrideapp.domain.usecase.RegisterUseCase
 import com.es.trackmyrideapp.domain.usecase.SendPasswordResetUseCase
 import com.es.trackmyrideapp.domain.usecase.SignInUseCase
 import com.es.trackmyrideapp.ui.screens.forgotPasswordScreen.ForgotPasswordUiState
@@ -21,7 +20,6 @@ import javax.inject.Inject
 @HiltViewModel
 class LoginViewModel @Inject constructor(
     private val signInUseCase: SignInUseCase,
-    private val registerUseCase: RegisterUseCase,
     private val sendPasswordResetUseCase: SendPasswordResetUseCase,
     private val rememberMePreferences: RememberMePreferences,
     private val authPreferences: AuthPreferences
@@ -73,12 +71,14 @@ class LoginViewModel @Inject constructor(
                     authPreferences.setJwtToken(jwt)
                     authPreferences.setRefreshToken(user.refreshToken)
 
+                    val role = authPreferences.getUserRoleFromToken()
+
                     Log.d("FlujoTest", "authviewmodel: signInUseCase llamado osucces. user uid: ${user.uid} jwt: ${jwt}")
                     Log.d("FlujoTest", "authviewmodel: signInUseCase llamado onsucces.setJwtToken y setrefresh llamados ")
 
                     Log.d("JWT Token", "Token recuperado usando getjwttoken(): ${authPreferences.getJwtToken()}")
 
-                    _uiState.value = LoginUiState.Success(user, jwt)
+                    _uiState.value = LoginUiState.Success(user, jwt, role)
 
                     Log.d("FlujoTest", "authviewmodel: signInUseCase llamado onsucces. loginuiState: ${_uiState.value} ")
 

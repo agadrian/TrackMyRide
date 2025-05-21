@@ -1,6 +1,5 @@
 package com.es.trackmyrideapp.ui.screens.routeDetailsScreen
 
-
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -19,15 +18,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.outlined.BrokenImage
 import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material3.Card
@@ -37,8 +31,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -46,22 +38,20 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import com.es.trackmyrideapp.R
-
+import com.es.trackmyrideapp.domain.model.RouteImage
 
 @Composable
 fun ImagesCard(
-    images: List<String>,
+    images: List<RouteImage>,
     onAddImage: () -> Unit,
-    onImageClick: (String) -> Unit
+    onImageClick: (RouteImage) -> Unit,
 ){
     Card(
         modifier = Modifier
@@ -76,7 +66,7 @@ fun ImagesCard(
             images = images,
             modifier = Modifier.fillMaxWidth(),
             onAddImage = onAddImage,
-            onImageClick = onImageClick
+            onImageClick = onImageClick,
         )
     }
 }
@@ -85,9 +75,9 @@ fun ImagesCard(
 @Composable
 fun ImageGallery(
     modifier: Modifier = Modifier,
-    images: List<String>,
+    images: List<RouteImage>,
     onAddImage: () -> Unit,
-    onImageClick: (String) -> Unit
+    onImageClick: (RouteImage) -> Unit,
 ) {
     Card(
         modifier = modifier
@@ -156,7 +146,7 @@ fun ImageGallery(
 
             ImageScrollGallery(
                 images = images,
-                onItemClick = onImageClick
+                onItemClick = onImageClick,
             )
         }
     }
@@ -165,8 +155,8 @@ fun ImageGallery(
 
 @Composable
 fun ImageScrollGallery(
-    images: List<String>,
-    onItemClick: (String) -> Unit,
+    images: List<RouteImage>,
+    onItemClick: (RouteImage) -> Unit,
     paddingScreen: Dp = 60.dp // Normalmente 30 a cada lado por defecto
 ) {
     if (images.isEmpty()){
@@ -184,12 +174,14 @@ fun ImageScrollGallery(
             contentPadding = PaddingValues(horizontal = 0.dp),
             horizontalArrangement = Arrangement.spacedBy(itemPadding)
         ) {
-            items(images) { imageUrl ->
-                ImageItem(
-                    imageUrl = imageUrl,
-                    onClick = { onItemClick(imageUrl) },
-                    modifier = Modifier.width(itemWidth)
-                )
+            items(images) { image ->
+                Box(modifier = Modifier.width(itemWidth)) {
+                    ImageItem(
+                        imageUrl = image.imageUrl,
+                        onClick = { onItemClick(image) },
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
             }
         }
     }
@@ -221,7 +213,6 @@ fun ImageItem(
         )
     }
 }
-
 
 
 @Composable
@@ -257,13 +248,4 @@ fun EmptyImagePlaceholder() {
             textAlign = TextAlign.Center
         )
     }
-}
-
-
-@Composable
-@Preview
-fun dffg(){
-    ImageGallery(
-        Modifier, listOf(""),{},{}
-    )
 }

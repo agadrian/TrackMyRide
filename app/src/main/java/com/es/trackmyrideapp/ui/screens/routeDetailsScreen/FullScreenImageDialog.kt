@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
@@ -20,11 +21,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import coil.compose.rememberAsyncImagePainter
+import com.es.trackmyrideapp.domain.model.RouteImage
 
 @Composable
 fun FullscreenImageDialog(
-    imageUrl: String,
-    onDismiss: () -> Unit
+    image: RouteImage,
+    onDismiss: () -> Unit,
+    onDelete : (Long) -> Unit
 ) {
     Dialog(
         onDismissRequest = onDismiss,
@@ -46,7 +49,7 @@ fun FullscreenImageDialog(
         ) {
             // Imagen a pantalla completa
             Image(
-                painter = rememberAsyncImagePainter(imageUrl),
+                painter = rememberAsyncImagePainter(image.imageUrl),
                 contentDescription = "Zoomed image",
                 modifier = Modifier
                     .fillMaxSize()
@@ -69,6 +72,26 @@ fun FullscreenImageDialog(
                 Icon(
                     imageVector = Icons.Default.Close,
                     contentDescription = "Close",
+                    tint = Color.White,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+
+            // Botón eliminar
+            IconButton(
+                onClick = {
+                    onDelete(image.id)
+                    onDismiss()
+                },
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(16.dp)
+                    .size(48.dp)
+                    .background(Color.Gray.copy(alpha = 0.6f), shape = CircleShape)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "Eliminar",
                     tint = Color.White,
                     modifier = Modifier.size(24.dp)
                 )

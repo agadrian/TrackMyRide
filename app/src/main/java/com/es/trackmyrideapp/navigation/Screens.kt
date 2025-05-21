@@ -51,5 +51,7 @@ object AboutUs
 @Serializable
 object Vehicles
 
+@Serializable
+object AdminScreen
 
 

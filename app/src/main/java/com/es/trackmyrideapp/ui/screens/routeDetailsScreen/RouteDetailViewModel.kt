@@ -1,15 +1,23 @@
 package com.es.trackmyrideapp.ui.screens.routeDetailsScreen
 
+import android.net.Uri
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.es.trackmyrideapp.core.extensions.round
+import com.es.trackmyrideapp.data.remote.dto.RouteImageRequest
 import com.es.trackmyrideapp.data.remote.mappers.Resource
 import com.es.trackmyrideapp.domain.model.Route
+import com.es.trackmyrideapp.domain.model.RouteImage
+import com.es.trackmyrideapp.domain.usecase.images.DeleteRouteImageUseCase
+import com.es.trackmyrideapp.domain.usecase.images.GetRouteImagesUseCase
+import com.es.trackmyrideapp.domain.usecase.images.UploadImageToCloudinaryUseCase
+import com.es.trackmyrideapp.domain.usecase.images.UploadRouteImagesUseCase
 import com.es.trackmyrideapp.domain.usecase.routes.GetRouteByIdUseCase
 import com.es.trackmyrideapp.ui.components.VehicleType
 import com.es.trackmyrideapp.utils.RouteSimplifier
@@ -24,6 +32,10 @@ import javax.inject.Inject
 class RouteDetailViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val getRouteByIdUseCase: GetRouteByIdUseCase,
+    private val uploadImageToCloudinaryUseCase: UploadImageToCloudinaryUseCase,
+    private val uploadRouteImageUseCase: UploadRouteImagesUseCase,
+    private val getRouteImagesUseCase: GetRouteImagesUseCase,
+    private val deleteRouteImageUseCase: DeleteRouteImageUseCase,
 ) : ViewModel() {
 
     private val routeId: Long = checkNotNull(savedStateHandle["routeId"])
@@ -79,6 +91,10 @@ class RouteDetailViewModel @Inject constructor(
         private set
 
 
+    var uploadedImages = mutableStateListOf<RouteImage>()
+        private set
+
+
     fun onNameChanged(newName: String) {
         name.value = newName
     }
@@ -88,10 +104,69 @@ class RouteDetailViewModel @Inject constructor(
     }
 
 
+    fun uploadImage(uri: Uri) {
+        viewModelScope.launch {
+            val imageUrl = uploadImageToCloudinaryUseCase(uri)
+            imageUrl?.let { url ->
+                val request = RouteImageRequest(
+                    imageUrl = url,
+                    description = null
+                )
+                uploadRouteImageUseCase(routeId, request)
+                // En vez de añadir aquí, mejor volver a cargar desde el servidor:
+                fetchRouteImages()
+            }
+        }
+    }
 
     init {
         fetchRouteAndPopulateStates()
+        fetchRouteImages()
     }
+
+
+
+    private fun fetchRouteImages() {
+        viewModelScope.launch {
+            when (val result = getRouteImagesUseCase(routeId)) {
+                is Resource.Success -> {
+                    result.data.let { images ->
+                        uploadedImages.clear() // Evitar duplicados
+                        uploadedImages.addAll(images)
+                    }
+                }
+                is Resource.Error -> {
+                    Log.e("Flujotest", "Error fetching route images: ${result.message}")
+                }
+                else -> Unit
+            }
+        }
+    }
+
+    fun deleteImage(imageId: Long) {
+        viewModelScope.launch {
+            when (val result = deleteRouteImageUseCase(routeId, imageId)) {
+                is Resource.Success -> {
+                    fetchRouteImages()
+                }
+                is Resource.Error -> {
+                    Log.e("RouteDetailVM", "Failed to delete image: ${result.message}")
+                }
+                else -> Unit
+            }
+        }
+    }
+
+    private fun extractImageIdFromUrl(imageUrl: String): Long? {
+        // Esto depende de si tienes el ID como parte de la URL o necesitas un modelo con ID + URL
+        // Aquí asumimos que NO lo tienes. Lo ideal es que en vez de `List<String>` uses `List<RouteImage>`
+
+        Log.e("DeleteImage", "No se puede extraer ID desde solo la URL")
+        return null
+    }
+
+
+
 
 
     private fun fetchRouteAndPopulateStates() {

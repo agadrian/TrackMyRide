@@ -1,4 +1,4 @@
-import org.apache.tools.ant.property.LocalProperties
+
 import java.io.FileInputStream
 import java.util.Properties
 
@@ -42,8 +42,15 @@ android {
 
         buildConfigField("String", "MAPS_API_KEY", "\"${localProperties.getProperty("MAPS_API_KEY", "")}\"")
         buildConfigField("String", "RETROFIT_API_KEY", "\"${localProperties.getProperty("RETROFIT_API_KEY", "")}\"")
-        manifestPlaceholders["MAPS_API_KEY"] = localProperties.getProperty("MAPS_API_KEY", "")
 
+
+        // CLOUDINARY
+        buildConfigField("String", "CLOUDINARY_CLOUD_NAME", "\"${localProperties.getProperty("cloudinary_cloud_name", "")}\"")
+        buildConfigField("String", "CLOUDINARY_API_KEY", "\"${localProperties.getProperty("cloudinary_api_key", "")}\"")
+        buildConfigField("String", "CLOUDINARY_API_SECRET", "\"${localProperties.getProperty("cloudinary_api_secret", "")}\"")
+        buildConfigField("String", "CLOUDINARY_UNSIGNED_PRESET", "\"${localProperties.getProperty("cloudinary_unsigned_preset", "")}\"")
+
+        manifestPlaceholders["MAPS_API_KEY"] = localProperties.getProperty("MAPS_API_KEY", "")
     }
 
     buildTypes {
@@ -157,6 +164,8 @@ dependencies {
 
     // Encripted sharedpreferences
     implementation("androidx.security:security-crypto:1.1.0-alpha07")
+
+    implementation("com.cloudinary:cloudinary-android:3.0.2")
 
 
 

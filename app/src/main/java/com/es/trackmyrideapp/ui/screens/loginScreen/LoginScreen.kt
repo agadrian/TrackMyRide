@@ -22,7 +22,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 
@@ -32,6 +31,7 @@ fun LoginScreen(
     modifier: Modifier = Modifier,
     navigateToRegister: () -> Unit,
     navigateToHome: () -> Unit,
+    navigateToAdminScreen: () -> Unit,
     navigateToForgotPassword: () -> Unit,
     snackbarHostState: SnackbarHostState
 ) {
@@ -42,7 +42,12 @@ fun LoginScreen(
     // Navegar a home si Login exitoso
     LaunchedEffect(uiState) {
         if (uiState is LoginUiState.Success) {
-            navigateToHome()
+            val role = (uiState as LoginUiState.Success).role
+            if (role == "ADMIN") {
+                navigateToAdminScreen()
+            } else {
+                navigateToHome()
+            }
         }
     }
 

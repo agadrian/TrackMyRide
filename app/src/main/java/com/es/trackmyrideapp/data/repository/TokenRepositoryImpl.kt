@@ -3,7 +3,7 @@ package com.es.trackmyrideapp.data.repository
 import android.util.Log
 import com.es.trackmyrideapp.data.local.AuthPreferences
 import com.es.trackmyrideapp.data.remote.api.AuthApi
-import com.es.trackmyrideapp.data.remote.api.RefreshTokenRequest
+import com.es.trackmyrideapp.data.remote.dto.RefreshTokenRequestDTO
 import com.es.trackmyrideapp.data.remote.mappers.AuthFlow
 import com.es.trackmyrideapp.data.remote.mappers.ErrorMessageMapper
 import com.es.trackmyrideapp.data.remote.mappers.toDomain
@@ -19,7 +19,7 @@ class TokenRepositoryImpl @Inject constructor(
             val refreshToken = authPreferences.getRefreshToken() ?: throw Exception("No refresh token found")
             Log.d("FlujoTest", "Refresh token actual: $refreshToken")
 
-            val response = authApi.refresh(RefreshTokenRequest(refreshToken))
+            val response = authApi.refresh(RefreshTokenRequestDTO(refreshToken))
 
             if (!response.isSuccessful) throw Exception("API refresh failed")
 

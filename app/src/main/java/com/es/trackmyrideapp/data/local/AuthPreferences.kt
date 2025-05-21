@@ -75,4 +75,16 @@ class AuthPreferences(context: Context) {
             null
         }
     }
+
+    fun getUserRoleFromToken(): String? {
+        val jwt = getJwtToken() ?: return null
+        return try {
+            val parts = jwt.split(".")
+            val payload = String(Base64.decode(parts[1], Base64.URL_SAFE), Charsets.UTF_8)
+            val jsonObject = JSONObject(payload)
+            jsonObject.getString("role")
+        } catch (e: Exception) {
+            null
+        }
+    }
 }

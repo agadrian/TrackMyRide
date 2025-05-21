@@ -35,9 +35,12 @@ class SessionViewModel @Inject constructor(
     private val _authState = MutableStateFlow<AuthState>(AuthState.Loading)
     val authState: StateFlow<AuthState> = _authState
 
+    private val _userRole = MutableStateFlow<String?>(null)
+    val userRole = _userRole.asStateFlow()
 
     init {
         checkAuthState()
+        _userRole.value = authPreferences.getUserRoleFromToken()
     }
 
     // Borrar tokens de encryptedsharedpreferences, el rememberMe y hacer singout
@@ -47,6 +50,8 @@ class SessionViewModel @Inject constructor(
         authPreferences.clearAllTokens()
         signOutUseCase()
         Log.d("FlujoTest", "Token shared pref: ${authPreferences.getJwtToken()}. Refreshtoken prefs ${authPreferences.getRefreshToken()}")
+        _userRole.value = null
+        _authState.value = AuthState.Unauthenticated
     }
 
     private fun checkAuthState() {
@@ -65,6 +70,13 @@ class SessionViewModel @Inject constructor(
                     withTimeout(5000) {
                         Log.d("FlujoTest", "Dentro de timeout5000 checkAndRefreshTokenUseCase...")
                         val newToken = checkAndRefreshTokenUseCase()
+
+                        // Obtener el rol del usuario para comprobar a que pantalla llevarlo
+                        if (newToken != null) {
+                            _userRole.value = authPreferences.getUserRoleFromToken()
+                        }else{
+                            _userRole.value = null
+                        }
                         Log.d("FlujoTest", "checkAndRefreshTokenUseCase completado correctamente con: $newToken")
                     }
 
@@ -79,6 +91,7 @@ class SessionViewModel @Inject constructor(
                 }
             } else {
                 Log.d("FlujoTest", "sesionviewmodel -> shouldAutoLogin -> false...")
+                _userRole.value = null
                 _authState.value = AuthState.Unauthenticated
             }
         }

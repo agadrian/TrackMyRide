@@ -1,6 +1,5 @@
 package com.es.trackmyrideapp.data.repository
 
-import android.util.Log
 import com.es.trackmyrideapp.data.remote.api.VehicleApi
 import com.es.trackmyrideapp.data.remote.dto.VehicleUpdateDTO
 import com.es.trackmyrideapp.data.remote.mappers.Resource

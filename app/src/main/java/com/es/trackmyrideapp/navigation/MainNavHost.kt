@@ -12,6 +12,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import com.es.trackmyrideapp.ui.screens.aboutUsScreen.AboutUsScreen
+import com.es.trackmyrideapp.ui.screens.adminScreen.AdminScreen
 import com.es.trackmyrideapp.ui.screens.forgotPasswordScreen.ForgotPasswordScreen
 import com.es.trackmyrideapp.ui.screens.homeScreen.HomeScreen
 import com.es.trackmyrideapp.ui.screens.loginScreen.LoginScreen
@@ -55,6 +56,12 @@ fun MainNavHost(
                     }
                 },
                 snackbarHostState = snackbarHostState,
+                navigateToAdminScreen ={
+                    navController.navigate(AdminScreen) {
+                        popUpTo(0)
+                        launchSingleTop = true
+                    }
+                }
             )
         }
 
@@ -143,6 +150,13 @@ fun MainNavHost(
             VehiclesScreen(
                 modifier = Modifier.padding(innerPadding),
                 snackbarHostState = snackbarHostState
+            )
+        }
+
+        // Admin Screen
+        composable<AdminScreen> {
+            AdminScreen(
+                modifier = Modifier.padding(innerPadding)
             )
         }
     }

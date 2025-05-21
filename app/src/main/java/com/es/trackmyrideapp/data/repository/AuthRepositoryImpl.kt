@@ -1,10 +1,8 @@
 package com.es.trackmyrideapp.data.repository
 
-import android.media.session.MediaSession.Token
 import android.util.Log
 import com.es.trackmyrideapp.data.local.AuthPreferences
 import com.es.trackmyrideapp.data.remote.api.AuthApi
-import com.es.trackmyrideapp.data.remote.api.RefreshTokenRequest
 import com.es.trackmyrideapp.data.remote.dto.UserRegistrationDTO
 import com.es.trackmyrideapp.data.remote.firebase.FirebaseAuthService
 import com.es.trackmyrideapp.data.remote.mappers.AuthFlow
@@ -13,7 +11,6 @@ import com.es.trackmyrideapp.data.remote.mappers.toDomain
 import com.es.trackmyrideapp.domain.model.AuthenticatedUser
 import com.es.trackmyrideapp.domain.model.FirebaseUser
 import com.es.trackmyrideapp.domain.repository.AuthRepository
-import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
@@ -107,10 +104,6 @@ class AuthRepositoryImpl @Inject constructor(
         Log.d("FlujoTest", "AuthRepositoryImpl. getFirebaseIdToken. firebaseUser: ${firebaseUser.uid} idToken: ${idTokenResult.token}")
         return idTokenResult.token ?: throw Exception("Failed to get Firebase ID token")
     }
-
-
-
-
 
 
     override fun signOut() {

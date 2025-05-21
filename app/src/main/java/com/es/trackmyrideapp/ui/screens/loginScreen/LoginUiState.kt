@@ -5,6 +5,6 @@ import com.es.trackmyrideapp.domain.model.AuthenticatedUser
 sealed class LoginUiState {
     object Idle : LoginUiState()
     object Loading : LoginUiState()
-    data class Success(val user: AuthenticatedUser, val jwtToken: String?) : LoginUiState()
+    data class Success(val user: AuthenticatedUser, val jwtToken: String?, val role: String?) : LoginUiState()
     //data class Error(val message: String) : LoginUiState()
 }
