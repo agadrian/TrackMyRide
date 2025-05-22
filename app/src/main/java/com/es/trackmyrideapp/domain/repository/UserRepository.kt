@@ -9,4 +9,6 @@ interface UserRepository {
     suspend fun getUserById(id: String): Resource<User>
     suspend fun updateUser(id: String, userUpdateDTO: UserUpdateDTO): Resource<User>
     suspend fun deleteUser(id: String): Resource<Unit>
+    suspend fun isUserPremium(): Resource<Boolean>
+    suspend fun setUserPremium(): Resource<Boolean>
 }

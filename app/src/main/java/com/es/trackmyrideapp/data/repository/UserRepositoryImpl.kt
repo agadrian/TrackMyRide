@@ -28,4 +28,14 @@ class UserRepositoryImpl @Inject constructor(
     override suspend fun deleteUser(id: String): Resource<Unit> = safeApiCall {
         userApi.deleteUser(id)
     }
+
+    override suspend fun isUserPremium(): Resource<Boolean> = safeApiCall {
+        userApi.isUserPremium().body()?.isPremium
+            ?: throw Exception("Empty response from API")
+    }
+
+    override suspend fun setUserPremium(): Resource<Boolean> = safeApiCall {
+        val response = userApi.setUserPremium()
+        response.isSuccessful && response.body() == true
+    }
 }

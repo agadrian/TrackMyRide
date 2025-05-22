@@ -2,6 +2,7 @@ package com.es.trackmyrideapp.ui.screens.routeDetailsScreen
 
 import FullscreenImageDialog
 import android.os.Build
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
@@ -18,6 +19,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -27,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.es.trackmyrideapp.LocalSessionViewModel
 import com.es.trackmyrideapp.R
 import com.es.trackmyrideapp.domain.model.RouteImage
 import com.es.trackmyrideapp.ui.components.VehicleType
@@ -44,6 +47,15 @@ fun RouteDetailScreen(
 ){
 
     val routeDetailViewModel: RouteDetailViewModel = hiltViewModel()
+
+    //  Llamo con launchedeffect a la api para comprobar el premium, y luego miro el estado obtenido
+    val sessionViewModel = LocalSessionViewModel.current
+    val isPremium by sessionViewModel.isPremium.collectAsState()
+
+    LaunchedEffect(Unit){
+        sessionViewModel.checkPremiumStatus()
+    }
+
 
     val scrollState = rememberScrollState()
 
@@ -148,6 +160,12 @@ fun RouteDetailScreen(
 
         Spacer(Modifier.height(24.dp))
 
+        if (isPremium){
+            Log.d("Flujotest", "Es premium")
+        }else{
+            Log.d("Flujotest", "No es premium")
+        }
+
         Column(
             modifier = Modifier
                 .padding(horizontal = 30.dp),
@@ -185,16 +203,20 @@ fun RouteDetailScreen(
                 onImageClick = { selectedImage.value = it }
             )
 
-            PremiumCard(
-                onUpdateToPremiumClicked = {
-                /*TODO: Navegar a premium screen o al pago directamente*/
-                }
-            )
+            if (!isPremium){
+                PremiumCard(
+                    onUpdateToPremiumClicked = {
+                        /*TODO: Navegar a premium screen o al pago directamente*/
+                    }
+                )
+            }
 
-            FooterButtons(
-                onExportClicked = {},
-                onShareClicked = {}
-            )
+            if (isPremium){
+                FooterButtons(
+                    onExportClicked = {},
+                    onShareClicked = {}
+                )
+            }
 
             Spacer(Modifier.height(8.dp))
         }

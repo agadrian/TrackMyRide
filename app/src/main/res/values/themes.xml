@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.TrackMyRideApp" parent="android:Theme.Material.Light.NoActionBar">
-        <!-- tu configuración aquí -->
+    <style name="Theme.TrackMyRideApp" parent="Theme.MaterialComponents.DayNight.NoActionBar">
     </style>
 
     <style name="Theme.TrackMyRideApp.Splash" parent="Theme.SplashScreen">

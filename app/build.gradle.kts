@@ -49,6 +49,7 @@ android {
         buildConfigField("String", "CLOUDINARY_API_KEY", "\"${localProperties.getProperty("cloudinary_api_key", "")}\"")
         buildConfigField("String", "CLOUDINARY_API_SECRET", "\"${localProperties.getProperty("cloudinary_api_secret", "")}\"")
         buildConfigField("String", "CLOUDINARY_UNSIGNED_PRESET", "\"${localProperties.getProperty("cloudinary_unsigned_preset", "")}\"")
+        buildConfigField("String", "PAYPAL_CLIENT_ID", "\"${localProperties.getProperty("paypal_client_id", "")}\"")
 
         manifestPlaceholders["MAPS_API_KEY"] = localProperties.getProperty("MAPS_API_KEY", "")
     }
@@ -91,6 +92,7 @@ android {
 dependencies {
     // Hilt
     implementation(libs.hilt.core)
+    implementation(libs.androidx.appcompat)
     kapt(libs.hilt.compiler)
     implementation(libs.hilt.navigation.compose)
 
@@ -165,6 +167,7 @@ dependencies {
     // Encripted sharedpreferences
     implementation("androidx.security:security-crypto:1.1.0-alpha07")
 
+    // Imagenes en la nube
     implementation("com.cloudinary:cloudinary-android:3.0.2")
 
 

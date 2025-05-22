@@ -10,6 +10,8 @@ import com.es.trackmyrideapp.data.repository.SessionRepository
 import com.es.trackmyrideapp.domain.usecase.GetCurrentUserUseCase
 import com.es.trackmyrideapp.domain.usecase.SignOutUseCase
 import com.es.trackmyrideapp.domain.usecase.auth.CheckAndRefreshTokenUseCase
+import com.es.trackmyrideapp.domain.usecase.users.IsUserPremiumUseCase
+import com.es.trackmyrideapp.domain.usecase.users.SetPremiumUseCase
 import com.es.trackmyrideapp.domain.usecase.vehicles.CreateInitialVehiclesUseCase
 import com.es.trackmyrideapp.ui.components.VehicleType
 import com.google.maps.android.compose.MapType
@@ -29,7 +31,9 @@ class SessionViewModel @Inject constructor(
     private val authPreferences: AuthPreferences,
     private val checkAndRefreshTokenUseCase: CheckAndRefreshTokenUseCase,
     private val sessionRepository: SessionRepository,
-    private val createInitialVehiclesUseCase: CreateInitialVehiclesUseCase
+    private val createInitialVehiclesUseCase: CreateInitialVehiclesUseCase,
+    private val isUserPremiumUseCase: IsUserPremiumUseCase,
+    private val setPremiumUseCase: SetPremiumUseCase
 ) : ViewModel() {
 
     private val _authState = MutableStateFlow<AuthState>(AuthState.Loading)
@@ -37,6 +41,9 @@ class SessionViewModel @Inject constructor(
 
     private val _userRole = MutableStateFlow<String?>(null)
     val userRole = _userRole.asStateFlow()
+
+    private val _isPremium = MutableStateFlow<Boolean>(false)
+    val isPremium: StateFlow<Boolean> = _isPremium.asStateFlow()
 
     init {
         checkAuthState()
@@ -53,6 +60,42 @@ class SessionViewModel @Inject constructor(
         _userRole.value = null
         _authState.value = AuthState.Unauthenticated
     }
+
+    fun checkPremiumStatus() {
+        viewModelScope.launch {
+            when(val result = isUserPremiumUseCase()) {
+                is Resource.Success -> {
+                    val newIsPremium = result.data
+                    if (_isPremium.value != newIsPremium) {
+                        _isPremium.value = newIsPremium
+                    }
+                }
+                is Resource.Error -> {
+                    Log.d("Flujotest", "Error comprobando IsPremium")
+                }
+                Resource.Loading -> {
+                    // Nada o estado loading si quieres
+                }
+            }
+        }
+    }
+
+    fun activatePremiumUser() {
+        viewModelScope.launch {
+            when (val result = setPremiumUseCase()) {
+                is Resource.Success -> {
+                    _isPremium.value = true  // o result.data si devuelve Boolean real
+                }
+                is Resource.Error -> {
+                    Log.e("SessionViewModel", "Error activando premium: ${result.message}")
+                }
+                Resource.Loading -> {
+                    // Opcional: manejar estado loading si quieres
+                }
+            }
+        }
+    }
+
 
     private fun checkAuthState() {
         viewModelScope.launch {

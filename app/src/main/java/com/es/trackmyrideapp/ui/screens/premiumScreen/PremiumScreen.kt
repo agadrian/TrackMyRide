@@ -1,5 +1,6 @@
 package com.es.trackmyrideapp.ui.screens.premiumScreen
 
+import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,7 +22,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -30,12 +31,15 @@ import androidx.compose.ui.unit.sp
 import com.es.trackmyrideapp.LocalIsDarkTheme
 import com.es.trackmyrideapp.R
 import com.es.trackmyrideapp.ui.components.CustomButton
+import com.es.trackmyrideapp.utils.PaymentWebViewActivity
 
 
 @Composable
 fun PremiumScreen(
     modifier: Modifier = Modifier
 ){
+
+    val context = LocalContext.current
 
     Box(
         modifier = modifier
@@ -118,7 +122,10 @@ fun PremiumScreen(
 
 
             CustomButton(
-                onclick = {/* TODO: Payment process*/},
+                onclick = {
+                    val intent = Intent(context, PaymentWebViewActivity::class.java)
+                    context.startActivity(intent)
+                },
                 buttonColor = colorResource(R.color.orangeButton),
                 fontColor = colorResource(R.color.black),
                 text = "Go Premium"

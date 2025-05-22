@@ -1,7 +1,9 @@
 package com.es.trackmyrideapp.data.remote.api
 
+import com.es.trackmyrideapp.data.remote.dto.IsPremiumResponseDTO
 import com.es.trackmyrideapp.data.remote.dto.UserResponseDTO
 import com.es.trackmyrideapp.data.remote.dto.UserUpdateDTO
+import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -28,4 +30,10 @@ interface UserApi {
     // Eliminar un usuario (solo admin)
     @DELETE("/users/{id}")
     suspend fun deleteUser(@Path("id") id: String)
+
+    @GET("/users/isPremium")
+    suspend fun isUserPremium(): Response<IsPremiumResponseDTO>
+
+    @PUT("users/setPremium")
+    suspend fun setUserPremium(): Response<Boolean>
 }

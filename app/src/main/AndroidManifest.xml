@@ -10,6 +10,7 @@
     <application
         android:usesCleartextTraffic="true"
         android:name=".TrackMyRideApp"
+
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -35,6 +36,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".utils.PaymentWebViewActivity"
+            android:exported="false"
+            android:theme="@style/Theme.TrackMyRideApp"
+        />
     </application>
 
 </manifest>
