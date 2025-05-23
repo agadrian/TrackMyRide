@@ -1,4 +1,4 @@
-package com.es.trackmyrideapp.utils
+package com.es.trackmyrideapp.ui.screens.payment
 
 import android.annotation.SuppressLint
 import android.os.Bundle
@@ -11,7 +11,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.es.trackmyrideapp.BuildConfig
-import com.es.trackmyrideapp.ui.SessionViewModel
+import com.es.trackmyrideapp.ui.viewmodels.SessionViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -22,10 +22,6 @@ class PaymentWebViewActivity : AppCompatActivity() {
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // Mostrar flecha de volver en el action bar nativo
-        //supportActionBar?.setDisplayHomeAsUpEnabled(true)
-
 
 
         val toolbar = Toolbar(this).apply {

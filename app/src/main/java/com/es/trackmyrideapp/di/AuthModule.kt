@@ -13,7 +13,7 @@ import retrofit2.Retrofit
 import javax.inject.Singleton
 
 @Module
-@InstallIn(SingletonComponent::class) // Asegura que se cree una única instancia en el ciclo de vida de la aplicación
+@InstallIn(SingletonComponent::class)
 object AuthModule {
 
     @Provides

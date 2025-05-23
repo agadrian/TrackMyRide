@@ -17,6 +17,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -26,11 +28,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.es.trackmyrideapp.LocalSessionViewModel
 import com.es.trackmyrideapp.R
+import com.es.trackmyrideapp.core.states.MessageType
 import com.es.trackmyrideapp.domain.model.RouteImage
 import com.es.trackmyrideapp.ui.components.VehicleType
 import com.es.trackmyrideapp.ui.permissions.AppPermission
@@ -43,19 +47,23 @@ import com.es.trackmyrideapp.ui.permissions.rememberPermissionHandler
 @Composable
 fun RouteDetailScreen(
     modifier: Modifier = Modifier,
-    idRoute: Long
+    onGoPremiumClicked: () -> Unit,
+    idRoute: Long,
+    snackbarHostState: SnackbarHostState
 ){
 
     val routeDetailViewModel: RouteDetailViewModel = hiltViewModel()
+    val uiMessage by routeDetailViewModel.uiMessage.collectAsState()
+    val context = LocalContext.current
 
     //  Llamo con launchedeffect a la api para comprobar el premium, y luego miro el estado obtenido
     val sessionViewModel = LocalSessionViewModel.current
     val isPremium by sessionViewModel.isPremium.collectAsState()
 
+
     LaunchedEffect(Unit){
         sessionViewModel.checkPremiumStatus()
     }
-
 
     val scrollState = rememberScrollState()
 
@@ -100,6 +108,18 @@ fun RouteDetailScreen(
     ) { uri ->
         uri?.let {
             routeDetailViewModel.uploadImage(it)
+        }
+    }
+
+    // Mostrar info  en snackbar
+    LaunchedEffect(uiMessage) {
+        uiMessage?.let { message ->
+            snackbarHostState.showSnackbar(
+                message = message.message,
+                withDismissAction = message.type == MessageType.ERROR,
+                duration = SnackbarDuration.Short
+            )
+            routeDetailViewModel.consumeUiMessage()
         }
     }
 
@@ -198,23 +218,32 @@ fun RouteDetailScreen(
             ImagesCard(
                 images = images,
                 onAddImage = {
-                    shouldLaunchPicker = true
+                    val canAdd = routeDetailViewModel.canAddMoreImages(isPremium, images.size)
+                    shouldLaunchPicker = canAdd
                 },
                 onImageClick = { selectedImage.value = it }
             )
 
             if (!isPremium){
                 PremiumCard(
-                    onUpdateToPremiumClicked = {
-                        /*TODO: Navegar a premium screen o al pago directamente*/
-                    }
+                    onUpdateToPremiumClicked = onGoPremiumClicked
                 )
             }
 
             if (isPremium){
                 FooterButtons(
-                    onExportClicked = {},
-                    onShareClicked = {}
+                    onExportClicked = {
+                        routeDetailViewModel.exportRouteToDownloads(context = context)
+                    },
+                    onShareClicked = {
+                        routeDetailViewModel.shareRouteAsGpx(context = context)
+                    },
+                    /*
+                    onImportClicked = { uri ->
+                        routeDetailViewModel.importGpxFromUri(uri, context)
+                    }
+
+                     */
                 )
             }
 

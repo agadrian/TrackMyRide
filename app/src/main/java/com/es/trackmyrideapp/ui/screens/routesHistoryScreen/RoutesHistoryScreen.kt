@@ -32,24 +32,21 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.es.trackmyrideapp.LocalSessionViewModel
 import com.es.trackmyrideapp.R
 import com.es.trackmyrideapp.core.states.MessageType
 import com.es.trackmyrideapp.domain.model.Route
+import com.es.trackmyrideapp.ui.components.CustomButton
 import com.es.trackmyrideapp.ui.components.VehicleFilter
 import com.es.trackmyrideapp.ui.components.VehicleFilterSelector
-import com.es.trackmyrideapp.ui.components.VehicleType
 import okhttp3.internal.concurrent.formatDuration
 
-
-data class RouteWithVehicleType(
-    val route: Route,
-    val vehicleType: VehicleType
-)
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun RoutesHistoryScreen(
     onViewDetailsClicked: (Long) -> Unit,
+    onGetPremiumClicked: () -> Unit,
     modifier: Modifier,
     snackbarHostState: SnackbarHostState
 ){
@@ -59,6 +56,14 @@ fun RoutesHistoryScreen(
     val uiState by routesHistoryViewModel.uiState.collectAsState()
     val scrollState = rememberScrollState()
 
+    //  Llamo con launchedeffect a la api para comprobar el premium, y luego miro el estado obtenido
+    val sessionViewModel = LocalSessionViewModel.current
+    val isPremium by sessionViewModel.isPremium.collectAsState()
+
+    LaunchedEffect(Unit){
+        sessionViewModel.checkPremiumStatus()
+    }
+
     LaunchedEffect(selectedFilter) {
         scrollState.animateScrollTo(0)
     }
@@ -67,15 +72,11 @@ fun RoutesHistoryScreen(
     var showDeleteDialog by remember { mutableStateOf(false) }
 
     val allRoutes by routesHistoryViewModel.routes.collectAsState()
-
-    val filteredRoutes = when (selectedFilter) {
-        is VehicleFilter.All -> allRoutes
-        is VehicleFilter.Type -> allRoutes.filter {
-            it.vehicleType == (selectedFilter as VehicleFilter.Type).type
-        }
+    val filteredRoutes = remember(allRoutes, selectedFilter, isPremium) {
+        routesHistoryViewModel.getFilteredRoutes(isPremium, selectedFilter)
     }
 
-
+    // Snackbar msg
     LaunchedEffect(uiMessage) {
         uiMessage?.let { message ->
             snackbarHostState.showSnackbar(
@@ -137,7 +138,20 @@ fun RoutesHistoryScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
             }
+
+            // Mostrar boton de get premium cuando no lo sea
+            if (!isPremium && selectedFilter == VehicleFilter.All){
+                CustomButton(
+                    onclick = onGetPremiumClicked,
+                    buttonColor = colorResource(R.color.orangeButton),
+                    fontColor = colorResource(R.color.black),
+                    text = "Go Premium to see more"
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+            }
         }
+
 
         // Dialog confirmacion para borrar
         if (showDeleteDialog && routeToDelete != null) {

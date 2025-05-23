@@ -20,8 +20,8 @@ import com.es.trackmyrideapp.navigation.AdminScreen
 import com.es.trackmyrideapp.navigation.Home
 import com.es.trackmyrideapp.navigation.Login
 import com.es.trackmyrideapp.navigation.NavigationWrapper
-import com.es.trackmyrideapp.ui.AuthState
-import com.es.trackmyrideapp.ui.SessionViewModel
+import com.es.trackmyrideapp.ui.viewmodels.AuthState
+import com.es.trackmyrideapp.ui.viewmodels.SessionViewModel
 import com.es.trackmyrideapp.ui.theme.TrackMyRideAppTheme
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject

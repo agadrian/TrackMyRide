@@ -1,5 +1,6 @@
 package com.es.trackmyrideapp.ui.screens.routeDetailsScreen
 
+import android.content.Context
 import android.net.Uri
 import android.os.Build
 import android.util.Log
@@ -10,6 +11,8 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.es.trackmyrideapp.core.extensions.round
+import com.es.trackmyrideapp.core.states.MessageType
+import com.es.trackmyrideapp.core.states.UiMessage
 import com.es.trackmyrideapp.data.remote.dto.RouteImageRequest
 import com.es.trackmyrideapp.data.remote.mappers.Resource
 import com.es.trackmyrideapp.domain.model.Route
@@ -20,9 +23,13 @@ import com.es.trackmyrideapp.domain.usecase.images.UploadImageToCloudinaryUseCas
 import com.es.trackmyrideapp.domain.usecase.images.UploadRouteImagesUseCase
 import com.es.trackmyrideapp.domain.usecase.routes.GetRouteByIdUseCase
 import com.es.trackmyrideapp.ui.components.VehicleType
+import com.es.trackmyrideapp.utils.GPXParser
+import com.es.trackmyrideapp.utils.GPXParser.saveGpxToDownloads
 import com.es.trackmyrideapp.utils.RouteSimplifier
 import com.google.android.gms.maps.model.LatLng
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
@@ -41,6 +48,13 @@ class RouteDetailViewModel @Inject constructor(
     private val routeId: Long = checkNotNull(savedStateHandle["routeId"])
 
     private var loadedRoute: Route? = null
+
+    private val _uiMessage = MutableStateFlow<UiMessage?>(null)
+    val uiMessage: StateFlow<UiMessage?> = _uiMessage
+
+    fun consumeUiMessage() {
+        _uiMessage.value = null
+    }
 
     var routePoints = mutableStateOf<List<LatLng>>(emptyList())
         private set
@@ -113,9 +127,19 @@ class RouteDetailViewModel @Inject constructor(
                     description = null
                 )
                 uploadRouteImageUseCase(routeId, request)
-                // En vez de añadir aquí, mejor volver a cargar desde el servidor:
+                // Volver a cargar desde el servidor:
                 fetchRouteImages()
             }
+        }
+    }
+
+    fun canAddMoreImages(isPremium: Boolean, currentImageCount: Int): Boolean {
+        val maxImages = if (isPremium) 10 else 3
+        return if (currentImageCount < maxImages) {
+            true
+        } else {
+            _uiMessage.value = UiMessage("You have reached the maximum number of images ($maxImages) ${if (!isPremium) "Get premium to add more" else ""}", MessageType.INFO)
+            false
         }
     }
 
@@ -157,17 +181,6 @@ class RouteDetailViewModel @Inject constructor(
         }
     }
 
-    private fun extractImageIdFromUrl(imageUrl: String): Long? {
-        // Esto depende de si tienes el ID como parte de la URL o necesitas un modelo con ID + URL
-        // Aquí asumimos que NO lo tienes. Lo ideal es que en vez de `List<String>` uses `List<RouteImage>`
-
-        Log.e("DeleteImage", "No se puede extraer ID desde solo la URL")
-        return null
-    }
-
-
-
-
 
     private fun fetchRouteAndPopulateStates() {
         viewModelScope.launch {
@@ -207,7 +220,7 @@ class RouteDetailViewModel @Inject constructor(
         }
     }
 
-    fun getDecodedRoutePoints(): List<LatLng> {
+    private fun getDecodedRoutePoints(): List<LatLng> {
         val encoded = loadedRoute?.compressedRoute
         return if (!encoded.isNullOrEmpty()) {
             try {
@@ -221,6 +234,59 @@ class RouteDetailViewModel @Inject constructor(
             emptyList()
         }
     }
+
+
+    fun shareRouteAsGpx(context: Context) {
+        val points = routePoints.value
+        if (points.isEmpty()) {
+            _uiMessage.value = UiMessage("No route points to export", MessageType.ERROR)
+            return
+        }
+
+        val gpx = GPXParser.generateGpx(points)
+        GPXParser.shareRouteAsGpx(context, gpx)
+    }
+
+    @RequiresApi(Build.VERSION_CODES.Q)
+    fun exportRouteToDownloads(context: Context) {
+        val gpx = GPXParser.generateGpx(routePoints.value)
+        val fileName = "route_${System.currentTimeMillis()}.gpx"
+        val success = saveGpxToDownloads(context, fileName, gpx)
+
+        if (success) {
+            _uiMessage.value = UiMessage("Route saved to Downloads", MessageType.INFO)
+        } else {
+            _uiMessage.value = UiMessage("An error occurred while saving the route", MessageType.ERROR)
+        }
+    }
+
+    /*
+    fun importGpxFromUri(uri: Uri, context: Context) {
+        viewModelScope.launch {
+            try {
+                context.contentResolver.openInputStream(uri)?.use { inputStream ->
+                    val gpxContent = inputStream.bufferedReader().use { it.readText() }
+                    // Aquí parseamos el GPX con tu parser
+                    val points = GPXParser.parseGpx(gpxContent)
+
+                    if (points.isNotEmpty()) {
+                        //routePoints.value = points
+                        _uiMessage.value = UiMessage("GPX imported successfully", MessageType.INFO)
+                    } else {
+                        _uiMessage.value = UiMessage("The GPX file contains no points", MessageType.ERROR)
+                    }
+                } ?: run {
+                    _uiMessage.value = UiMessage("Could not open the selected file", MessageType.ERROR)
+                }
+            } catch (e: Exception) {
+                _uiMessage.value = UiMessage("Error importing GPX: ${e.message}", MessageType.ERROR)
+            }
+        }
+    }
+    */
+
+
+
 
     private fun formatSecondsToHhMmSs(seconds: Long): String {
         val h = seconds / 3600

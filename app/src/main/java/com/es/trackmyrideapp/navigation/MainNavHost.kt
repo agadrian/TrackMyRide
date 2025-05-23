@@ -104,7 +104,13 @@ fun MainNavHost(
             RoutesHistoryScreen(
                 onViewDetailsClicked = { routeId -> navController.navigate(RouteDetails(routeId = routeId)) },
                 modifier = Modifier.padding(innerPadding),
-                snackbarHostState = snackbarHostState
+                snackbarHostState = snackbarHostState,
+                onGetPremiumClicked = {
+                    navController.navigate(Premium) {
+                        popUpTo<RoutesHistory> { inclusive = true }
+                        launchSingleTop = true
+                    }
+                }
             )
         }
 
@@ -113,7 +119,14 @@ fun MainNavHost(
             val routeDetail = backStackEntry.toRoute<RouteDetails>()
             RouteDetailScreen(
                 modifier = Modifier.padding(innerPadding),
-                idRoute = routeDetail.routeId
+                idRoute = routeDetail.routeId,
+                snackbarHostState = snackbarHostState,
+                onGoPremiumClicked = {
+                    navController.navigate(Premium) {
+                        popUpTo<RouteDetails> { inclusive = true }
+                        launchSingleTop = true
+                    }
+                }
             )
         }
 

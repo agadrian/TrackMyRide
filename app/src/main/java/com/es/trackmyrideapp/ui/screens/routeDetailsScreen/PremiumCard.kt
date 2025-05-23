@@ -97,7 +97,7 @@ fun PremiumCard(
 
             CustomButton(
                 onclick = onUpdateToPremiumClicked,
-                text = "Update to Premium",
+                text = "Upgrade to Premium",
                 buttonColor = colorResource(R.color.orangeButton),
                 fontColor = colorResource(R.color.black),
             )

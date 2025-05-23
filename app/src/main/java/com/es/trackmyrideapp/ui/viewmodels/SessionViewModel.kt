@@ -1,4 +1,4 @@
-package com.es.trackmyrideapp.ui
+package com.es.trackmyrideapp.ui.viewmodels
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
@@ -48,6 +48,7 @@ class SessionViewModel @Inject constructor(
     init {
         checkAuthState()
         _userRole.value = authPreferences.getUserRoleFromToken()
+        checkPremiumStatus()
     }
 
     // Borrar tokens de encryptedsharedpreferences, el rememberMe y hacer singout
