@@ -37,7 +37,6 @@ fun NavigationWrapper(
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
-
     val sessionViewModel = LocalSessionViewModel.current
 
 
@@ -53,9 +52,11 @@ fun NavigationWrapper(
         )
     }
 
+    val isAdminScreen = currentDestination == AdminScreen::class.qualifiedName
+
     // Controlar visibilidad UI
     val showAppBars = !isAuthScreen
-    val showDrawer = showAppBars && !isSubScreen
+    val showDrawer = showAppBars && !isSubScreen && !isAdminScreen
     val showBackButton = isSubScreen
 
     // Paddings
@@ -135,7 +136,14 @@ fun NavigationWrapper(
                         onVehicleTypeChanged = { vehicle ->
                             sessionViewModel.selectVehicle(vehicle)
                         },
-                        currentVehicleType = sessionViewModel.selectedVehicle.collectAsState().value
+                        currentVehicleType = sessionViewModel.selectedVehicle.collectAsState().value,
+                        onLogoutAdminClicked = {
+                            sessionViewModel.logout()
+                            navController.navigate(Login) {
+                                popUpTo(0)
+                                launchSingleTop = true
+                            }},
+                        showDrawerMenuButton = showDrawer
                     )
                 }
             ) { innerPadding ->

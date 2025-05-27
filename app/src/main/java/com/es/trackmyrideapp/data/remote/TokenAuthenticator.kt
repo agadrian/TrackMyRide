@@ -19,7 +19,7 @@ class TokenAuthenticator @Inject constructor(
         val newToken = try {
             runBlocking {
                 val result = tokenRefreshRepo.get().refreshToken()
-                if (result.isSuccess) result.getOrNull()?.apiUser?.jwtToken else null
+                if (result.isSuccess) result.getOrNull()?.authenticatedUser?.jwtToken else null
             }
         } catch (e: Exception) {
             null

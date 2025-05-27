@@ -39,7 +39,7 @@ fun LoginScreen(
     val uiState by loginViewModel.uiState.collectAsState()
     val errorMessage by loginViewModel.errorMessage.collectAsState()
 
-    // Navegar a home si Login exitoso
+    // Navegar a home/admin si Login exitoso
     LaunchedEffect(uiState) {
         if (uiState is LoginUiState.Success) {
             val role = (uiState as LoginUiState.Success).role

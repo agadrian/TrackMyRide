@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.es.trackmyrideapp.data.local.AuthPreferences
 import com.es.trackmyrideapp.data.remote.dto.UserRegistrationDTO
 import com.es.trackmyrideapp.domain.usecase.RegisterUseCase
 import com.es.trackmyrideapp.domain.usecase.vehicles.CreateInitialVehiclesUseCase
@@ -18,7 +19,8 @@ import javax.inject.Inject
 @HiltViewModel
 class RegisterViewModel @Inject constructor(
     private val registerUseCase: RegisterUseCase,
-    private val createInitialVehiclesUseCase: CreateInitialVehiclesUseCase
+    private val createInitialVehiclesUseCase: CreateInitialVehiclesUseCase,
+    private val authPreferences: AuthPreferences
 ) : ViewModel() {
 
     // Estados del formulario
@@ -72,17 +74,17 @@ class RegisterViewModel @Inject constructor(
 
             result.fold(
                 onSuccess = { authResult ->
-                    val user = authResult.apiUser
-                    val jwt = authResult.apiUser.jwtToken
-                    _uiState.value = RegisterUiState.Success(user, jwt)
+                    val role = authPreferences.getUserRoleFromToken()
+                    _uiState.value = RegisterUiState.Success(role)
 
-                    Log.d("FlujoTest", "authviewmodel: register llamado. onsucces. user ${user.username} user uid ${user.uid} jwt: ${jwt}  registeruistatevalue ${_uiState.value}")
-
-                    // Crear los vehiculos iniciales
-                    launch {
-                        val vehiclesResult = createInitialVehiclesUseCase()
-                        Log.d("FlujoTest", "Registerviewmodel. Resultado de createInitialVehicles: $vehiclesResult")
+                    if (role != "ADMIN"){
+                        // Crear los vehiculos iniciales cuando no sea admin solo
+                        launch {
+                            val vehiclesResult = createInitialVehiclesUseCase()
+                            Log.d("FlujoTest", "Registerviewmodel. Resultado de createInitialVehicles: $vehiclesResult")
+                        }
                     }
+
                 },
                 onFailure = { exception ->
                     Log.d("FlujoTest", "authviewmodel: register llamado. onfailure. exception: ${exception.message} ")

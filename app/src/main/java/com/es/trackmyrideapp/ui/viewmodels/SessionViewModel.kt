@@ -51,7 +51,52 @@ class SessionViewModel @Inject constructor(
         checkPremiumStatus()
     }
 
-    // Borrar tokens de encryptedsharedpreferences, el rememberMe y hacer singout
+
+    private fun checkAuthState() {
+        viewModelScope.launch {
+            Log.d("FlujoTest", "- Verificando el estado de la autenticación...")
+            val shouldAutoLogin = rememberMePreferences.isRememberMe() && getCurrentUserUseCase() != null
+            Log.d("FlujoTest", "sesionviewmodel -> shouldAutoLogin: $shouldAutoLogin")
+
+
+            if (shouldAutoLogin) {
+                try {
+                    Log.d("FlujoTest", "sesionviewmodel -> shouldAutoLogin...")
+                    Log.d("FlujoTest", "Intentando refrescar token si es necesario...")
+                    // Comprobar que el jwt guardado sea valido, y renovarlo en cado de que no
+                    withTimeout(6000) {
+                        Log.d("FlujoTest", "Dentro de timeout5000 checkAndRefreshTokenUseCase...")
+                        val newToken = checkAndRefreshTokenUseCase()
+
+                        // Obtener el rol del usuario para comprobar a que pantalla llevarlo
+                        if (newToken != null) {
+                            _userRole.value = authPreferences.getUserRoleFromToken()
+                        }else{
+                            _userRole.value = null
+                        }
+                        Log.d("FlujoTest", "checkAndRefreshTokenUseCase completado correctamente con: $newToken")
+                    }
+
+
+                    Log.d("FlujoTest", "Saliendo del timeout de 6000 para el chekAndRefreshTokenUseCase...")
+                    _authState.value = AuthState.Authenticated
+                    loadInitialVehicles()
+                } catch (e: Throwable) {
+                    Log.d("FlujoTest", "sesionviewmodel -> shouldAutoLogin.. catch. Se llama al logout Exception: ${e.message}")
+                    logout()
+                    _authState.value = AuthState.Unauthenticated
+                }
+            } else {
+                Log.d("FlujoTest", "sesionviewmodel -> shouldAutoLogin -> false...")
+                _userRole.value = null
+                _authState.value = AuthState.Unauthenticated
+            }
+        }
+    }
+
+    /**
+     * Borrar tokens de encryptedsharedpreferences, el rememberMe y hacer singout
+     */
     fun logout() {
         Log.d("FlujoTest", "sesionviewmodel -> logout llamado...")
         rememberMePreferences.clearRememberMe()
@@ -61,6 +106,7 @@ class SessionViewModel @Inject constructor(
         _userRole.value = null
         _authState.value = AuthState.Unauthenticated
     }
+
 
     fun checkPremiumStatus() {
         viewModelScope.launch {
@@ -75,7 +121,7 @@ class SessionViewModel @Inject constructor(
                     Log.d("Flujotest", "Error comprobando IsPremium")
                 }
                 Resource.Loading -> {
-                    // Nada o estado loading si quieres
+                    // Nada
                 }
             }
         }
@@ -85,58 +131,14 @@ class SessionViewModel @Inject constructor(
         viewModelScope.launch {
             when (val result = setPremiumUseCase()) {
                 is Resource.Success -> {
-                    _isPremium.value = true  // o result.data si devuelve Boolean real
+                    _isPremium.value = true
                 }
                 is Resource.Error -> {
                     Log.e("SessionViewModel", "Error activando premium: ${result.message}")
                 }
                 Resource.Loading -> {
-                    // Opcional: manejar estado loading si quieres
+                    // nada
                 }
-            }
-        }
-    }
-
-
-    private fun checkAuthState() {
-        viewModelScope.launch {
-            Log.d("SessionViewModel", "Verificando el estado de la autenticación...")
-            Log.d("FlujoTest", "- Verificando el estado de la autenticación...")
-            val shouldAutoLogin = rememberMePreferences.isRememberMe() && getCurrentUserUseCase() != null
-            Log.d("FlujoTest", "sesionviewmodel -> shouldAutoLogin: $shouldAutoLogin")
-
-
-            if (shouldAutoLogin) {
-                try {
-                    Log.d("FlujoTest", "sesionviewmodel -> shouldAutoLogin...")
-                    Log.d("FlujoTest", "Intentando refrescar token si es necesario...")
-                    // Comprobar que el jwt guardado sea valido, y renovarlo en cado de que no
-                    withTimeout(5000) {
-                        Log.d("FlujoTest", "Dentro de timeout5000 checkAndRefreshTokenUseCase...")
-                        val newToken = checkAndRefreshTokenUseCase()
-
-                        // Obtener el rol del usuario para comprobar a que pantalla llevarlo
-                        if (newToken != null) {
-                            _userRole.value = authPreferences.getUserRoleFromToken()
-                        }else{
-                            _userRole.value = null
-                        }
-                        Log.d("FlujoTest", "checkAndRefreshTokenUseCase completado correctamente con: $newToken")
-                    }
-
-
-                    Log.d("FlujoTest", "Saliendo del timeout de 5000 para el chekAndRefreshTokenUseCase...")
-                    _authState.value = AuthState.Authenticated
-                    loadInitialVehicles()
-                } catch (e: Throwable) {
-                    Log.d("FlujoTest", "sesionviewmodel -> shouldAutoLogin.. catch. Se llama al logout Exception: ${e.message}")
-                    logout()
-                    _authState.value = AuthState.Unauthenticated
-                }
-            } else {
-                Log.d("FlujoTest", "sesionviewmodel -> shouldAutoLogin -> false...")
-                _userRole.value = null
-                _authState.value = AuthState.Unauthenticated
             }
         }
     }

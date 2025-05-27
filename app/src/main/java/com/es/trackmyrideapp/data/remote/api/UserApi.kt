@@ -29,11 +29,15 @@ interface UserApi {
 
     // Eliminar un usuario (solo admin)
     @DELETE("/users/{id}")
-    suspend fun deleteUser(@Path("id") id: String)
+    suspend fun deleteUser(@Path("id") id: String): Response<Unit>
 
     @GET("/users/isPremium")
     suspend fun isUserPremium(): Response<IsPremiumResponseDTO>
 
     @PUT("users/setPremium")
     suspend fun setUserPremium(): Response<Boolean>
+
+    // Cambiar el estado de premium de un usuario (solo admin)
+    @PUT("/users/changeSubscriptionAdmin/{id}")
+    suspend fun toggleUserPremiumByAdmin(@Path("id") userId: String): UserResponseDTO
 }

@@ -36,7 +36,6 @@ class AuthRepositoryImpl @Inject constructor(
             authPreferences.setJwtToken(authUser.jwtToken)
             authPreferences.setRefreshToken(authUser.refreshToken)
 
-            Result.success(AuthResult(authUser))
 
             Log.d("FlujoTest", "authrepoimpl setJwtToken y setreefreshtoken llamados. jwt: ${authUser.jwtToken} refresh: ${authUser.refreshToken} ")
 
@@ -69,7 +68,7 @@ class AuthRepositoryImpl @Inject constructor(
             if (!apiResponse.isSuccessful) {
                 Log.d("FlujoTest", "AuthRepositoryImpl. register. apiresponse no es successfull. haciendo rollback en firebase. codigo ${apiResponse.code()}")
                 firebaseAuthService.deleteCurrentUser() // Rollback si falla
-                throw Exception("API register failed: ${apiResponse.code()}")
+                throw Exception("Register failed (${apiResponse.code()})")
 
             }
 
@@ -77,7 +76,6 @@ class AuthRepositoryImpl @Inject constructor(
             val authenticatedUser = apiResponse.body()?.toDomain()
                 ?: throw Exception("API register response null")
 
-            Log.d("FlujoTest", "AuthRepositoryImpl. register. authenticated user ${authenticatedUser.uid} name: ${authenticatedUser.username} email: ${authenticatedUser.email}")
 
             // Registrar tokens
             Log.d("FlujoTest", "AuthRepositoryImpl. register. registrar tokens llamado")
@@ -85,10 +83,8 @@ class AuthRepositoryImpl @Inject constructor(
             authPreferences.setRefreshToken(authenticatedUser.refreshToken)
             Log.d("FlujoTest", "AuthRepositoryImpl. register. tokens registrados. jwt: ${authenticatedUser.jwtToken} refresh: ${authenticatedUser.refreshToken} ")
 
-
-            // Devolver AuthResult completo con Firebase + backend user
+            // Devolver AuthResult con el AuthenticatedUser
             Result.success(AuthResult(authenticatedUser))
-
 
         } catch (e: Exception) {
             Log.d("FlujoTest", "authrepoimpl register excepcion: ${e.message} ")
@@ -132,7 +128,7 @@ class AuthRepositoryImpl @Inject constructor(
 
 data class AuthResult(
     //val firebaseUser: FirebaseUser,
-    val apiUser: AuthenticatedUser
+    val authenticatedUser: AuthenticatedUser
 )
 
 

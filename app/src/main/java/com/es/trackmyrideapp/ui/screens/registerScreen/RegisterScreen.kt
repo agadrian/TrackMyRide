@@ -29,19 +29,25 @@ fun RegisterScreen(
     modifier: Modifier = Modifier,
     navigateToLogin: () -> Unit,
     navigateToHome: () -> Unit,
+    navigateToAdminScreen: () -> Unit,
     snackbarHostState: SnackbarHostState
 ){
     val registerViewModel: RegisterViewModel = hiltViewModel()
     val uiState by registerViewModel.uiState.collectAsState()
     val errorMessage by registerViewModel.errorMessage.collectAsState()
 
-
-    // Navegar a Home si exitoso
+    // Navegar si exitoso
     LaunchedEffect(uiState) {
         if (uiState is RegisterUiState.Success) {
-            navigateToHome()
+            val role = (uiState as RegisterUiState.Success).role
+            if (role == "ADMIN") {
+                navigateToAdminScreen()
+            } else {
+                navigateToHome()
+            }
         }
     }
+
 
     // Mostrar errores
     LaunchedEffect(errorMessage) {

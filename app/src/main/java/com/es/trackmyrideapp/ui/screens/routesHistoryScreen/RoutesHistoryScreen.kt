@@ -76,6 +76,8 @@ fun RoutesHistoryScreen(
         routesHistoryViewModel.getFilteredRoutes(isPremium, selectedFilter)
     }
 
+    val showButtonGoPremium = routesHistoryViewModel.shouldShowGetPremiumButton(isPremium, selectedFilter)
+
     // Snackbar msg
     LaunchedEffect(uiMessage) {
         uiMessage?.let { message ->
@@ -114,33 +116,49 @@ fun RoutesHistoryScreen(
         ) {
             Spacer(modifier = Modifier.height(8.dp))
 
-            filteredRoutes.forEach { item ->
+            if (filteredRoutes.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(top = 64.dp),
+                    contentAlignment = Alignment.TopCenter
+                ) {
+                    Text(
+                        text = "You haven't completed any routes yet.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                }
+            } else {
+                filteredRoutes.forEach { item ->
 
-                val route = item.route
-                val title = route.name
-                val distance = "${route.distanceKm} Km"
-                val duration = formatDuration(route.movingTimeSec)
-                val pace = route.pace?.let { String.format("%.2f", it) + " Km/h" } ?: "-"
-                val date = route.startTime.toLocalDate().toString()
+                    val route = item.route
+                    val title = route.name
+                    val distance = "${route.distanceKm} Km"
+                    val duration = formatDuration(route.movingTimeSec)
+                    val pace = route.pace?.let { String.format("%.2f", it) + " Km/h" } ?: "-"
+                    val date = route.startTime.toLocalDate().toString()
 
-                RouteCard(
-                    tittle = title,
-                    duration = duration,
-                    distance = distance,
-                    pace = pace,
-                    date = date,
-                    onDeleteClicked = {
-                        routeToDelete = route
-                        showDeleteDialog = true
-                    },
-                    onViewDetailsClicked = { onViewDetailsClicked(route.id) }
-                )
+                    RouteCard(
+                        tittle = title,
+                        duration = duration,
+                        distance = distance,
+                        pace = pace,
+                        date = date,
+                        onDeleteClicked = {
+                            routeToDelete = route
+                            showDeleteDialog = true
+                        },
+                        onViewDetailsClicked = { onViewDetailsClicked(route.id) }
+                    )
 
-                Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(24.dp))
+                }
             }
 
+
             // Mostrar boton de get premium cuando no lo sea
-            if (!isPremium && selectedFilter == VehicleFilter.All){
+            if (showButtonGoPremium){
                 CustomButton(
                     onclick = onGetPremiumClicked,
                     buttonColor = colorResource(R.color.orangeButton),

@@ -66,19 +66,11 @@ class LoginViewModel @Inject constructor(
 
                     Log.d("FlujoTest", "authviewmodel: signInUseCase onsucces")
 
-                    val user = authResult.apiUser
-                    val jwt = authResult.apiUser.jwtToken
-                    authPreferences.setJwtToken(jwt)
-                    authPreferences.setRefreshToken(user.refreshToken)
-
                     val role = authPreferences.getUserRoleFromToken()
 
-                    Log.d("FlujoTest", "authviewmodel: signInUseCase llamado osucces. user uid: ${user.uid} jwt: ${jwt}")
                     Log.d("FlujoTest", "authviewmodel: signInUseCase llamado onsucces.setJwtToken y setrefresh llamados ")
 
-                    Log.d("JWT Token", "Token recuperado usando getjwttoken(): ${authPreferences.getJwtToken()}")
-
-                    _uiState.value = LoginUiState.Success(user, jwt, role)
+                    _uiState.value = LoginUiState.Success(role)
 
                     Log.d("FlujoTest", "authviewmodel: signInUseCase llamado onsucces. loginuiState: ${_uiState.value} ")
 

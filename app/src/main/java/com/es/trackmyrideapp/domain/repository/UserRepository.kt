@@ -11,4 +11,5 @@ interface UserRepository {
     suspend fun deleteUser(id: String): Resource<Unit>
     suspend fun isUserPremium(): Resource<Boolean>
     suspend fun setUserPremium(): Resource<Boolean>
+    suspend fun toggleUserPremiumByAdmin(userId: String): Resource<User>
 }

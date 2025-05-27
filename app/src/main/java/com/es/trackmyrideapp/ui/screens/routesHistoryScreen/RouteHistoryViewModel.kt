@@ -89,6 +89,18 @@ class RoutesHistoryViewModel @Inject constructor(
             }
         }
     }
+
+    fun shouldShowGetPremiumButton(
+        isPremium: Boolean,
+        selectedFilter: VehicleFilter
+    ): Boolean {
+        val filtered = when (selectedFilter) {
+            is VehicleFilter.All -> _routes.value
+            is VehicleFilter.Type -> _routes.value.filter { it.vehicleType == selectedFilter.type }
+        }
+
+        return !isPremium && selectedFilter is VehicleFilter.All && filtered.count() > 4
+    }
 }
 
 

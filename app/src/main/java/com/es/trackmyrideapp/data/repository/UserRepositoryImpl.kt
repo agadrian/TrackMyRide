@@ -38,4 +38,8 @@ class UserRepositoryImpl @Inject constructor(
         val response = userApi.setUserPremium()
         response.isSuccessful && response.body() == true
     }
+
+    override suspend fun toggleUserPremiumByAdmin(userId: String): Resource<User> = safeApiCall {
+        userApi.toggleUserPremiumByAdmin(userId).toDomainModel()
+    }
 }

@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.DirectionsBike
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Layers
@@ -51,6 +52,7 @@ fun AppTopBar(
     currentDestination: String?,
     scope: CoroutineScope,
     showBackButton: Boolean,
+    showDrawerMenuButton: Boolean,
     onBackClicked: () -> Unit,
     drawerState: DrawerState,
     navigateToHistoryClicked: () -> Unit,
@@ -59,6 +61,7 @@ fun AppTopBar(
     onVehicleTypeChanged: (VehicleType) -> Unit,
     currentMapType: MapType,
     currentVehicleType: VehicleType,
+    onLogoutAdminClicked: () -> Unit
 ){
 
     var showMapTypeMenu by remember { mutableStateOf(false) }
@@ -73,6 +76,7 @@ fun AppTopBar(
         Vehicles::class.qualifiedName -> "My Vehicles"
         RoutesHistory::class.qualifiedName -> "Routes History"
         RouteDetails::class.qualifiedName -> "Route Details"
+        AdminScreen::class.qualifiedName -> "Admin Screen"
         else -> ""
     }
 
@@ -100,20 +104,24 @@ fun AppTopBar(
             ),
             modifier = Modifier.statusBarsPadding(), // Pading superior unicamente
             navigationIcon = {
-                // Mostrar flecha para volver o el icono para abrir Drawer
-                if (showBackButton){
-                    IconButton(
-                        onClick = onBackClicked
-                    ) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                }else{
-                    IconButton(onClick = {
-                        scope.launch {
-                            if (drawerState.isClosed) drawerState.open() else drawerState.close()
+                // Mostrar flecha para volver, el icono para abrir Drawer o nada
+                when {
+                    showBackButton -> {
+                        IconButton(onClick = onBackClicked) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                         }
-                    }) {
-                        Icon(Icons.Default.Menu, contentDescription = "Menu")
+                    }
+                    showDrawerMenuButton -> {
+                        IconButton(onClick = {
+                            scope.launch {
+                                if (drawerState.isClosed) drawerState.open() else drawerState.close()
+                            }
+                        }) {
+                            Icon(Icons.Default.Menu, contentDescription = "Menu")
+                        }
+                    }
+                    else -> {
+                        // Nada
                     }
                 }
             },
@@ -201,6 +209,14 @@ fun AppTopBar(
                             onClick = navigateToHomeClicked
                         ) {
                             Icon(Icons.Default.Map, contentDescription = "Map")
+                        }
+                    }
+
+                    AdminScreen::class.qualifiedName -> {
+                        IconButton(onClick = {
+                            onLogoutAdminClicked()
+                        }) {
+                            Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = "Log Out")
                         }
                     }
                 }

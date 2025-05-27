@@ -87,7 +87,13 @@ fun MainNavHost(
                         launchSingleTop = true
                     }
                 },
-                snackbarHostState = snackbarHostState
+                snackbarHostState = snackbarHostState,
+                navigateToAdminScreen = {
+                    navController.navigate(AdminScreen) {
+                        popUpTo(0)
+                        launchSingleTop = true
+                    }
+                }
             )
         }
 
@@ -169,7 +175,8 @@ fun MainNavHost(
         // Admin Screen
         composable<AdminScreen> {
             AdminScreen(
-                modifier = Modifier.padding(innerPadding)
+                modifier = Modifier.padding(innerPadding),
+                snackbarHostState = snackbarHostState
             )
         }
     }
