@@ -12,7 +12,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.DirectionsBike
 import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DirectionsCar
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.Map
@@ -63,20 +65,22 @@ fun AppTopBar(
     currentVehicleType: VehicleType,
     onLogoutAdminClicked: () -> Unit
 ){
-
+    val sessionViewModel = LocalSessionViewModel.current
     var showMapTypeMenu by remember { mutableStateOf(false) }
     var showVehicleTypeMenu by remember { mutableStateOf(false) }
-    val selectedVehicle = LocalSessionViewModel.current.selectedVehicle.collectAsState().value
+    val selectedVehicle = sessionViewModel.selectedVehicle.collectAsState().value
+    val isEditingDetails by sessionViewModel.isEditingRouteDetails.collectAsState()
+    val isEditingProfile by sessionViewModel.isEditingProfile.collectAsState()
 
-    val title = when (currentDestination) {
-        Home::class.qualifiedName -> "Home"
-        Profile::class.qualifiedName -> "My Profile"
-        Premium::class.qualifiedName -> "Premium"
-        AboutUs::class.qualifiedName -> "About Us"
-        Vehicles::class.qualifiedName -> "My Vehicles"
-        RoutesHistory::class.qualifiedName -> "Routes History"
-        RouteDetails::class.qualifiedName -> "Route Details"
-        AdminScreen::class.qualifiedName -> "Admin Screen"
+    val title = when {
+        currentDestination == Home::class.qualifiedName -> "Home"
+        currentDestination == Profile::class.qualifiedName -> "My Profile"
+        currentDestination == Premium::class.qualifiedName -> "Premium"
+        currentDestination == AboutUs::class.qualifiedName -> "About Us"
+        currentDestination == Vehicles::class.qualifiedName -> "My Vehicles"
+        currentDestination == RoutesHistory::class.qualifiedName -> "Routes History"
+        currentDestination?.startsWith(RouteDetails::class.qualifiedName ?: "") == true -> "Route Details"
+        currentDestination == AdminScreen::class.qualifiedName -> "Admin Screen"
         else -> ""
     }
 
@@ -126,8 +130,8 @@ fun AppTopBar(
                 }
             },
             actions = {
-                when (currentDestination) {
-                    Home::class.qualifiedName -> {
+                when  {
+                    currentDestination == Home::class.qualifiedName -> {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -204,7 +208,7 @@ fun AppTopBar(
                         }
                     }
 
-                    RoutesHistory::class.qualifiedName -> {
+                    currentDestination == RoutesHistory::class.qualifiedName -> {
                         IconButton(
                             onClick = navigateToHomeClicked
                         ) {
@@ -212,7 +216,29 @@ fun AppTopBar(
                         }
                     }
 
-                    AdminScreen::class.qualifiedName -> {
+                    currentDestination?.startsWith(RouteDetails::class.qualifiedName ?: "") == true -> {
+                        IconButton(
+                            onClick = { sessionViewModel.toggleEditingRouteDetails() }
+                        ) {
+                            Icon(
+                                imageVector = if (isEditingDetails) Icons.Default.Close else Icons.Default.Edit,
+                                contentDescription = if (isEditingDetails) "Cancel edition" else "Edit"
+                            )
+                        }
+                    }
+
+                    currentDestination == Profile::class.qualifiedName -> {
+                        IconButton(
+                            onClick = { sessionViewModel.toggleEditingProfile() }
+                        ) {
+                            Icon(
+                                imageVector = if (isEditingProfile) Icons.Default.Close else Icons.Default.Edit,
+                                contentDescription = if (isEditingProfile) "Cancel edition" else "Edit"
+                            )
+                        }
+                    }
+
+                    currentDestination == AdminScreen::class.qualifiedName -> {
                         IconButton(onClick = {
                             onLogoutAdminClicked()
                         }) {

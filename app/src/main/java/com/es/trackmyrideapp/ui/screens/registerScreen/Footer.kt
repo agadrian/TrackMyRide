@@ -22,7 +22,7 @@ import com.es.trackmyrideapp.ui.components.CustomButton
 fun Footer(
     modifier: Modifier,
     onRegisterButtonClicked: () -> Unit,
-    onSingInClicked: () -> Unit
+    onSingInClicked: () -> Unit,
 ){
 
     Column(
@@ -34,6 +34,7 @@ fun Footer(
         CustomButton(
             onclick = onRegisterButtonClicked,
             text = "Register",
+            enabled = true,
             buttonColor = MaterialTheme.colorScheme.primary,
             fontColor = MaterialTheme.colorScheme.onBackground
 

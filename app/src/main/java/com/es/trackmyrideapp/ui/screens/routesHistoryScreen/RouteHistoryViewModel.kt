@@ -1,5 +1,6 @@
 package com.es.trackmyrideapp.ui.screens.routesHistoryScreen
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.es.trackmyrideapp.core.states.MessageType
@@ -19,7 +20,19 @@ import javax.inject.Inject
 class RoutesHistoryViewModel @Inject constructor(
     private val getRoutesByUserUseCase: GetRoutesByUserUseCase,
     private val deleteRouteUseCase: DeleteRouteUseCase,
+    private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
+
+    val shouldRefresh = savedStateHandle.getStateFlow("should_refresh", false)
+
+    fun setShouldRefresh(value: Boolean) {
+        savedStateHandle["should_refresh"] = value
+    }
+
+    fun clearShouldRefresh() {
+        savedStateHandle["should_refresh"] = false
+    }
+
 
     private val _uiState = MutableStateFlow<RoutesHistoryUiState>(RoutesHistoryUiState.Idle)
     val uiState: StateFlow<RoutesHistoryUiState> = _uiState
@@ -53,7 +66,7 @@ class RoutesHistoryViewModel @Inject constructor(
     }
 
 
-    private fun fetchRoutes() {
+    fun fetchRoutes() {
         viewModelScope.launch {
             _uiState.value = RoutesHistoryUiState.Loading
             when (val result = getRoutesByUserUseCase()) {

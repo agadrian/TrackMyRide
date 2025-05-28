@@ -14,6 +14,7 @@ import com.es.trackmyrideapp.core.extensions.round
 import com.es.trackmyrideapp.core.states.MessageType
 import com.es.trackmyrideapp.core.states.UiMessage
 import com.es.trackmyrideapp.data.remote.dto.RouteImageRequest
+import com.es.trackmyrideapp.data.remote.dto.RouteUpdateDTO
 import com.es.trackmyrideapp.data.remote.mappers.Resource
 import com.es.trackmyrideapp.domain.model.Route
 import com.es.trackmyrideapp.domain.model.RouteImage
@@ -22,6 +23,7 @@ import com.es.trackmyrideapp.domain.usecase.images.GetRouteImagesUseCase
 import com.es.trackmyrideapp.domain.usecase.images.UploadImageToCloudinaryUseCase
 import com.es.trackmyrideapp.domain.usecase.images.UploadRouteImagesUseCase
 import com.es.trackmyrideapp.domain.usecase.routes.GetRouteByIdUseCase
+import com.es.trackmyrideapp.domain.usecase.routes.UpdateRouteUseCase
 import com.es.trackmyrideapp.ui.components.VehicleType
 import com.es.trackmyrideapp.utils.GPXParser
 import com.es.trackmyrideapp.utils.GPXParser.saveGpxToDownloads
@@ -43,6 +45,7 @@ class RouteDetailViewModel @Inject constructor(
     private val uploadRouteImageUseCase: UploadRouteImagesUseCase,
     private val getRouteImagesUseCase: GetRouteImagesUseCase,
     private val deleteRouteImageUseCase: DeleteRouteImageUseCase,
+    private val updateRouteUseCase: UpdateRouteUseCase
 ) : ViewModel() {
 
     private val routeId: Long = checkNotNull(savedStateHandle["routeId"])
@@ -59,10 +62,16 @@ class RouteDetailViewModel @Inject constructor(
     var routePoints = mutableStateOf<List<LatLng>>(emptyList())
         private set
 
-    var name = mutableStateOf("")
+    var title = mutableStateOf("")
         private set
 
     var description = mutableStateOf("")
+        private set
+
+    var nameError  = mutableStateOf<String?>(null)
+        private set
+
+    var descriptionError = mutableStateOf<String?>(null)
         private set
 
     var startTime = mutableStateOf("")
@@ -109,12 +118,39 @@ class RouteDetailViewModel @Inject constructor(
         private set
 
 
-    fun onNameChanged(newName: String) {
-        name.value = newName
+    fun onTitleChanged(newName: String) {
+        title.value = newName
+        nameError.value = validateName(newName)
     }
 
     fun onDescriptionChanged(newDescription: String) {
         description.value = newDescription
+        descriptionError.value = validateDescription(newDescription)
+    }
+
+    private fun validateName(value: String): String? {
+        return when {
+            value.isBlank() -> "Title cannot be empty"
+            value.length > 40 -> "Max 35 characters"
+            else -> null
+        }
+    }
+
+    private fun validateDescription(value: String): String? {
+        return if (value.length > 150) "Max 80 characters" else null
+    }
+
+    fun validateAll(): Boolean {
+        nameError.value = validateName(title.value)
+        descriptionError.value = validateDescription(description.value)
+
+        return nameError.value == null && descriptionError.value == null
+    }
+
+
+    init {
+        fetchRouteAndPopulateStates()
+        fetchRouteImages()
     }
 
 
@@ -142,12 +178,6 @@ class RouteDetailViewModel @Inject constructor(
             false
         }
     }
-
-    init {
-        fetchRouteAndPopulateStates()
-        fetchRouteImages()
-    }
-
 
 
     private fun fetchRouteImages() {
@@ -190,7 +220,7 @@ class RouteDetailViewModel @Inject constructor(
                         loadedRoute = route
 
                         // Asignar a estados individuales
-                        name.value = route.name
+                        title.value = route.name
                         description.value = route.description.orEmpty()
                         startTime.value = route.startTime.format(DateTimeFormatter.ofPattern("HH:mm"))
                         endTime.value = route.endTime.format(DateTimeFormatter.ofPattern("HH:mm"))
@@ -232,6 +262,28 @@ class RouteDetailViewModel @Inject constructor(
             }
         } else {
             emptyList()
+        }
+    }
+
+    fun updateRoute() {
+        viewModelScope.launch {
+            val routeUpdateDTO = RouteUpdateDTO(
+                name = title.value,
+                description = description.value,
+            )
+
+            when (val result = updateRouteUseCase(routeId, routeUpdateDTO)) {
+                is Resource.Success -> {
+                    _uiMessage.value = UiMessage("Route updated successfully", MessageType.INFO)
+                    fetchRouteAndPopulateStates() // Recargar datos actualizados
+                }
+
+                is Resource.Error -> {
+                    _uiMessage.value = UiMessage("Error updating route: ${result.message}", MessageType.ERROR)
+                }
+
+                else -> Unit
+            }
         }
     }
 

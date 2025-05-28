@@ -19,18 +19,16 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.es.trackmyrideapp.LocalIsDarkTheme
 import com.es.trackmyrideapp.R
-import com.es.trackmyrideapp.ui.components.CustomTextFieldWithoutIcon
+import com.es.trackmyrideapp.ui.components.CustomTextFieldWithoutIconVehicles
 
 @Composable
 fun BikeScreen(
@@ -149,7 +147,7 @@ fun BodyBike(
     ) {
         Row(Modifier.fillMaxWidth()) {
             // Name
-            CustomTextFieldWithoutIcon(
+            CustomTextFieldWithoutIconVehicles(
                 label = "Name",
                 value = name,
                 modifier = Modifier.fillMaxWidth(),
@@ -163,14 +161,14 @@ fun BodyBike(
             Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            CustomTextFieldWithoutIcon(
+            CustomTextFieldWithoutIconVehicles(
                 label = "Brand",
                 value = brand,
                 modifier = Modifier.weight(0.5f),
                 onValueChange = onBrandChange
             )
 
-            CustomTextFieldWithoutIcon(
+            CustomTextFieldWithoutIconVehicles(
                 label = "Model",
                 value = model,
                 modifier = Modifier.weight(0.5f),
@@ -184,14 +182,14 @@ fun BodyBike(
             Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            CustomTextFieldWithoutIcon(
+            CustomTextFieldWithoutIconVehicles(
                 label = "Year",
                 value = year,
                 modifier = Modifier.weight(0.5f),
                 onValueChange = onYearChange
             )
 
-            CustomTextFieldWithoutIcon(
+            CustomTextFieldWithoutIconVehicles(
                 label = "Bike type",
                 value = bikeType,
                 modifier = Modifier.weight(0.5f),
@@ -201,7 +199,7 @@ fun BodyBike(
 
         Row(Modifier.fillMaxWidth()) {
             // Aditional notes
-            CustomTextFieldWithoutIcon(
+            CustomTextFieldWithoutIconVehicles(
                 label = "Additional Notes",
                 value = notes,
                 singleLine = false,

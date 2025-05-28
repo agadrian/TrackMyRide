@@ -30,7 +30,7 @@ fun IconTextRow(
     text: String,
     icon: ImageVector,
     fontSize: TextUnit = 16.sp,
-    horizontalAlignment: Alignment.Horizontal = Alignment.Start // Nuevo parámetro
+    horizontalAlignment: Alignment.Horizontal = Alignment.Start
 ) {
     Row(
         verticalAlignment = Alignment.Top,

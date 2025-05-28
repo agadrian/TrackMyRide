@@ -70,7 +70,7 @@ class AuthPreferences(context: Context) {
             val parts = jwt.split(".")
             val payload = String(Base64.decode(parts[1], Base64.URL_SAFE), Charsets.UTF_8)
             val jsonObject = JSONObject(payload)
-            jsonObject.getString("uid") // o "sub" dependiendo de tu JWT
+            jsonObject.getString("uid")
         } catch (e: Exception) {
             null
         }

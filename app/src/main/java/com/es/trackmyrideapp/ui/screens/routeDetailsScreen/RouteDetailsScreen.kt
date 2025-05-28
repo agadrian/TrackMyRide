@@ -7,6 +7,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -29,6 +31,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -36,6 +39,7 @@ import com.es.trackmyrideapp.LocalSessionViewModel
 import com.es.trackmyrideapp.R
 import com.es.trackmyrideapp.core.states.MessageType
 import com.es.trackmyrideapp.domain.model.RouteImage
+import com.es.trackmyrideapp.ui.components.CustomButton
 import com.es.trackmyrideapp.ui.components.VehicleType
 import com.es.trackmyrideapp.ui.permissions.AppPermission
 import com.es.trackmyrideapp.ui.permissions.ClosableBlockedDialog
@@ -55,11 +59,12 @@ fun RouteDetailScreen(
     val routeDetailViewModel: RouteDetailViewModel = hiltViewModel()
     val uiMessage by routeDetailViewModel.uiMessage.collectAsState()
     val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
 
     //  Llamo con launchedeffect a la api para comprobar el premium, y luego miro el estado obtenido
     val sessionViewModel = LocalSessionViewModel.current
     val isPremium by sessionViewModel.isPremium.collectAsState()
-
+    val isEditing by sessionViewModel.isEditingRouteDetails.collectAsState()
 
     LaunchedEffect(Unit){
         sessionViewModel.checkPremiumStatus()
@@ -67,9 +72,12 @@ fun RouteDetailScreen(
 
     val scrollState = rememberScrollState()
 
-    val title by routeDetailViewModel.name
+    val title by routeDetailViewModel.title
     val date by routeDetailViewModel.startDateTime
     val description by routeDetailViewModel.description
+    val titleError by routeDetailViewModel.nameError
+    val descriptionError by routeDetailViewModel.descriptionError
+
     val startTime by routeDetailViewModel.startTime
     val endTime by routeDetailViewModel.endTime
     val startPoint by routeDetailViewModel.startPoint
@@ -160,7 +168,13 @@ fun RouteDetailScreen(
             .verticalScroll(scrollState)
             .background(MaterialTheme.colorScheme.background)
             .navigationBarsPadding()
-        ,
+            .clickable(
+                // Evita que el click consuma otros eventos
+                indication = null,
+                interactionSource = remember { MutableInteractionSource() }
+            ) {
+                focusManager.clearFocus()
+            },
     ){
 
         // Imagen mapa con boton Full Map
@@ -175,7 +189,10 @@ fun RouteDetailScreen(
                 .padding(horizontal = 30.dp),
             title = title,
             date = date,
-            vehicleType = vehicleType ?: VehicleType.CAR
+            vehicleType = vehicleType ?: VehicleType.CAR,
+            isEditing = isEditing,
+            onTitleChange = { routeDetailViewModel.onTitleChanged(it) },
+            titleError = titleError
         )
 
         Spacer(Modifier.height(24.dp))
@@ -202,7 +219,22 @@ fun RouteDetailScreen(
                 startPoint = startPoint,
                 endPoint = endPoint,
                 onDescriptionChanged = { routeDetailViewModel.onDescriptionChanged(it) },
+                isEditable = isEditing,
+                descriptionError = descriptionError
             )
+
+            // Boton Save cuando esta en modo edicion
+            if (isEditing){
+                CustomButton(
+                    onclick = {
+                        routeDetailViewModel.updateRoute()
+                        sessionViewModel.setEditingRouteDetails(false) },
+                    text = "Save changes",
+                    buttonColor = MaterialTheme.colorScheme.primary,
+                    fontColor = colorResource(R.color.black),
+                    enabled = routeDetailViewModel.validateAll()
+                )
+            }
 
             // Card Stats
             StatsCard(

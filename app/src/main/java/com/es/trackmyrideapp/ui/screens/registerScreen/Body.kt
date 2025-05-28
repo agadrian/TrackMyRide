@@ -26,8 +26,8 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.es.trackmyrideapp.R
 import com.es.trackmyrideapp.ui.components.CustomTextField
 
@@ -47,7 +47,12 @@ fun Body(
     password2Visible: Boolean,
     onPasswordVisibilityChanged: () -> Unit,
     onPassword2VisibilityChanged: () -> Unit,
-
+    emailError: String?,
+    usernameError: String?,
+    phoneError: String?,
+    passwordError: String?,
+    password2Error: String?,
+    attemptSubmit: Boolean
 ) {
 
     Column(
@@ -62,7 +67,10 @@ fun Body(
             icon = Icons.Default.Email,
             value = email,
             modifier = Modifier.fillMaxWidth(),
-            onValueChange = onEmailChanged
+            onValueChange = onEmailChanged,
+            isError = emailError!= null && attemptSubmit,
+            errorMessage = emailError
+
         )
 
         Spacer(modifier = Modifier.height(15.dp))
@@ -73,7 +81,9 @@ fun Body(
             icon = Icons.Default.Person,
             value = username,
             modifier = Modifier.fillMaxWidth(),
-            onValueChange = onUsernameChanged
+            onValueChange = onUsernameChanged,
+            isError = usernameError!= null && attemptSubmit,
+            errorMessage = usernameError
         )
 
         Spacer(modifier = Modifier.height(15.dp))
@@ -84,7 +94,9 @@ fun Body(
             icon = Icons.Default.Phone,
             value = phone,
             modifier = Modifier.fillMaxWidth(),
-            onValueChange = onPhoneChanged
+            onValueChange = onPhoneChanged,
+            isError = phoneError!= null && attemptSubmit,
+            errorMessage = phoneError
         )
 
 
@@ -95,7 +107,7 @@ fun Body(
         TextField(
             value = password,
             onValueChange = onPasswordChanged,
-            label = { Text("Password") },
+            label = { Text("Password", fontSize = 14.sp)},
             leadingIcon = { Icon(Icons.Default.Lock, contentDescription = "Password Icon") },
             trailingIcon = {
                 val image = if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility
@@ -111,11 +123,23 @@ fun Body(
             colors = TextFieldDefaults.colors(
                 focusedContainerColor = Color.Transparent,
                 unfocusedContainerColor = Color.Transparent,
+                errorContainerColor = Color.Transparent,
+                errorLabelColor = MaterialTheme.colorScheme.onBackground,
                 focusedIndicatorColor = MaterialTheme.colorScheme.primary,
                 unfocusedIndicatorColor = if (password.isEmpty()) Color.Gray else colorResource(R.color.greenTextFieldFilled),
                 cursorColor = MaterialTheme.colorScheme.primary
-            )
+            ),
+            isError = passwordError!= null && attemptSubmit
         )
+
+        if (passwordError != null && attemptSubmit) {
+            Text(
+                text = passwordError,
+                color = MaterialTheme.colorScheme.error,
+                fontSize = 12.sp,
+                modifier = Modifier.padding(start = 16.dp, top = 2.dp)
+            )
+        }
 
         Spacer(modifier = Modifier.height(15.dp))
 
@@ -123,7 +147,7 @@ fun Body(
         TextField(
             value = password2,
             onValueChange = onPassword2Changed,
-            label = { Text("Confirm password") },
+            label = { Text(text = "Confirm password", fontSize = 14.sp) },
             leadingIcon = { Icon(Icons.Default.Lock, contentDescription = "Password Icon") },
             trailingIcon = {
                 val image = if (password2Visible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility
@@ -133,24 +157,28 @@ fun Body(
                     Icon(image, contentDescription = "Toggle Password Visibility")
                 }
             },
-            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+            visualTransformation = if (password2Visible) VisualTransformation.None else PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
             modifier = Modifier.fillMaxWidth(),
             colors = TextFieldDefaults.colors(
                 focusedContainerColor = Color.Transparent,
                 unfocusedContainerColor = Color.Transparent,
+                errorContainerColor = Color.Transparent,
+                errorLabelColor = MaterialTheme.colorScheme.onBackground,
                 focusedIndicatorColor = MaterialTheme.colorScheme.primary,
                 unfocusedIndicatorColor = if (password2.isEmpty()) Color.Gray else colorResource(R.color.greenTextFieldFilled),
                 cursorColor = MaterialTheme.colorScheme.primary
-            )
+            ),
+            isError = password2Error != null && attemptSubmit
         )
-    }
-}
 
-@Preview
-@Composable
-fun dfgdsg(){
-    Body(
-        "", "", "", "", "", {}, {}, {}, {}, {}, false,false, {},{}
-    )
+        if (password2Error != null && attemptSubmit) {
+            Text(
+                text = password2Error,
+                color = MaterialTheme.colorScheme.error,
+                fontSize = 12.sp,
+                modifier = Modifier.padding(start = 16.dp, top = 2.dp)
+            )
+        }
+    }
 }

@@ -36,6 +36,22 @@ fun RegisterScreen(
     val uiState by registerViewModel.uiState.collectAsState()
     val errorMessage by registerViewModel.errorMessage.collectAsState()
 
+    val email by registerViewModel.email
+    val username by registerViewModel.username
+    val phone by registerViewModel.phone
+    val password by registerViewModel.password
+    val password2 by registerViewModel.password2
+    val passwordVisible by registerViewModel.passwordVisible
+    val password2Visible by registerViewModel.password2Visible
+
+    val emailError by registerViewModel.emailError
+    val usernameError by registerViewModel.usernameError
+    val phoneError by registerViewModel.phoneError
+    val passwordError by registerViewModel.passwordError
+    val password2Error by registerViewModel.password2Error
+
+    val attemptSubmit by registerViewModel.attemptedSubmit
+
     // Navegar si exitoso
     LaunchedEffect(uiState) {
         if (uiState is RegisterUiState.Success) {
@@ -81,20 +97,26 @@ fun RegisterScreen(
 
 
                 Body(
-                    email = registerViewModel.email,
-                    username = registerViewModel.username,
-                    phone = registerViewModel.phone,
-                    password = registerViewModel.password,
-                    password2 = registerViewModel.password2,
+                    email = email,
+                    username = username,
+                    phone = phone,
+                    password = password,
+                    password2 = password2,
                     onEmailChanged = { registerViewModel.updateEmail(it) },
                     onPasswordChanged = { registerViewModel.updatePassword(it) },
                     onPassword2Changed = { registerViewModel.updatePassword2(it) },
                     onUsernameChanged = { registerViewModel.updateUsername(it) },
                     onPhoneChanged = { registerViewModel.updatePhone(it) },
-                    passwordVisible = registerViewModel.passwordVisible,
-                    password2Visible = registerViewModel.password2Visible,
+                    passwordVisible = passwordVisible,
+                    password2Visible = password2Visible,
                     onPasswordVisibilityChanged = { registerViewModel.togglePasswordVisibility() },
-                    onPassword2VisibilityChanged = { registerViewModel.togglePassword2Visibility() }
+                    onPassword2VisibilityChanged = { registerViewModel.togglePassword2Visibility() },
+                    emailError = emailError,
+                    usernameError = usernameError,
+                    phoneError = phoneError,
+                    passwordError = passwordError,
+                    password2Error = password2Error,
+                    attemptSubmit = attemptSubmit
                 )
 
                 Spacer(modifier = Modifier.height(50.dp))
@@ -104,7 +126,9 @@ fun RegisterScreen(
 
             Footer(
                 modifier = Modifier,
-                onRegisterButtonClicked = { registerViewModel.register() },
+                onRegisterButtonClicked = {
+                    registerViewModel.register()
+                },
                 onSingInClicked = navigateToLogin
             )
         }

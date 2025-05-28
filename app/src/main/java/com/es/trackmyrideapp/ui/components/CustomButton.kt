@@ -15,13 +15,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 @Composable
 fun CustomButton(
@@ -34,11 +34,13 @@ fun CustomButton(
     shape: Dp = 12.dp,
     icon: ImageVector? = null,
     iconDescription: String? = null,
-    iconSize: Dp? = 24.dp
+    iconSize: Dp? = 24.dp,
+    enabled: Boolean = true
 
     ){
     Button(
         onClick = onclick,
+        enabled = enabled,
         modifier = modifier.fillMaxWidth(),
         colors = ButtonDefaults.buttonColors(
             containerColor = buttonColor,

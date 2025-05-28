@@ -1,26 +1,23 @@
 package com.es.trackmyrideapp.ui.screens.profileScreen
 
-import android.os.Build
 import android.util.Log
-import androidx.annotation.RequiresApi
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.es.trackmyrideapp.data.local.AuthPreferences
 import com.es.trackmyrideapp.data.remote.dto.UserUpdateDTO
 import com.es.trackmyrideapp.data.remote.mappers.Resource
-import com.es.trackmyrideapp.domain.model.User
 import com.es.trackmyrideapp.domain.usecase.users.GetUserByIdUseCase
 import com.es.trackmyrideapp.domain.usecase.users.UpdateUserUseCase
+import com.google.firebase.auth.EmailAuthProvider
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
-import java.time.ZonedDateTime
-import java.time.format.TextStyle
 import java.util.Date
 import java.util.Locale
 import javax.inject.Inject
@@ -33,32 +30,79 @@ class ProfileViewModel @Inject constructor(
 ) : ViewModel() {
 
     // Estados del formulario
-    var email by mutableStateOf("")
-        private set
-    var username by mutableStateOf("")
-        private set
-    var phone by mutableStateOf("")
-        private set
-    var password by mutableStateOf("")
-        private set
-    var passwordVisible by mutableStateOf(false)
-        private set
-    var displayUsername by mutableStateOf("")
-        private set
-    var memberSince by mutableStateOf("")
+    var email: MutableState<String> = mutableStateOf("")
         private set
 
-    // Estados para el diálogo de cambio de contraseña
-    var showChangePasswordDialog by mutableStateOf(false)
-        private set
-    var currentPassword by mutableStateOf("")
-        private set
-    var newPassword by mutableStateOf("")
-        private set
-    var confirmPassword by mutableStateOf("")
+    var username: MutableState<String> = mutableStateOf("")
         private set
 
+    var savedUsername: MutableState<String> = mutableStateOf("")
+        private set
 
+    var usernameError: MutableState<String?> = mutableStateOf(null)
+        private set
+
+    var phone: MutableState<String> = mutableStateOf("")
+        private set
+
+    var phoneError: MutableState<String?> = mutableStateOf(null)
+        private set
+
+    var password: MutableState<String> = mutableStateOf("")
+        private set
+
+    var passwordVisible: MutableState<Boolean> = mutableStateOf(false)
+        private set
+
+    var memberSince: MutableState<String> = mutableStateOf("")
+        private set
+
+    // Change password button. Passwordsa y errores
+    val showChangePasswordDialog = MutableStateFlow(false)
+
+    val currentPassword = MutableStateFlow("")
+    val newPassword = MutableStateFlow("")
+    val confirmPassword = MutableStateFlow("")
+
+    val currentPasswordVisible = MutableStateFlow(false)
+    val newPasswordVisible = MutableStateFlow(false)
+    val confirmPasswordVisible = MutableStateFlow(false)
+
+    val currentPasswordError = MutableStateFlow<String?>(null)
+    val newPasswordError = MutableStateFlow<String?>(null)
+    val confirmPasswordError = MutableStateFlow<String?>(null)
+
+    val passwordDialogError = MutableStateFlow<String?>(null)
+
+    fun toggleCurrentPasswordVisibility() {
+        currentPasswordVisible.value = !currentPasswordVisible.value
+    }
+    fun toggleNewPasswordVisibility() {
+        newPasswordVisible.value = !newPasswordVisible.value
+    }
+    fun toggleConfirmPasswordVisibility() {
+        confirmPasswordVisible.value = !confirmPasswordVisible.value
+    }
+
+    fun resetPasswordDialogState() {
+        currentPassword.value = ""
+        newPassword.value = ""
+        confirmPassword.value = ""
+        currentPasswordVisible.value = false
+        newPasswordVisible.value = false
+        confirmPasswordVisible.value = false
+        currentPasswordError.value = null
+        newPasswordError.value = null
+        confirmPasswordError.value = null
+        passwordDialogError.value = null
+        showChangePasswordDialog.value = false
+
+    }
+
+
+    fun openChangePasswordDialog() {
+        showChangePasswordDialog.value = true
+    }
 
 
     // UI State
@@ -74,23 +118,38 @@ class ProfileViewModel @Inject constructor(
     }
 
     // Funciones para actualizar estados
-    fun updateEmail(newEmail: String) { email = newEmail }
-    fun updateUsername(newUsername: String) { username = newUsername }
-    fun updatePhone(newPhone: String) { phone = newPhone }
-    fun updatePassword(newPassword: String) { password = newPassword }
-    fun togglePasswordVisibility() { passwordVisible = !passwordVisible }
-
-    // TODO: Dialogo contraseña
-    fun openChangePasswordDialog() { showChangePasswordDialog = true }
-    fun closeChangePasswordDialog() {
-        showChangePasswordDialog = false
-        currentPassword = ""
-        newPassword = ""
-        confirmPassword = ""
+    fun updateUsername(newUsername: String) {
+        username.value = newUsername
+        usernameError.value = validateUsername(newUsername)
     }
-    fun updateCurrentPassword(value: String) { currentPassword = value }
-    fun updateNewPassword(value: String) { newPassword = value }
-    fun updateConfirmPassword(value: String) { confirmPassword = value }
+
+    private fun validateUsername(value: String): String? {
+        return when {
+            value.isBlank() -> "Username cannot be empty"
+            value.length > 10 -> "Max 10 characters"
+            else -> null
+        }
+    }
+
+    fun updatePhone(newPhone: String) {
+        phone.value = newPhone
+        phoneError.value = validatePhone(newPhone)
+    }
+
+    private fun validatePhone(value: String): String? {
+        return when {
+            value.length > 9 -> "Max 9 characters"
+            else -> null
+        }
+    }
+
+    fun validateAll(): Boolean {
+        usernameError.value = validateUsername(username.value)
+        phoneError.value = validatePhone(phone.value)
+
+        return usernameError.value == null && phoneError.value == null
+    }
+
 
     init {
         loadUserProfile()
@@ -109,11 +168,13 @@ class ProfileViewModel @Inject constructor(
             when (val result = getUserByIdUseCase(userId)) {
                 is Resource.Success -> {
                     result.data.let { user ->
-                        username = user.username.replaceFirstChar { it.uppercaseChar() }
-                        email = user.email
-                        phone = user.phone ?: ""
-                        memberSince = formatMemberSince(user.createdAt)
+                        val formattedUsername = user.username.replaceFirstChar { it.uppercaseChar() }
+                        username.value = formattedUsername
+                        email.value = user.email
+                        phone.value = user.phone ?: ""
+                        memberSince.value = formatMemberSince(user.createdAt)
                         _uiState.value = ProfileUiState.Success(user)
+                        savedUsername.value = formattedUsername
                     }
                 }
                 is Resource.Error -> {
@@ -137,15 +198,16 @@ class ProfileViewModel @Inject constructor(
             }
 
             val updateData = UserUpdateDTO(
-                username = username,
-                phone = phone.ifBlank { null }
+                username = username.value,
+                phone = phone.value.ifBlank { null }
             )
 
             when (val result = updateUserUseCase(userId, updateData)) {
                 is Resource.Success -> {
                     result.data.let { user ->
-                        username = user.username
-                        phone = user.phone ?: ""
+                        username.value = user.username
+                        savedUsername.value = user.username
+                        phone.value = user.phone ?: ""
                         _uiState.value = ProfileUiState.Success(user)
 
                         _confirmationMessage.value = "Profile updated successfully"
@@ -162,17 +224,105 @@ class ProfileViewModel @Inject constructor(
 
     fun validateBeforeSave(): Boolean {
         return when {
-            username.isBlank() -> {
+            username.value.isBlank() -> {
                 _uiState.value = ProfileUiState.Error("Username cannot be empty")
                 false
             }
-            phone.length > 12 -> {
+            username.value.length > 15 -> {
+                _uiState.value = ProfileUiState.Error("Username too long")
+                false
+            }
+            phone.value.length > 12 -> {
                 _uiState.value = ProfileUiState.Error("Phone number too long")
                 false
             }
             else -> true
         }
     }
+
+    fun changePassword() {
+        val current = currentPassword.value.trim()
+        val new = newPassword.value.trim()
+        val confirm = confirmPassword.value.trim()
+
+        if (!validatePasswordFields(current, new, confirm)) return
+
+        reauthenticateAndChangePassword(current, new)
+    }
+
+    private fun validatePasswordFields(current: String, new: String, confirm: String): Boolean {
+        var valid = true
+
+        currentPasswordError.value = if (current.isEmpty()) {
+            valid = false
+            "Enter current password"
+        } else null
+
+        newPasswordError.value = when {
+            new.isEmpty() -> {
+                valid = false
+                "Enter new password"
+            }
+            new.length < 8 -> {
+                valid = false
+                "Must be at least 8 characters"
+            }
+            new == current -> {
+                valid = false
+                "Must be different from current"
+            }
+            else -> null
+        }
+
+        confirmPasswordError.value = when {
+            confirm.isEmpty() -> {
+                valid = false
+                "Confirm your password"
+            }
+            confirm != new -> {
+                valid = false
+                "Passwords do not match"
+            }
+            else -> null
+        }
+
+        return valid
+    }
+
+    private fun reauthenticateAndChangePassword(current: String, new: String) {
+        val user = FirebaseAuth.getInstance().currentUser
+        val email = user?.email
+
+        if (user == null || email == null) {
+            passwordDialogError.value = "User not logged in"
+            return
+        }
+
+        _uiState.value = ProfileUiState.Loading
+
+        val credential = EmailAuthProvider.getCredential(email, current)
+        user.reauthenticate(credential)
+            .addOnCompleteListener { reauthTask ->
+                if (reauthTask.isSuccessful) {
+                    updatePassword(user, new)
+                } else {
+                    passwordDialogError.value = "Re-authentication failed. Check your current password."
+                }
+            }
+    }
+
+    private fun updatePassword(user: FirebaseUser, newPassword: String) {
+        user.updatePassword(newPassword)
+            .addOnCompleteListener { updateTask ->
+                if (updateTask.isSuccessful) {
+                    _confirmationMessage.value = "Password updated successfully"
+                    resetPasswordDialogState()
+                } else {
+                    passwordDialogError.value = updateTask.exception?.message ?: "Password update failed"
+                }
+            }
+    }
+
 
     private fun formatMemberSince(date: Date): String {
         return try {
@@ -182,7 +332,5 @@ class ProfileViewModel @Inject constructor(
             "Unknown"
         }
     }
-
-
 }
 

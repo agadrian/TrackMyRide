@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -20,20 +19,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.es.trackmyrideapp.core.states.AuthState
 import com.es.trackmyrideapp.data.local.ThemePreferences
 import com.es.trackmyrideapp.navigation.AdminScreen
 import com.es.trackmyrideapp.navigation.Home
 import com.es.trackmyrideapp.navigation.Login
 import com.es.trackmyrideapp.navigation.NavigationWrapper
 import com.es.trackmyrideapp.ui.theme.TrackMyRideAppTheme
-import com.es.trackmyrideapp.ui.viewmodels.AuthState
 import com.es.trackmyrideapp.ui.viewmodels.SessionViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
-// Variables globales
-val LocalIsDarkTheme = compositionLocalOf { false}
-val LocalSessionViewModel = compositionLocalOf<SessionViewModel> { error("No SessionViewModel found") }
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {

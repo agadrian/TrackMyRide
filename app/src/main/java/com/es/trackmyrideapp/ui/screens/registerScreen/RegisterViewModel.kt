@@ -1,9 +1,7 @@
 package com.es.trackmyrideapp.ui.screens.registerScreen
 
 import android.util.Log
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.es.trackmyrideapp.data.local.AuthPreferences
@@ -23,21 +21,86 @@ class RegisterViewModel @Inject constructor(
     private val authPreferences: AuthPreferences
 ) : ViewModel() {
 
-    // Estados del formulario
-    var email by mutableStateOf("")
+    var email = mutableStateOf("")
         private set
-    var password by mutableStateOf("")
+
+    var password = mutableStateOf("")
         private set
-    var password2 by mutableStateOf("")
+
+    var password2 = mutableStateOf("")
         private set
-    var username by mutableStateOf("")
+
+    var username = mutableStateOf("")
         private set
-    var phone by mutableStateOf("")
+
+    var phone = mutableStateOf("")
         private set
-    var passwordVisible by mutableStateOf(false)
+
+    var passwordVisible = mutableStateOf(false)
         private set
-    var password2Visible by mutableStateOf(false)
+
+    var password2Visible = mutableStateOf(false)
         private set
+
+    val emailError = mutableStateOf<String?>(null)
+
+    val usernameError = mutableStateOf<String?>(null)
+
+    val phoneError = mutableStateOf<String?>(null)
+
+    val passwordError = mutableStateOf<String?>(null)
+
+    val password2Error = mutableStateOf<String?>(null)
+
+    val attemptedSubmit = mutableStateOf(false)
+
+
+    private fun validateEmail(value: String): String? {
+        if (value.isBlank()) return "Email cannot be empty"
+        val pattern = android.util.Patterns.EMAIL_ADDRESS
+        return if (!pattern.matcher(value).matches()) "Invalid email address" else null
+    }
+
+    private fun validateUsername(value: String): String? {
+        return when {
+            value.isBlank() -> "Username cannot be empty"
+            value.length > 15 -> "Max 15 characters allowed"
+            else -> null
+        }
+    }
+
+    private fun validatePhone(value: String): String? {
+        return if (value.length > 12) "Max 12 characters allowed" else null
+    }
+
+    private fun validatePassword(value: String): String? {
+        return if (value.length < 8) "Minimum 8 characters required" else null
+    }
+
+    private fun validatePassword2(value: String, password: String): String? {
+        return when {
+            value.length < 8 -> "Minimum 8 characters required"
+            value != password -> "Passwords do not match"
+            else -> null
+        }
+    }
+
+    fun validateAll(): Boolean {
+        emailError.value = validateEmail(email.value)
+        usernameError.value = validateUsername(username.value)
+        phoneError.value = validatePhone(phone.value)
+        passwordError.value = validatePassword(password.value)
+        password2Error.value = validatePassword2(password2.value, password.value)
+
+        return listOf(
+            emailError.value,
+            usernameError.value,
+            phoneError.value,
+            passwordError.value,
+            password2Error.value
+        ).all { it == null }
+    }
+
 
     // UI State
     private val _uiState = MutableStateFlow<RegisterUiState>(RegisterUiState.Idle)
@@ -48,32 +111,35 @@ class RegisterViewModel @Inject constructor(
     val errorMessage: StateFlow<String?> = _errorMessage
 
     // Funciones para actualizar los estados
-    fun updateEmail(newEmail: String) { email = newEmail }
-    fun updatePassword(newPassword: String) { password = newPassword }
-    fun updatePassword2(newPassword: String) { password2 = newPassword }
-    fun updateUsername(newUsername: String) { username = newUsername }
-    fun updatePhone(newPhone: String) { phone = newPhone }
-    fun togglePasswordVisibility() { passwordVisible = !passwordVisible }
-    fun togglePassword2Visibility() { password2Visible = !password2Visible }
+    fun updateEmail(newEmail: String) { email.value = newEmail }
+    fun updatePassword(newPassword: String) { password.value = newPassword }
+    fun updatePassword2(newPassword: String) { password2.value = newPassword }
+    fun updateUsername(newUsername: String) { username.value= newUsername }
+    fun updatePhone(newPhone: String) { phone.value = newPhone }
+    fun togglePasswordVisibility() { passwordVisible.value = !passwordVisible.value }
+    fun togglePassword2Visibility() { password2Visible.value = !password2Visible.value }
 
     // REGISTER
     fun register() {
+        attemptedSubmit.value = true
+        if (!validateAll()) return
+
         viewModelScope.launch {
             Log.d("FlujoTest", "authviewmodel: register llamado ")
             _uiState.value = RegisterUiState.Loading
 
             val userData = UserRegistrationDTO(
-                username = username,
-                phone = phone
+                username = username.value,
+                phone = phone.value
             )
 
-            val result = registerUseCase(email, password, userData)
+            val result = registerUseCase(email.value, password.value, userData)
             _uiState.value = RegisterUiState.Idle
 
             Log.d("FlujoTest", "authviewmodel: register llamado.")
 
             result.fold(
-                onSuccess = { authResult ->
+                onSuccess = {
                     val role = authPreferences.getUserRoleFromToken()
                     _uiState.value = RegisterUiState.Success(role)
 

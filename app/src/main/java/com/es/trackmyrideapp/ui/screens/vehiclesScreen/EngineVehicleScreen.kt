@@ -28,7 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.es.trackmyrideapp.LocalIsDarkTheme
 import com.es.trackmyrideapp.R
-import com.es.trackmyrideapp.ui.components.CustomTextFieldWithoutIcon
+import com.es.trackmyrideapp.ui.components.CustomTextFieldWithoutIconVehicles
 import com.es.trackmyrideapp.ui.components.VehicleIcon
 
 @Composable
@@ -170,7 +170,7 @@ fun Body(
     ) {
         Row(Modifier.fillMaxWidth()) {
             // Name
-            CustomTextFieldWithoutIcon(
+            CustomTextFieldWithoutIconVehicles(
                 label = "Name",
                 value = name,
                 modifier = Modifier.fillMaxWidth(),
@@ -184,7 +184,7 @@ fun Body(
             Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            CustomTextFieldWithoutIcon(
+            CustomTextFieldWithoutIconVehicles(
                 label = "Brand",
                 value = brand,
                 modifier = Modifier.weight(0.5f),
@@ -192,7 +192,7 @@ fun Body(
             )
 
 
-            CustomTextFieldWithoutIcon(
+            CustomTextFieldWithoutIconVehicles(
                 label = "Model",
                 value = model,
                 modifier = Modifier.weight(0.5f),
@@ -206,7 +206,7 @@ fun Body(
             Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            CustomTextFieldWithoutIcon(
+            CustomTextFieldWithoutIconVehicles(
                 label = "Year",
                 value = year,
                 modifier = Modifier.weight(0.5f),
@@ -214,7 +214,7 @@ fun Body(
             )
 
 
-            CustomTextFieldWithoutIcon(
+            CustomTextFieldWithoutIconVehicles(
                 label = "Fuel type",
                 value = fuelType,
                 modifier = Modifier.weight(0.5f),
@@ -228,7 +228,7 @@ fun Body(
             Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            CustomTextFieldWithoutIcon(
+            CustomTextFieldWithoutIconVehicles(
                 label = "Tank Capacity (L)",
                 value = tankCapacity,
                 modifier = Modifier.weight(0.5f),
@@ -236,7 +236,7 @@ fun Body(
             )
 
 
-            CustomTextFieldWithoutIcon(
+            CustomTextFieldWithoutIconVehicles(
                 label = "Efficiency (Km/L)",
                 value = efficiency,
                 modifier = Modifier.weight(0.5f),
@@ -246,7 +246,7 @@ fun Body(
 
         Row(Modifier.fillMaxWidth()) {
             // Aditional notes
-            CustomTextFieldWithoutIcon(
+            CustomTextFieldWithoutIconVehicles(
                 label = "Additional Notes",
                 value = notes,
                 singleLine = false,

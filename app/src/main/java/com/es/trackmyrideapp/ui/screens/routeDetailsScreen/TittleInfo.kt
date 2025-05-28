@@ -1,7 +1,6 @@
 package com.es.trackmyrideapp.ui.screens.routeDetailsScreen
 
 import androidx.compose.foundation.background
-import androidx.compose.runtime.Composable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -26,6 +26,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.es.trackmyrideapp.R
+import com.es.trackmyrideapp.ui.components.CustomTextFieldWithoutIcon
 import com.es.trackmyrideapp.ui.components.VehicleIcon
 import com.es.trackmyrideapp.ui.components.VehicleType
 import com.es.trackmyrideapp.ui.components.getIcon
@@ -35,8 +36,11 @@ import com.es.trackmyrideapp.ui.components.getLabel
 fun TittleInfo(
     modifier: Modifier,
     title: String,
+    onTitleChange: (String) -> Unit,
     date: String,
-    vehicleType: VehicleType
+    vehicleType: VehicleType,
+    isEditing: Boolean,
+    titleError: String? = null
 ) {
     Row(
         modifier = modifier
@@ -78,13 +82,24 @@ fun TittleInfo(
         Column(
             modifier = Modifier.weight(1f)
         ) {
-            // Título de la ruta
-            Text(
-                text = title,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black
-            )
+            if (!isEditing){
+                // Título de la ruta
+                Text(
+                    text = title,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black
+                )
+            }else{
+                CustomTextFieldWithoutIcon(
+                    modifier = Modifier.fillMaxWidth(),
+                    label = "Title",
+                    value = title,
+                    onValueChange = onTitleChange,
+                    isError = titleError != null,
+                    errorMessage = titleError
+                )
+            }
 
             // Fecha con icono
             Row(

@@ -1,6 +1,7 @@
 package com.es.trackmyrideapp.ui.screens.routesHistoryScreen
 
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -32,10 +33,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.compose.currentBackStackEntryAsState
+import com.es.trackmyrideapp.LocalNavController
 import com.es.trackmyrideapp.LocalSessionViewModel
 import com.es.trackmyrideapp.R
 import com.es.trackmyrideapp.core.states.MessageType
 import com.es.trackmyrideapp.domain.model.Route
+import com.es.trackmyrideapp.navigation.RoutesHistory
 import com.es.trackmyrideapp.ui.components.CustomButton
 import com.es.trackmyrideapp.ui.components.VehicleFilter
 import com.es.trackmyrideapp.ui.components.VehicleFilterSelector
@@ -67,6 +71,20 @@ fun RoutesHistoryScreen(
     LaunchedEffect(selectedFilter) {
         scrollState.animateScrollTo(0)
     }
+
+    val navController = LocalNavController.current
+    val currentBackStackEntry = navController.currentBackStackEntryAsState()
+
+    LaunchedEffect(currentBackStackEntry.value) {
+        val route = currentBackStackEntry.value?.destination?.route
+        if (route == RoutesHistory::class.qualifiedName) {
+            Log.d("flujotest", "RoutesHistoryScreen: Refreshing. ")
+            routesHistoryViewModel.fetchRoutes()
+        }else{
+            Log.d("flujotest", "RoutesHistoryScreen currentbackstackentry .value;: ${currentBackStackEntry.value?.destination?.route}. ")
+        }
+    }
+
 
     var routeToDelete by remember { mutableStateOf<Route?>(null) }
     var showDeleteDialog by remember { mutableStateOf(false) }

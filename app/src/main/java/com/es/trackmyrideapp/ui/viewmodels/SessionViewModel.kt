@@ -3,6 +3,7 @@ package com.es.trackmyrideapp.ui.viewmodels
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.es.trackmyrideapp.core.states.AuthState
 import com.es.trackmyrideapp.data.local.AuthPreferences
 import com.es.trackmyrideapp.data.local.RememberMePreferences
 import com.es.trackmyrideapp.data.remote.mappers.Resource
@@ -10,6 +11,7 @@ import com.es.trackmyrideapp.data.repository.SessionRepository
 import com.es.trackmyrideapp.domain.usecase.GetCurrentUserUseCase
 import com.es.trackmyrideapp.domain.usecase.SignOutUseCase
 import com.es.trackmyrideapp.domain.usecase.auth.CheckAndRefreshTokenUseCase
+import com.es.trackmyrideapp.domain.usecase.users.GetUserByIdUseCase
 import com.es.trackmyrideapp.domain.usecase.users.IsUserPremiumUseCase
 import com.es.trackmyrideapp.domain.usecase.users.SetPremiumUseCase
 import com.es.trackmyrideapp.domain.usecase.vehicles.CreateInitialVehiclesUseCase
@@ -33,7 +35,8 @@ class SessionViewModel @Inject constructor(
     private val sessionRepository: SessionRepository,
     private val createInitialVehiclesUseCase: CreateInitialVehiclesUseCase,
     private val isUserPremiumUseCase: IsUserPremiumUseCase,
-    private val setPremiumUseCase: SetPremiumUseCase
+    private val setPremiumUseCase: SetPremiumUseCase,
+    private val getUserByIdUseCase: GetUserByIdUseCase
 ) : ViewModel() {
 
     private val _authState = MutableStateFlow<AuthState>(AuthState.Loading)
@@ -44,6 +47,9 @@ class SessionViewModel @Inject constructor(
 
     private val _isPremium = MutableStateFlow<Boolean>(false)
     val isPremium: StateFlow<Boolean> = _isPremium.asStateFlow()
+
+    private val _userName = MutableStateFlow<String>("TrackMyRide User")
+    val userName: StateFlow<String> = _userName.asStateFlow()
 
     init {
         checkAuthState()
@@ -77,9 +83,11 @@ class SessionViewModel @Inject constructor(
                         Log.d("FlujoTest", "checkAndRefreshTokenUseCase completado correctamente con: $newToken")
                     }
 
-
                     Log.d("FlujoTest", "Saliendo del timeout de 6000 para el chekAndRefreshTokenUseCase...")
+
                     _authState.value = AuthState.Authenticated
+
+                    // Cargar vehiculos iniciales
                     loadInitialVehicles()
                 } catch (e: Throwable) {
                     Log.d("FlujoTest", "sesionviewmodel -> shouldAutoLogin.. catch. Se llama al logout Exception: ${e.message}")
@@ -90,6 +98,12 @@ class SessionViewModel @Inject constructor(
                 Log.d("FlujoTest", "sesionviewmodel -> shouldAutoLogin -> false...")
                 _userRole.value = null
                 _authState.value = AuthState.Unauthenticated
+            }
+
+             //Cargar datos usuario (Username)
+            Log.d("FlujoTest","userid from token: ${authPreferences.getUserIdFromToken()}")
+            authPreferences.getUserIdFromToken()?.let { uid ->
+                loadUserInfo(uid)
             }
         }
     }
@@ -143,9 +157,29 @@ class SessionViewModel @Inject constructor(
         }
     }
 
+    private fun loadUserInfo(userId: String) {
+        viewModelScope.launch {
+            when (val result = getUserByIdUseCase(userId)) {
+                is Resource.Success -> {
+                    _userName.value = result.data.username
+                    Log.e("Flujotest", "Useranme laoded correctly: ${result.data.username}")
+                }
+                is Resource.Error -> {
+                        Log.e("Flujotest", "Error loading username: ${result.message}")
+                    _userName.value = "TrackMyRide User"
+                }
+                Resource.Loading -> {
+                    // No hacer nada
+                }
+            }
+        }
+    }
+
     /*
-    Meto aqui los estados de la barra superior ya que este es u viewmodel generico que se peude usar en cualquier pantalla, por lo que me va perfecto para acceder a estos estados y modificarlos desde culauqier lugar
+    Meto aqui los estados de la barra superior ya que este es un viewmodel generico que se peude usar en cualquier pantalla, por lo que me va perfecto para acceder a estos estados y modificarlos desde culauqier lugar
      */
+
+    /* HOME SCREEN */
 
     // Estado tipo mapa
     private val _mapType = MutableStateFlow(MapType.NORMAL)
@@ -161,6 +195,35 @@ class SessionViewModel @Inject constructor(
     fun selectVehicle(vehicle: VehicleType) {
         sessionRepository.setSelectedVehicle(vehicle)
     }
+
+
+    /* ROUTE DETAILS SCREEN */
+
+    private val _isEditingRouteDetails = MutableStateFlow(false)
+    val isEditingRouteDetails: StateFlow<Boolean> = _isEditingRouteDetails
+
+    fun toggleEditingRouteDetails() {
+        _isEditingRouteDetails.value = !_isEditingRouteDetails.value
+    }
+
+    fun setEditingRouteDetails(isEditing: Boolean) {
+        _isEditingRouteDetails.value = isEditing
+    }
+
+
+    /* My Profile SCREEN */
+
+    private val _isEditingProfile = MutableStateFlow(false)
+    val isEditingProfile: StateFlow<Boolean> = _isEditingProfile
+
+    fun toggleEditingProfile() {
+        _isEditingProfile.value = !_isEditingProfile.value
+    }
+
+    fun setEditingProfile(isEditing: Boolean) {
+        _isEditingProfile.value = isEditing
+    }
+
 
     private suspend fun loadInitialVehicles() {
         when (val result = createInitialVehiclesUseCase()) {
@@ -183,8 +246,4 @@ class SessionViewModel @Inject constructor(
     }
 }
 
-sealed class AuthState {
-    object Loading : AuthState()
-    object Authenticated : AuthState()
-    object Unauthenticated : AuthState()
-}
+

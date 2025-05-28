@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.PinDrop
 import androidx.compose.material.icons.outlined.WatchLater
@@ -24,6 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.es.trackmyrideapp.ui.components.CustomTextField
+import com.es.trackmyrideapp.ui.components.IconTextBlock
 import com.es.trackmyrideapp.ui.components.IconTextRow
 
 @Composable
@@ -33,7 +34,9 @@ fun GeneralInfoCard(
     endTime: String,
     startPoint: String,
     endPoint: String,
-    onDescriptionChanged: (String) -> Unit
+    onDescriptionChanged: (String) -> Unit,
+    isEditable: Boolean,
+    descriptionError: String?
 ){
     Card(
         modifier = Modifier
@@ -78,7 +81,9 @@ fun GeneralInfoCard(
                 endTime = endTime,
                 startPoint = startPoint,
                 endPoint = endPoint,
-                onDescriptionChanged = onDescriptionChanged
+                onDescriptionChanged = onDescriptionChanged,
+                isEditable = isEditable,
+                descriptionError = descriptionError
             )
         }
     }
@@ -92,23 +97,43 @@ fun Body(
     startTime: String,
     endTime: String,
     startPoint: String,
-    endPoint: String
+    endPoint: String,
+    isEditable: Boolean,
+    descriptionError: String?
 ){
     Column(
         verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
-        // Desc
-        Row(
-            Modifier.fillMaxWidth(),
-        ) {
-            CustomTextField(
-                modifier = Modifier.fillMaxWidth(),
-                label = "Description",
-                icon = Icons.Default.Description,
-                value = description,
-                onValueChange = onDescriptionChanged,
-                enabled = false
-            )
+        if (isEditable){
+            // Desc
+            Row(
+                Modifier.fillMaxWidth(),
+            ) {
+                CustomTextField(
+                    modifier = Modifier.fillMaxWidth(),
+                    label = "Description",
+                    icon = Icons.Outlined.Description,
+                    value = description,
+                    onValueChange = onDescriptionChanged,
+                    enabled = true,
+                    isError = descriptionError != null,
+                    errorMessage = descriptionError
+                )
+            }
+        }else{
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 15.dp),
+
+            ) {
+                IconTextBlock(
+                    modifier = Modifier,
+                    title = "Description",
+                    icon = Icons.Outlined.Description,
+                    text = description.ifBlank { "No description" },
+                )
+            }
         }
 
         // Start time - end time
