@@ -81,7 +81,6 @@ fun FullscreenImageDialog(
             IconButton(
                 onClick = {
                     onDelete(image.id)
-                    onDismiss()
                 },
                 modifier = Modifier
                     .align(Alignment.TopStart)

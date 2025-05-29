@@ -188,32 +188,6 @@ fun Body(
                 confirmPasswordError = confirmPasswordError,
                 generalError = generalError
             )
-
-//            TextField(
-//                value = password,
-//                onValueChange = onPasswordChanged,
-//                label = { Text("Password",fontSize = 14.sp)  },
-//                leadingIcon = { Icon(Icons.Default.Lock, contentDescription = "Password Icon") },
-//                trailingIcon = {
-//                    val image = if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility
-//                    IconButton(
-//                        onClick = onPasswordVisibilityChanged
-//                    ) {
-//                        Icon(image, contentDescription = "Toggle Password Visibility")
-//                    }
-//                },
-//                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-//                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-//                modifier = Modifier.fillMaxWidth(),
-//                colors = TextFieldDefaults.colors(
-//                    focusedContainerColor = Color.Transparent,
-//                    unfocusedContainerColor = Color.Transparent,
-//                    focusedIndicatorColor = MaterialTheme.colorScheme.primary,
-//                    unfocusedIndicatorColor = if (password.isEmpty()) Color.Gray else colorResource(
-//                        R.color.greenTextFieldFilled),
-//                    cursorColor = MaterialTheme.colorScheme.primary
-//                )
-//            )
         }
         Spacer(Modifier.weight(1f))
     }

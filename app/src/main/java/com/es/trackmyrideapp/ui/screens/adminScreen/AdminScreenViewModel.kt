@@ -91,6 +91,10 @@ class AdminViewModel @Inject constructor(
         }
     }
 
+    fun refreshUsers(){
+        loadUsers()
+    }
+
     fun consumeUiMessage() {
         _uiMessage.value = null
     }

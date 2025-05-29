@@ -33,6 +33,7 @@ import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.Locale
 import javax.inject.Inject
 import kotlin.random.Random
@@ -233,7 +234,7 @@ class HomeViewModel @Inject constructor(
 
                     // Crear DTO ruta
                     val routeCreateDTO = RouteCreateDTO(
-                        name = "Route day ${LocalDateTime.now()}",
+                        name = "Route day ${LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH:mm:ss"))}",
                         description = null,
                         startTime = Instant.ofEpochMilli(routeTracker.startTimeMillis)
                             .atZone(ZoneId.systemDefault()).toLocalDateTime(),

@@ -1,8 +1,8 @@
 package com.es.trackmyrideapp.ui.screens.routesHistoryScreen
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.es.trackmyrideapp.RoutesHistoryConstants
 import com.es.trackmyrideapp.core.states.MessageType
 import com.es.trackmyrideapp.core.states.UiMessage
 import com.es.trackmyrideapp.data.remote.mappers.Resource
@@ -19,19 +19,8 @@ import javax.inject.Inject
 @HiltViewModel
 class RoutesHistoryViewModel @Inject constructor(
     private val getRoutesByUserUseCase: GetRoutesByUserUseCase,
-    private val deleteRouteUseCase: DeleteRouteUseCase,
-    private val savedStateHandle: SavedStateHandle
+    private val deleteRouteUseCase: DeleteRouteUseCase
 ) : ViewModel() {
-
-    val shouldRefresh = savedStateHandle.getStateFlow("should_refresh", false)
-
-    fun setShouldRefresh(value: Boolean) {
-        savedStateHandle["should_refresh"] = value
-    }
-
-    fun clearShouldRefresh() {
-        savedStateHandle["should_refresh"] = false
-    }
 
 
     private val _uiState = MutableStateFlow<RoutesHistoryUiState>(RoutesHistoryUiState.Idle)
@@ -61,7 +50,7 @@ class RoutesHistoryViewModel @Inject constructor(
             }
         }
 
-        val maxVisible = if (isPremium) Int.MAX_VALUE else 4
+        val maxVisible = if (isPremium) RoutesHistoryConstants.MAX_ROUTES_PREMIUM else RoutesHistoryConstants.MAX_ROUTES_NO_PREMIUM
         return filtered.take(maxVisible)
     }
 

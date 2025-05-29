@@ -39,7 +39,7 @@ import com.es.trackmyrideapp.LocalSessionViewModel
 import com.es.trackmyrideapp.R
 import com.es.trackmyrideapp.core.states.MessageType
 import com.es.trackmyrideapp.domain.model.Route
-import com.es.trackmyrideapp.navigation.RoutesHistory
+import com.es.trackmyrideapp.ui.navigation.RoutesHistory
 import com.es.trackmyrideapp.ui.components.CustomButton
 import com.es.trackmyrideapp.ui.components.VehicleFilter
 import com.es.trackmyrideapp.ui.components.VehicleFilterSelector

@@ -36,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.es.trackmyrideapp.LocalSessionViewModel
 import com.es.trackmyrideapp.core.states.MessageType
 import com.es.trackmyrideapp.domain.model.User
 import com.es.trackmyrideapp.ui.components.ConfirmationDialog
@@ -46,6 +47,7 @@ fun AdminScreen(
     snackbarHostState: SnackbarHostState
 ){
     val adminViewModel: AdminViewModel = hiltViewModel()
+    val sessionViewModel = LocalSessionViewModel.current
     val uiState by adminViewModel.uiState.collectAsState()
     val uiMessage by adminViewModel.uiMessage.collectAsState()
     var userToDelete by remember { mutableStateOf<User?>(null) }
@@ -63,6 +65,13 @@ fun AdminScreen(
                 userToDelete = null
             }
         )
+    }
+
+    // Refresh de listado de usuarios cuando se clica Refresh en la Top Bar
+    LaunchedEffect(Unit) {
+        sessionViewModel.refreshAdminTrigger.collect {
+            adminViewModel.refreshUsers()
+        }
     }
 
 

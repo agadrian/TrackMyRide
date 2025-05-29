@@ -1,4 +1,4 @@
-package com.es.trackmyrideapp.navigation
+package com.es.trackmyrideapp.ui.navigation
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background

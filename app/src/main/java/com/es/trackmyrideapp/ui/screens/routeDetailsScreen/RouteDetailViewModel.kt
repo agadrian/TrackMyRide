@@ -10,6 +10,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.es.trackmyrideapp.RouteDetailsConstants
 import com.es.trackmyrideapp.core.extensions.round
 import com.es.trackmyrideapp.core.states.MessageType
 import com.es.trackmyrideapp.core.states.UiMessage
@@ -131,13 +132,13 @@ class RouteDetailViewModel @Inject constructor(
     private fun validateName(value: String): String? {
         return when {
             value.isBlank() -> "Title cannot be empty"
-            value.length > 40 -> "Max 35 characters"
+            value.length > RouteDetailsConstants.MAX_NAME_LENGTH -> "Max ${RouteDetailsConstants.MAX_NAME_LENGTH} characters"
             else -> null
         }
     }
 
     private fun validateDescription(value: String): String? {
-        return if (value.length > 150) "Max 80 characters" else null
+        return if (value.length > RouteDetailsConstants.MAX_DESC_LENGTH) "Max ${RouteDetailsConstants.MAX_DESC_LENGTH} characters" else null
     }
 
     fun validateAll(): Boolean {
@@ -170,7 +171,7 @@ class RouteDetailViewModel @Inject constructor(
     }
 
     fun canAddMoreImages(isPremium: Boolean, currentImageCount: Int): Boolean {
-        val maxImages = if (isPremium) 10 else 3
+        val maxImages = if (isPremium) RouteDetailsConstants.MAX_IMAGES_PREMIUM else RouteDetailsConstants.MAX_IMAGES_NO_PREMIUM
         return if (currentImageCount < maxImages) {
             true
         } else {
@@ -337,6 +338,55 @@ class RouteDetailViewModel @Inject constructor(
     }
     */
 
+    /* Gestion estados imagenes */
+
+    var selectedImage = mutableStateOf<RouteImage?>(null)
+        private set
+
+    fun selectImage(image: RouteImage) {
+        selectedImage.value = image
+    }
+
+    fun clearSelectedImage() {
+        selectedImage.value = null
+    }
+
+
+    /*  Dialog Imagen  */
+    private val _imagePendingDeletion = MutableStateFlow<RouteImage?>(null)
+    val imagePendingDeletion: StateFlow<RouteImage?> = _imagePendingDeletion
+
+    fun requestImageDeletion(image: RouteImage) {
+        _imagePendingDeletion.value = image
+    }
+
+    fun confirmImageDeletion() {
+        _imagePendingDeletion.value?.let { image ->
+            deleteImage(image.id)
+
+            if (selectedImage.value?.id == image.id) {
+                clearSelectedImage()
+            }
+        }
+        _imagePendingDeletion.value = null
+    }
+
+    fun cancelImageDeletion() {
+        _imagePendingDeletion.value = null
+    }
+
+
+    /* Dialog ShowMap */
+    private val _showMapDialog = MutableStateFlow(false)
+    val showMapDialog: StateFlow<Boolean> = _showMapDialog
+
+    fun openMapDialog() {
+        _showMapDialog.value = true
+    }
+
+    fun closeMapDialog() {
+        _showMapDialog.value = false
+    }
 
 
 
@@ -346,8 +396,4 @@ class RouteDetailViewModel @Inject constructor(
         val s = seconds % 60
         return String.format("%02d:%02d:%02d", h, m, s)
     }
-
-
-
-
 }

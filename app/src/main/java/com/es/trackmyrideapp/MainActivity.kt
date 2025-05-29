@@ -21,10 +21,10 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.es.trackmyrideapp.core.states.AuthState
 import com.es.trackmyrideapp.data.local.ThemePreferences
-import com.es.trackmyrideapp.navigation.AdminScreen
-import com.es.trackmyrideapp.navigation.Home
-import com.es.trackmyrideapp.navigation.Login
-import com.es.trackmyrideapp.navigation.NavigationWrapper
+import com.es.trackmyrideapp.ui.navigation.AdminScreen
+import com.es.trackmyrideapp.ui.navigation.Home
+import com.es.trackmyrideapp.ui.navigation.Login
+import com.es.trackmyrideapp.ui.navigation.NavigationWrapper
 import com.es.trackmyrideapp.ui.theme.TrackMyRideAppTheme
 import com.es.trackmyrideapp.ui.viewmodels.SessionViewModel
 import dagger.hilt.android.AndroidEntryPoint

@@ -1,4 +1,4 @@
-package com.es.trackmyrideapp.navigation
+package com.es.trackmyrideapp.ui.navigation
 
 import android.util.Log
 import androidx.compose.foundation.layout.PaddingValues
@@ -147,7 +147,8 @@ fun NavigationWrapper(
                                     popUpTo(0)
                                     launchSingleTop = true
                                 }},
-                            showDrawerMenuButton = showDrawer
+                            showDrawerMenuButton = showDrawer,
+                            onRefreshAdminScreen = { sessionViewModel.triggerAdminRefresh() }
                         )
                     }
                 ) { innerPadding ->

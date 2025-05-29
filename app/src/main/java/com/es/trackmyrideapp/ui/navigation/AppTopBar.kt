@@ -1,4 +1,4 @@
-package com.es.trackmyrideapp.navigation
+package com.es.trackmyrideapp.ui.navigation
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.TwoWheeler
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DrawerState
@@ -63,7 +64,8 @@ fun AppTopBar(
     onVehicleTypeChanged: (VehicleType) -> Unit,
     currentMapType: MapType,
     currentVehicleType: VehicleType,
-    onLogoutAdminClicked: () -> Unit
+    onLogoutAdminClicked: () -> Unit,
+    onRefreshAdminScreen: () -> Unit
 ){
     val sessionViewModel = LocalSessionViewModel.current
     var showMapTypeMenu by remember { mutableStateOf(false) }
@@ -239,6 +241,13 @@ fun AppTopBar(
                     }
 
                     currentDestination == AdminScreen::class.qualifiedName -> {
+                        // Para refresh lista usuarios
+                        IconButton(onClick = {
+                            onRefreshAdminScreen()
+                        }) {
+                            Icon(Icons.Default.Refresh, contentDescription = "Refresh")
+                        }
+
                         IconButton(onClick = {
                             onLogoutAdminClicked()
                         }) {

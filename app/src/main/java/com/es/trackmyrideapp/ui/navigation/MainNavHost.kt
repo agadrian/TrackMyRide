@@ -1,4 +1,4 @@
-package com.es.trackmyrideapp.navigation
+package com.es.trackmyrideapp.ui.navigation
 
 import android.os.Build
 import androidx.annotation.RequiresApi

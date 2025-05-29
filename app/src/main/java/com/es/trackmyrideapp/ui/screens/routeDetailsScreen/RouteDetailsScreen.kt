@@ -2,7 +2,6 @@ package com.es.trackmyrideapp.ui.screens.routeDetailsScreen
 
 import FullscreenImageDialog
 import android.os.Build
-import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
@@ -38,7 +37,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.es.trackmyrideapp.LocalSessionViewModel
 import com.es.trackmyrideapp.R
 import com.es.trackmyrideapp.core.states.MessageType
-import com.es.trackmyrideapp.domain.model.RouteImage
+import com.es.trackmyrideapp.ui.components.ConfirmationDialog
 import com.es.trackmyrideapp.ui.components.CustomButton
 import com.es.trackmyrideapp.ui.components.VehicleType
 import com.es.trackmyrideapp.ui.permissions.AppPermission
@@ -97,17 +96,21 @@ fun RouteDetailScreen(
 
     val images = routeDetailViewModel.uploadedImages
 
+
+    // Imagen del dialog grande
+    val selectedImage by routeDetailViewModel.selectedImage
+    val imagePendingDeletion by routeDetailViewModel.imagePendingDeletion.collectAsState()
+
+    // Dialog del mapa
+    val showMapDialog by routeDetailViewModel.showMapDialog.collectAsState()
+
+    // Permisos
+
     val (permissionState, requestPermission) = rememberPermissionHandler(
         permission = AppPermission.ReadImages
     )
 
-    // Imagen del dialog grande
-    val selectedImage = remember { mutableStateOf<RouteImage?>(null) }
-
-    // Controlar estado dialogo mapa
-    var showMapDialog by remember { mutableStateOf(false) }
     var showPermDialog by remember { mutableStateOf(false) }
-
     var shouldLaunchPicker by remember { mutableStateOf(false) }
 
     // Lanzador para seleccionar imagen y enviarla al viewmodel
@@ -179,7 +182,7 @@ fun RouteDetailScreen(
 
         // Imagen mapa con boton Full Map
         RouteImagePreview(
-            onFullMapClicked = { showMapDialog = true }
+            onFullMapClicked = { routeDetailViewModel.openMapDialog() }
         )
 
         // Titulo, fecha, tipo veh
@@ -197,11 +200,6 @@ fun RouteDetailScreen(
 
         Spacer(Modifier.height(24.dp))
 
-        if (isPremium){
-            Log.d("Flujotest", "Es premium")
-        }else{
-            Log.d("Flujotest", "No es premium")
-        }
 
         Column(
             modifier = Modifier
@@ -253,7 +251,9 @@ fun RouteDetailScreen(
                     val canAdd = routeDetailViewModel.canAddMoreImages(isPremium, images.size)
                     shouldLaunchPicker = canAdd
                 },
-                onImageClick = { selectedImage.value = it }
+                onImageClick = {
+                    routeDetailViewModel.selectImage(it)
+                }
             )
 
             if (!isPremium){
@@ -283,21 +283,34 @@ fun RouteDetailScreen(
         }
     }
 
-    selectedImage.value?.let { image ->
+    selectedImage?.let { image ->
         FullscreenImageDialog(
             image = image,
-            onDismiss = { selectedImage.value = null },
-            onDelete = { imageId ->
-                routeDetailViewModel.deleteImage(imageId)
-                selectedImage.value = null
+            onDismiss = { routeDetailViewModel.clearSelectedImage() },
+            onDelete = {
+                routeDetailViewModel.requestImageDeletion(image)
+            }
+        )
+    }
 
+    imagePendingDeletion?.let {
+        ConfirmationDialog(
+            title = "Delete Image",
+            message = "Are you sure you want to delete this image?",
+            confirmButtonText = "Delete",
+            dismissButtonText = "Cancel",
+            onConfirm = {
+                routeDetailViewModel.confirmImageDeletion()
+            },
+            onDismiss = {
+                routeDetailViewModel.cancelImageDeletion()
             }
         )
     }
 
     if (showMapDialog) {
         DialogMap(
-            onDismissRequest = { showMapDialog = false },
+            onDismissRequest = { routeDetailViewModel.closeMapDialog() },
             routePoints = routePoints,
             startPointName = startPointName,
             endPointName = endPointName

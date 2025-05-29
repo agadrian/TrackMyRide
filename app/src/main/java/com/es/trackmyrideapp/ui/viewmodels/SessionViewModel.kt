@@ -18,8 +18,10 @@ import com.es.trackmyrideapp.domain.usecase.vehicles.CreateInitialVehiclesUseCas
 import com.es.trackmyrideapp.ui.components.VehicleType
 import com.google.maps.android.compose.MapType
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
@@ -222,6 +224,17 @@ class SessionViewModel @Inject constructor(
 
     fun setEditingProfile(isEditing: Boolean) {
         _isEditingProfile.value = isEditing
+    }
+
+
+    /* Admin Screen */
+    private val _refreshAdminTrigger = MutableSharedFlow<Unit>(replay = 0)
+    val refreshAdminTrigger = _refreshAdminTrigger.asSharedFlow()
+
+    fun triggerAdminRefresh() {
+        viewModelScope.launch {
+            _refreshAdminTrigger.emit(Unit)
+        }
     }
 
 
