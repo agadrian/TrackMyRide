@@ -237,11 +237,11 @@ fun RouteDetailScreen(
             // Card Stats
             StatsCard(
                 totalDistance = "$totalDistance Km",
-                movingTime = "$movingTime h",
+                movingTime = movingTime,
                 avgSpeed = "$avgSpeed Km/h",
                 maxSpeed = "$maxSpeed Km/h",
-                fuelConsumed = "$fuelConsumed L",
-                efficiency = "$efficiency Km/L"
+                fuelConsumed = routeDetailViewModel.appendUnit(fuelConsumed, "L"),
+                efficiency = routeDetailViewModel.appendUnit(efficiency, "Km/L")
             )
 
             // Card images

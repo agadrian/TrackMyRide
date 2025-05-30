@@ -39,11 +39,11 @@ import com.es.trackmyrideapp.LocalSessionViewModel
 import com.es.trackmyrideapp.R
 import com.es.trackmyrideapp.core.states.MessageType
 import com.es.trackmyrideapp.domain.model.Route
-import com.es.trackmyrideapp.ui.navigation.RoutesHistory
 import com.es.trackmyrideapp.ui.components.CustomButton
 import com.es.trackmyrideapp.ui.components.VehicleFilter
 import com.es.trackmyrideapp.ui.components.VehicleFilterSelector
-import okhttp3.internal.concurrent.formatDuration
+import com.es.trackmyrideapp.ui.navigation.RoutesHistory
+import com.es.trackmyrideapp.utils.TimeFormatter
 
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -153,7 +153,7 @@ fun RoutesHistoryScreen(
                     val route = item.route
                     val title = route.name
                     val distance = "${route.distanceKm} Km"
-                    val duration = formatDuration(route.movingTimeSec)
+                    val duration = TimeFormatter.formatSecondsToHhMmSs(route.movingTimeSec)
                     val pace = route.pace?.let { String.format("%.2f", it) + " Km/h" } ?: "-"
                     val date = route.startTime.toLocalDate().toString()
 
@@ -167,7 +167,8 @@ fun RoutesHistoryScreen(
                             routeToDelete = route
                             showDeleteDialog = true
                         },
-                        onViewDetailsClicked = { onViewDetailsClicked(route.id) }
+                        onViewDetailsClicked = { onViewDetailsClicked(route.id) },
+                        vehicleType = route.vehicleType
                     )
 
                     Spacer(modifier = Modifier.height(24.dp))

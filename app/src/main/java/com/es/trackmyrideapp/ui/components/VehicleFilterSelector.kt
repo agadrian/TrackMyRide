@@ -10,7 +10,6 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import com.es.trackmyrideapp.R
-import com.es.trackmyrideapp.ui.screens.vehiclesScreen.IconSelectorBar
 
 @Composable
 fun VehicleFilterSelector(

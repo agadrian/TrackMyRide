@@ -11,6 +11,7 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.es.trackmyrideapp.HomeScreenConstants
 import com.es.trackmyrideapp.core.extensions.round
 import com.es.trackmyrideapp.core.states.MessageType
 import com.es.trackmyrideapp.core.states.UiMessage
@@ -216,9 +217,15 @@ class HomeViewModel @Inject constructor(
      * Guardar la ruta creando un routeCreateDTO, y usando un callback para limpiar los estados al acabar.
      */
     private fun saveCurrentRoute(onComplete: () -> Unit = {}) {
-        // Si no hay puntos, no hacer nada
         val points = _routePoints.value
-        if (points.size <= 1) return
+        val duration = routeTracker.getElapsedTimeMillis()
+
+        // No guardar si es corta por puntos o tiempo
+        if (points.size < HomeScreenConstants.MIN_ROUTE_POINTS || duration < HomeScreenConstants.MIN_DURATION_MILLIS) {
+            _uiMessage.value = UiMessage("Route too short to save", MessageType.INFO)
+            onComplete()
+            return
+        }
 
         val selectedVehicle = sessionRepository.selectedVehicle.value
 

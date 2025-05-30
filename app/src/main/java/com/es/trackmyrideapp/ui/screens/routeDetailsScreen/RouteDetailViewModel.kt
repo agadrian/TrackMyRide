@@ -29,6 +29,7 @@ import com.es.trackmyrideapp.ui.components.VehicleType
 import com.es.trackmyrideapp.utils.GPXParser
 import com.es.trackmyrideapp.utils.GPXParser.saveGpxToDownloads
 import com.es.trackmyrideapp.utils.RouteSimplifier
+import com.es.trackmyrideapp.utils.TimeFormatter
 import com.google.android.gms.maps.model.LatLng
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -229,12 +230,12 @@ class RouteDetailViewModel @Inject constructor(
                         startDateTime.value =route.startTime.format(DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm"))
                         endPoint.value = route.endPoint
                         distanceKm.value = route.distanceKm.round().toString()
-                        movingTimeSec.value = formatSecondsToHhMmSs(route.movingTimeSec)
+                        movingTimeSec.value = TimeFormatter.formatSecondsToHhMmSs(route.movingTimeSec)
                         avgSpeed.value = route.avgSpeed.round().toString()
                         maxSpeed.value = route.maxSpeed.round().toString()
-                        fuelConsumed.value = route.fuelConsumed?.round().toString() ?: "-"
-                        efficiency.value = route.efficiency?.round().toString() ?: "-"
-                        pace.value = route.pace?.round().toString() ?: "-"
+                        fuelConsumed.value = route.fuelConsumed?.round()?.toString() ?: "-"
+                        efficiency.value = route.efficiency?.round()?.toString() ?: "-"
+                        pace.value = route.pace?.round()?.toString() ?: "-"
                         vehicleType.value = route.vehicleType
                     }
 
@@ -389,11 +390,9 @@ class RouteDetailViewModel @Inject constructor(
     }
 
 
-
-    private fun formatSecondsToHhMmSs(seconds: Long): String {
-        val h = seconds / 3600
-        val m = (seconds % 3600) / 60
-        val s = seconds % 60
-        return String.format("%02d:%02d:%02d", h, m, s)
+    fun appendUnit(value: String, unit: String): String {
+        return if (value == "-") "-" else "$value $unit"
     }
+
+
 }

@@ -30,12 +30,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.es.trackmyrideapp.LocalIsDarkTheme
+import com.es.trackmyrideapp.R
+import com.es.trackmyrideapp.ui.components.VehicleType
+import com.es.trackmyrideapp.ui.components.getLabel
 
 @Composable
 fun RouteCard(
@@ -46,6 +51,7 @@ fun RouteCard(
     pace: String,
     onViewDetailsClicked: () -> Unit,
     onDeleteClicked: () -> Unit,
+    vehicleType: VehicleType,
 ){
     val isDarkMode = LocalIsDarkTheme.current
 
@@ -88,6 +94,23 @@ fun RouteCard(
                         color = MaterialTheme.colorScheme.secondary,
                         fontSize = 14.sp
                     )
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    // Chip de tipo de transporte
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(colorResource(R.color.grayCircle))
+                            .padding(horizontal = 8.dp, vertical = 2.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = vehicleType.getLabel(),
+                            fontSize = 12.sp,
+                            color = Color.DarkGray
+                        )
+                    }
                 }
             }
 

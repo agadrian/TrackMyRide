@@ -22,3 +22,8 @@ object RoutesHistoryConstants {
     const val MAX_ROUTES_PREMIUM = 100
     const val MAX_ROUTES_NO_PREMIUM = 4
 }
+
+object HomeScreenConstants {
+    const val MIN_ROUTE_POINTS = 3
+    const val MIN_DURATION_MILLIS = 10_000L
+}
