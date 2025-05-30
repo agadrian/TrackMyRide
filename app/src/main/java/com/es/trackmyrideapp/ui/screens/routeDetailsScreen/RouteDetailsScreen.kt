@@ -21,6 +21,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -150,6 +151,13 @@ fun RouteDetailScreen(
         if (permissionState.isGranted) {
             // Cuando el permiso es concedido, actualizamos el estado
             showPermDialog = false
+        }
+    }
+
+    // Resetear la edicion por si cambiamos de pantalla sin quitarla
+    DisposableEffect(Unit) {
+        onDispose {
+            sessionViewModel.setEditingRouteDetails(false)
         }
     }
 

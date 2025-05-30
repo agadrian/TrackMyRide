@@ -130,6 +130,17 @@ class SessionViewModel @Inject constructor(
     }
 
 
+    // Se llama desde el login screen para cargar datos
+    fun onUserLoggedIn() {
+        val userId = authPreferences.getUserIdFromToken()
+        if (userId != null) {
+            _authState.value = AuthState.Authenticated
+            _userRole.value = authPreferences.getUserRoleFromToken()
+            loadUserInfo(userId)
+        }
+    }
+
+
     fun checkPremiumStatus() {
         viewModelScope.launch {
             when(val result = isUserPremiumUseCase()) {
@@ -138,8 +149,7 @@ class SessionViewModel @Inject constructor(
                     if (_isPremium.value != newIsPremium) {
                         _isPremium.value = newIsPremium
                     }
-                    // Cargar la imagen
-                    loadProfileImage()
+
                 }
                 is Resource.Error -> {
                     Log.d("Flujotest", "Error comprobando IsPremium")
@@ -174,6 +184,9 @@ class SessionViewModel @Inject constructor(
                 is Resource.Success -> {
                     _userName.value = result.data.username
                     Log.e("Flujotest", "Useranme laoded correctly: ${result.data.username}")
+
+                    // Cargar la imagen
+                    loadProfileImage()
                 }
                 is Resource.Error -> {
                         Log.e("Flujotest", "Error loading username: ${result.message}")

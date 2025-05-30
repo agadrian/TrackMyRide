@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.es.trackmyrideapp.LocalSessionViewModel
 
 
 @Composable
@@ -36,11 +37,13 @@ fun LoginScreen(
     snackbarHostState: SnackbarHostState
 ) {
     val loginViewModel: LoginViewModel = hiltViewModel()
+    val sessionViewModel = LocalSessionViewModel.current
     val uiState by loginViewModel.uiState.collectAsState()
     val errorMessage by loginViewModel.errorMessage.collectAsState()
 
     // Navegar a home/admin si Login exitoso
     LaunchedEffect(uiState) {
+        sessionViewModel.onUserLoggedIn()
         if (uiState is LoginUiState.Success) {
             val role = (uiState as LoginUiState.Success).role
             if (role == "ADMIN") {

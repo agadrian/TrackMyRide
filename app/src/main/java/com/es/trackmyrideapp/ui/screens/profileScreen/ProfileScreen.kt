@@ -29,6 +29,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -166,6 +167,13 @@ fun ProfileScreen(
         uiMessage?.let { msg ->
             snackbarHostState.showSnackbar(msg.message)
             profileViewModel.consumeUiMessage()
+        }
+    }
+
+    // Resetear la edicion por si cambiamos de pantalla sin quitarla
+    DisposableEffect(Unit) {
+        onDispose {
+            sessionViewModel.setEditingProfile(false)
         }
     }
 
