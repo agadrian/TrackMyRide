@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.DirectionsCar
@@ -41,13 +42,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.es.trackmyrideapp.R
 import com.es.trackmyrideapp.data.local.ThemePreferences
 import com.es.trackmyrideapp.ui.viewmodels.SessionViewModel
@@ -64,7 +66,8 @@ fun DrawerContent(
     onThemeChanged: (Boolean) -> Unit = {},
     userName: String,
     userPlan: String,
-    currentDestination: String?
+    currentDestination: String?,
+    userProfileImageUrl: String?
 ) {
     val sessionViewModel: SessionViewModel = hiltViewModel()
 
@@ -99,7 +102,8 @@ fun DrawerContent(
         // User profile section
         UserProfileSection(
             userName = userName,
-            userPlan = userPlan
+            userPlan = userPlan,
+            userProfileImageUrl = userProfileImageUrl
         )
 
         HorizontalDivider(
@@ -152,7 +156,8 @@ fun DrawerContent(
 @Composable
 fun UserProfileSection(
     userName: String,
-    userPlan: String
+    userPlan: String,
+    userProfileImageUrl: String? = null
 ){
     Column(
         modifier = Modifier
@@ -163,18 +168,36 @@ fun UserProfileSection(
         // Profile avatar
         Box(
             modifier = Modifier
-                .size(64.dp)
-                .clip(CircleShape)
-                .background(colorResource(R.color.orangeButton))
-                .padding(12.dp),
+                .size(90.dp)
+                .clip(CircleShape),
             contentAlignment = Alignment.Center
         ) {
-            Icon(
-                imageVector = Icons.Default.Person,
-                contentDescription = "Profile",
-                tint = Color.White,
-                modifier = Modifier.size(32.dp)
-            )
+            if (userProfileImageUrl != null) {
+                AsyncImage(
+                    model = userProfileImageUrl,
+                    contentDescription = "Profile Image",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .size(90.dp)
+                        .clip(CircleShape)
+                )
+            } else {
+                Icon(
+                    imageVector = Icons.Default.AccountCircle,
+                    contentDescription = "Profile",
+                    modifier = Modifier
+                        .size(90.dp)
+                        .clip(CircleShape),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+
+//            Icon(
+//                imageVector = Icons.Default.Person,
+//                contentDescription = "Profile",
+//                tint = Color.White,
+//                modifier = Modifier.size(32.dp)
+//            )
         }
 
         Spacer(modifier = Modifier.height(8.dp))

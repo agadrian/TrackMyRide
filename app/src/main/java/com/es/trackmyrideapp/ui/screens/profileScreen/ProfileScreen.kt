@@ -1,5 +1,7 @@
 package com.es.trackmyrideapp.ui.screens.profileScreen
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -20,6 +22,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -29,11 +32,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -41,8 +47,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import coil.compose.AsyncImage
 import com.es.trackmyrideapp.LocalSessionViewModel
 import com.es.trackmyrideapp.R
+import com.es.trackmyrideapp.core.states.UiState
+import com.es.trackmyrideapp.ui.permissions.AppPermission
+import com.es.trackmyrideapp.ui.permissions.ClosableBlockedDialog
+import com.es.trackmyrideapp.ui.permissions.rememberPermissionHandler
 
 
 @Composable
@@ -53,9 +64,9 @@ fun ProfileScreen(
 ) {
 
     val profileViewModel: ProfileViewModel = hiltViewModel()
-    val confirmationMessage by profileViewModel.confirmationMessage.collectAsState()
     val uiState by profileViewModel.uiState.collectAsState()
-
+    val uiMessage by profileViewModel.uiMessage.collectAsState()
+    val focusManager = LocalFocusManager.current
     val sessionViewModel = LocalSessionViewModel.current
     val isPremium by sessionViewModel.isPremium.collectAsState()
     val isEditing by sessionViewModel.isEditingProfile.collectAsState()
@@ -83,26 +94,78 @@ fun ProfileScreen(
 
     val passwordDialogError  by profileViewModel.passwordDialogError.collectAsState()
 
+    val profileImageUrl by profileViewModel.profileImageUrl.collectAsState()
+
+    // Actualizar datos del usuario para el Drawer, gestionado en el sesssionviewmodel.
+    LaunchedEffect(profileImageUrl) {
+        profileImageUrl?.let {
+            sessionViewModel.updateProfileImage(it)
+        }
+    }
+
+    LaunchedEffect(username) {
+        sessionViewModel.updateUserName(username)
+    }
+
 
     LaunchedEffect(Unit){
         sessionViewModel.checkPremiumStatus()
     }
 
-    val focusManager = LocalFocusManager.current
 
-    // Mensajes informativos
-    LaunchedEffect(uiState) {
-        if (uiState is ProfileUiState.Error) {
-            val errorMessage = (uiState as ProfileUiState.Error).message
-            snackbarHostState.showSnackbar(errorMessage)
+    /* Permisos para foto perfil */
+    val (permissionState, requestPermission) = rememberPermissionHandler(
+        permission = AppPermission.ReadImages
+    )
+
+    var showPermDialog by remember { mutableStateOf(false) }
+    var shouldLaunchPicker by remember { mutableStateOf(false) }
+
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        uri?.let {
+            profileViewModel.uploadProfileImage(it)
+
         }
     }
 
-    // Mensajes de confirmacion
-    LaunchedEffect(confirmationMessage) {
-        confirmationMessage?.let { message ->
-            snackbarHostState.showSnackbar(message)
-            profileViewModel.consumeConfirmationMessage()
+    LaunchedEffect(shouldLaunchPicker, permissionState.isGranted) {
+        if (shouldLaunchPicker) {
+            if (permissionState.isGranted) {
+                imagePickerLauncher.launch("image/*")
+                shouldLaunchPicker = false
+            } else {
+                requestPermission()
+            }
+        }
+    }
+
+    LaunchedEffect(permissionState.isGranted) {
+        if (permissionState.isGranted) {
+            showPermDialog = false
+        }
+    }
+
+    if (showPermDialog) {
+        ClosableBlockedDialog(
+            onDismiss = { showPermDialog = false },
+            onResumeCheck = {
+                requestPermission()
+            }
+        )
+    }
+
+    LaunchedEffect(permissionState.shouldShowBlockedDialog) {
+        showPermDialog = permissionState.shouldShowBlockedDialog
+    }
+
+
+    // Mensajes snackbar
+    LaunchedEffect(uiMessage) {
+        uiMessage?.let { msg ->
+            snackbarHostState.showSnackbar(msg.message)
+            profileViewModel.consumeUiMessage()
         }
     }
 
@@ -127,17 +190,34 @@ fun ProfileScreen(
 
         // Image
         Box(
-            contentAlignment = Alignment.BottomEnd,
-            modifier = Modifier.size(100.dp)
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .size(110.dp)
+                .clickable {
+                    shouldLaunchPicker = true
+                }
+            ,
         ) {
-            Icon(
-                imageVector = Icons.Default.AccountCircle,
-                contentDescription = "Profile",
-                modifier = Modifier
-                    .size(100.dp)
-                    .clip(CircleShape),
-                tint = MaterialTheme.colorScheme.primary
-            )
+            if (profileImageUrl != null) {
+                AsyncImage(
+                    model = profileImageUrl,
+                    contentDescription = "Profile Image",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .size(100.dp)
+                        .clip(CircleShape)
+                )
+            } else {
+                Icon(
+                    imageVector = Icons.Default.AccountCircle,
+                    contentDescription = "Profile",
+                    modifier = Modifier
+                        .size(100.dp)
+                        .clip(CircleShape),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+
 
             Icon(
                 imageVector = Icons.Default.Edit,
@@ -183,6 +263,28 @@ fun ProfileScreen(
                         color = MaterialTheme.colorScheme.secondary
                     )
                 }
+            }else{
+                OutlinedButton(
+                    modifier = Modifier
+                        .padding(6.dp)
+                        .height(36.dp),
+                    contentPadding = PaddingValues(8.dp, 0.dp),
+                    onClick = {}
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.logo_premium),
+                        contentDescription = "Premium",
+                        modifier = Modifier.size(18.dp)
+                    )
+
+                    Spacer(Modifier.width(8.dp))
+
+                    Text(
+                        text = "Premium",
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                }
             }
 
             Text(
@@ -201,7 +303,11 @@ fun ProfileScreen(
             phone = phone,
             onUsernameChanged = { profileViewModel.updateUsername(it) },
             onPhoneChanged = { profileViewModel.updatePhone(it) },
-            onSaveButtonClicked = { if (profileViewModel.validateBeforeSave()) profileViewModel.updateProfile() },
+            onSaveButtonClicked = {
+                if (profileViewModel.validateBeforeSave()) {
+                    profileViewModel.updateProfile()
+                    sessionViewModel.setEditingProfile(false)
+                }},
             isEditing = isEditing,
             usernameError = usernameError,
             phoneError = phoneError,
@@ -229,5 +335,16 @@ fun ProfileScreen(
             },
             generalError = passwordDialogError
         )
+    }
+
+    if (uiState is UiState.Loading) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.4f)),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
     }
 }

@@ -11,6 +11,7 @@ import com.es.trackmyrideapp.data.repository.SessionRepository
 import com.es.trackmyrideapp.domain.usecase.GetCurrentUserUseCase
 import com.es.trackmyrideapp.domain.usecase.SignOutUseCase
 import com.es.trackmyrideapp.domain.usecase.auth.CheckAndRefreshTokenUseCase
+import com.es.trackmyrideapp.domain.usecase.profileImages.GetProfileImageUseCase
 import com.es.trackmyrideapp.domain.usecase.users.GetUserByIdUseCase
 import com.es.trackmyrideapp.domain.usecase.users.IsUserPremiumUseCase
 import com.es.trackmyrideapp.domain.usecase.users.SetPremiumUseCase
@@ -38,7 +39,8 @@ class SessionViewModel @Inject constructor(
     private val createInitialVehiclesUseCase: CreateInitialVehiclesUseCase,
     private val isUserPremiumUseCase: IsUserPremiumUseCase,
     private val setPremiumUseCase: SetPremiumUseCase,
-    private val getUserByIdUseCase: GetUserByIdUseCase
+    private val getUserByIdUseCase: GetUserByIdUseCase,
+    private val getProfileImageUseCase: GetProfileImageUseCase
 ) : ViewModel() {
 
     private val _authState = MutableStateFlow<AuthState>(AuthState.Loading)
@@ -52,6 +54,10 @@ class SessionViewModel @Inject constructor(
 
     private val _userName = MutableStateFlow<String>("TrackMyRide User")
     val userName: StateFlow<String> = _userName.asStateFlow()
+
+    private val _profileImageUrl = MutableStateFlow<String?>(null)
+    val profileImageUrl = _profileImageUrl.asStateFlow()
+
 
     init {
         checkAuthState()
@@ -132,6 +138,8 @@ class SessionViewModel @Inject constructor(
                     if (_isPremium.value != newIsPremium) {
                         _isPremium.value = newIsPremium
                     }
+                    // Cargar la imagen
+                    loadProfileImage()
                 }
                 is Resource.Error -> {
                     Log.d("Flujotest", "Error comprobando IsPremium")
@@ -159,6 +167,7 @@ class SessionViewModel @Inject constructor(
         }
     }
 
+    /* User info DRAWER */
     private fun loadUserInfo(userId: String) {
         viewModelScope.launch {
             when (val result = getUserByIdUseCase(userId)) {
@@ -175,6 +184,31 @@ class SessionViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    private fun loadProfileImage() {
+        viewModelScope.launch {
+            when(val result = getProfileImageUseCase()) {
+                is Resource.Success -> {
+                    _profileImageUrl.value = result.data.imageUrl
+                }
+                is Resource.Error -> {
+                    Log.e("SessionViewModel", "Error loading profile image: ${result.message}")
+                    _profileImageUrl.value = null
+                }
+                Resource.Loading -> {
+                    // Nada
+                }
+            }
+        }
+    }
+
+    fun updateUserName(newName: String) {
+        _userName.value = newName
+    }
+
+    fun updateProfileImage(newUrl: String?) {
+        _profileImageUrl.value = newUrl
     }
 
     /*

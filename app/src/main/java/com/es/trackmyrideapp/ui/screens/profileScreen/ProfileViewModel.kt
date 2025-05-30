@@ -1,15 +1,24 @@
 package com.es.trackmyrideapp.ui.screens.profileScreen
 
+import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.es.trackmyrideapp.core.states.MessageType
+import com.es.trackmyrideapp.core.states.UiMessage
+import com.es.trackmyrideapp.core.states.UiState
 import com.es.trackmyrideapp.data.local.AuthPreferences
+import com.es.trackmyrideapp.data.remote.dto.ProfileImageRequest
 import com.es.trackmyrideapp.data.remote.dto.UserUpdateDTO
 import com.es.trackmyrideapp.data.remote.mappers.Resource
+import com.es.trackmyrideapp.domain.usecase.images.UploadImageToCloudinaryUseCase
+import com.es.trackmyrideapp.domain.usecase.profileImages.GetProfileImageUseCase
+import com.es.trackmyrideapp.domain.usecase.profileImages.UploadProfileImageUseCase
 import com.es.trackmyrideapp.domain.usecase.users.GetUserByIdUseCase
 import com.es.trackmyrideapp.domain.usecase.users.UpdateUserUseCase
+import com.es.trackmyrideapp.utils.ApiErrorHandler
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
@@ -26,7 +35,10 @@ import javax.inject.Inject
 class ProfileViewModel @Inject constructor(
     private val getUserByIdUseCase: GetUserByIdUseCase,
     private val updateUserUseCase: UpdateUserUseCase,
-    private val authPreferences: AuthPreferences
+    private val authPreferences: AuthPreferences,
+    private val uploadImageToCloudinaryUseCase: UploadImageToCloudinaryUseCase,
+    private val uploadProfileImageUseCase: UploadProfileImageUseCase,
+    private val getProfileImageUseCase: GetProfileImageUseCase
 ) : ViewModel() {
 
     // Estados del formulario
@@ -49,9 +61,6 @@ class ProfileViewModel @Inject constructor(
         private set
 
     var password: MutableState<String> = mutableStateOf("")
-        private set
-
-    var passwordVisible: MutableState<Boolean> = mutableStateOf(false)
         private set
 
     var memberSince: MutableState<String> = mutableStateOf("")
@@ -77,9 +86,11 @@ class ProfileViewModel @Inject constructor(
     fun toggleCurrentPasswordVisibility() {
         currentPasswordVisible.value = !currentPasswordVisible.value
     }
+
     fun toggleNewPasswordVisibility() {
         newPasswordVisible.value = !newPasswordVisible.value
     }
+
     fun toggleConfirmPasswordVisibility() {
         confirmPasswordVisible.value = !confirmPasswordVisible.value
     }
@@ -106,16 +117,13 @@ class ProfileViewModel @Inject constructor(
 
 
     // UI State
-    private val _uiState = MutableStateFlow<ProfileUiState>(ProfileUiState.Idle)
-    val uiState: StateFlow<ProfileUiState> = _uiState
+    private val _uiState = MutableStateFlow<UiState>(UiState.Idle)
+    val uiState: StateFlow<UiState> = _uiState
 
-    // Mensaje de confirmacion
-    private val _confirmationMessage = MutableStateFlow<String?>(null)
-    val confirmationMessage: StateFlow<String?> = _confirmationMessage
+    // Ui Messages
+    private val _uiMessage = MutableStateFlow<UiMessage?>(null)
+    val uiMessage: StateFlow<UiMessage?> = _uiMessage
 
-    fun consumeConfirmationMessage() {
-        _confirmationMessage.value = null
-    }
 
     // Funciones para actualizar estados
     fun updateUsername(newUsername: String) {
@@ -153,33 +161,37 @@ class ProfileViewModel @Inject constructor(
 
     init {
         loadUserProfile()
+        fetchProfileImage()
     }
-
 
 
     private fun loadUserProfile() {
         viewModelScope.launch {
-            _uiState.value = ProfileUiState.Loading
+            _uiState.value = UiState.Loading
             val userId = authPreferences.getUserIdFromToken() ?: run {
-                _uiState.value = ProfileUiState.Error("Invalid user token")
+                _uiMessage.value = UiMessage("Invalid user token", MessageType.ERROR)
+                _uiState.value = UiState.Idle
                 return@launch
             }
 
             when (val result = getUserByIdUseCase(userId)) {
                 is Resource.Success -> {
                     result.data.let { user ->
-                        val formattedUsername = user.username.replaceFirstChar { it.uppercaseChar() }
+                        val formattedUsername =
+                            user.username.replaceFirstChar { it.uppercaseChar() }
                         username.value = formattedUsername
                         email.value = user.email
                         phone.value = user.phone ?: ""
                         memberSince.value = formatMemberSince(user.createdAt)
-                        _uiState.value = ProfileUiState.Success(user)
                         savedUsername.value = formattedUsername
+                        _uiState.value = UiState.Idle
                     }
                 }
+
                 is Resource.Error -> {
                     Log.d("ProfileViewModel", "Error loading profile: ${result.message}")
-                    _uiState.value = ProfileUiState.Error(result.message ?: "Error loading profile")
+                    _uiMessage.value = UiMessage(result.message, MessageType.ERROR)
+                    _uiState.value = UiState.Idle
                 }
 
                 Resource.Loading -> TODO()
@@ -188,12 +200,12 @@ class ProfileViewModel @Inject constructor(
     }
 
 
-
     fun updateProfile() {
         viewModelScope.launch {
-            _uiState.value = ProfileUiState.Loading
+            _uiState.value = UiState.Loading
             val userId = authPreferences.getUserIdFromToken() ?: run {
-                _uiState.value = ProfileUiState.Error("Invalid user token")
+                _uiMessage.value = UiMessage("Invalid user token", MessageType.ERROR)
+                _uiState.value = UiState.Idle
                 return@launch
             }
 
@@ -208,13 +220,14 @@ class ProfileViewModel @Inject constructor(
                         username.value = user.username
                         savedUsername.value = user.username
                         phone.value = user.phone ?: ""
-                        _uiState.value = ProfileUiState.Success(user)
-
-                        _confirmationMessage.value = "Profile updated successfully"
+                        _uiMessage.value = UiMessage("Profile updated successfully", MessageType.INFO)
+                        _uiState.value = UiState.Idle
                     }
                 }
+
                 is Resource.Error -> {
-                    _uiState.value = ProfileUiState.Error(result.message)
+                    _uiMessage.value = UiMessage(result.message, MessageType.ERROR)
+                    _uiState.value = UiState.Idle
                 }
 
                 Resource.Loading -> TODO()
@@ -225,17 +238,20 @@ class ProfileViewModel @Inject constructor(
     fun validateBeforeSave(): Boolean {
         return when {
             username.value.isBlank() -> {
-                _uiState.value = ProfileUiState.Error("Username cannot be empty")
+                _uiMessage.value = UiMessage("Username cannot be empty", MessageType.ERROR)
                 false
             }
+
             username.value.length > 15 -> {
-                _uiState.value = ProfileUiState.Error("Username too long")
+                _uiMessage.value = UiMessage("Username too long", MessageType.ERROR)
                 false
             }
+
             phone.value.length > 12 -> {
-                _uiState.value = ProfileUiState.Error("Phone number too long")
+                _uiMessage.value = UiMessage("Phone number too long", MessageType.ERROR)
                 false
             }
+
             else -> true
         }
     }
@@ -263,14 +279,17 @@ class ProfileViewModel @Inject constructor(
                 valid = false
                 "Enter new password"
             }
+
             new.length < 8 -> {
                 valid = false
                 "Must be at least 8 characters"
             }
+
             new == current -> {
                 valid = false
                 "Must be different from current"
             }
+
             else -> null
         }
 
@@ -279,10 +298,12 @@ class ProfileViewModel @Inject constructor(
                 valid = false
                 "Confirm your password"
             }
+
             confirm != new -> {
                 valid = false
                 "Passwords do not match"
             }
+
             else -> null
         }
 
@@ -298,7 +319,7 @@ class ProfileViewModel @Inject constructor(
             return
         }
 
-        _uiState.value = ProfileUiState.Loading
+        _uiState.value = UiState.Loading
 
         val credential = EmailAuthProvider.getCredential(email, current)
         user.reauthenticate(credential)
@@ -306,7 +327,9 @@ class ProfileViewModel @Inject constructor(
                 if (reauthTask.isSuccessful) {
                     updatePassword(user, new)
                 } else {
-                    passwordDialogError.value = "Re-authentication failed. Check your current password."
+                    _uiState.value = UiState.Idle
+                    passwordDialogError.value =
+                        "Re-authentication failed. Check your current password."
                 }
             }
     }
@@ -314,11 +337,13 @@ class ProfileViewModel @Inject constructor(
     private fun updatePassword(user: FirebaseUser, newPassword: String) {
         user.updatePassword(newPassword)
             .addOnCompleteListener { updateTask ->
+                _uiState.value = UiState.Idle
                 if (updateTask.isSuccessful) {
-                    _confirmationMessage.value = "Password updated successfully"
+                    _uiMessage.value = UiMessage("Password updated successfully", MessageType.INFO)
                     resetPasswordDialogState()
                 } else {
-                    passwordDialogError.value = updateTask.exception?.message ?: "Password update failed"
+                    passwordDialogError.value =
+                        updateTask.exception?.message ?: "Password update failed"
                 }
             }
     }
@@ -331,6 +356,75 @@ class ProfileViewModel @Inject constructor(
         } catch (e: Exception) {
             "Unknown"
         }
+    }
+
+    /*  Imagenes perfil  */
+
+    private val _profileImageUrl = MutableStateFlow<String?>(null)
+    val profileImageUrl: StateFlow<String?> = _profileImageUrl
+
+    fun uploadProfileImage(uri: Uri) {
+        viewModelScope.launch {
+            _uiState.value = UiState.Loading
+            try {
+                val imageUrl = uploadImageToCloudinaryUseCase(uri)
+                if (imageUrl == null) {
+                    _uiMessage.value = UiMessage("Failed to upload image to Cloudinary", MessageType.ERROR)
+                    _uiState.value = UiState.Idle
+                    return@launch
+                }
+
+                val request = ProfileImageRequest(imageUrl = imageUrl)
+                val result = uploadProfileImageUseCase(request)
+                _uiState.value = UiState.Idle
+
+                if (result is Resource.Success) {
+                    fetchProfileImage()
+                    _uiMessage.value = UiMessage("Profile picture updated", MessageType.INFO)
+                } else if (result is Resource.Error) {
+                    val message = ApiErrorHandler.handleApiError(
+                        result
+                    )
+                    _uiMessage.value = message
+                }
+            } catch (e: Exception) {
+                _uiState.value = UiState.Idle
+                _uiMessage.value = UiMessage("Error uploading image: ${e.localizedMessage}", MessageType.ERROR)
+            }
+        }
+    }
+
+    private fun fetchProfileImage() {
+        viewModelScope.launch {
+            _uiState.value = UiState.Loading
+
+            val result = getProfileImageUseCase()
+            _uiState.value = UiState.Idle
+
+            when (result) {
+                is Resource.Success -> {
+                    _profileImageUrl.value = result.data.imageUrl
+                }
+                is Resource.Error -> {
+                    val message = ApiErrorHandler.handleApiError(
+                        result,
+                        customMessages = mapOf(
+                            404 to ""
+                        )
+                    )
+                    if (message.message.isNotEmpty()) {
+                        _uiMessage.value = message
+                    }
+
+                }
+                Resource.Loading -> {}
+            }
+        }
+    }
+
+
+    fun consumeUiMessage() {
+        _uiMessage.value = null
     }
 }
 

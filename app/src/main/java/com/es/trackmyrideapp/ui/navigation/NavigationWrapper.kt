@@ -41,6 +41,7 @@ fun NavigationWrapper(
     val sessionViewModel = LocalSessionViewModel.current
     val isPremium by sessionViewModel.isPremium.collectAsState()
     val nameState by sessionViewModel.userName.collectAsState()
+    val profileImageUrl by sessionViewModel.profileImageUrl.collectAsState()
     val userPlanState = if (isPremium) "Premium Account" else "Free Account"
 
 
@@ -104,7 +105,8 @@ fun NavigationWrapper(
                         userPlan = userPlanState,
                         currentDestination = currentDestination,
                         isDarkTheme = isDarkTheme,
-                        onThemeChanged = onThemeChanged
+                        onThemeChanged = onThemeChanged,
+                        userProfileImageUrl = profileImageUrl
                     )
                 }
             }

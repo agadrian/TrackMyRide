@@ -105,7 +105,6 @@ fun RouteDetailScreen(
     val showMapDialog by routeDetailViewModel.showMapDialog.collectAsState()
 
     // Permisos
-
     val (permissionState, requestPermission) = rememberPermissionHandler(
         permission = AppPermission.ReadImages
     )
