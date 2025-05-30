@@ -22,7 +22,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -159,6 +158,15 @@ fun ProfileScreen(
 
     LaunchedEffect(permissionState.shouldShowBlockedDialog) {
         showPermDialog = permissionState.shouldShowBlockedDialog
+    }
+
+
+    // CircularProgessIndicator
+    LaunchedEffect(uiState) {
+        when (uiState) {
+            is UiState.Loading -> sessionViewModel.showLoading()
+            else -> sessionViewModel.hideLoading()
+        }
     }
 
 
@@ -343,16 +351,5 @@ fun ProfileScreen(
             },
             generalError = passwordDialogError
         )
-    }
-
-    if (uiState is UiState.Loading) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.4f)),
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator()
-        }
     }
 }

@@ -48,8 +48,6 @@ class AdminViewModel @Inject constructor(
                     _uiState.value = AdminUiState.Idle
                     _uiMessage.value = UiMessage(result.message, MessageType.ERROR)
                 }
-
-                Resource.Loading -> TODO()
             }
         }
     }
@@ -67,7 +65,7 @@ class AdminViewModel @Inject constructor(
                     _uiMessage.value = UiMessage(result.message, MessageType.ERROR)
                 }
 
-                Resource.Loading -> TODO()
+               
             }
         }
     }
@@ -82,10 +80,8 @@ class AdminViewModel @Inject constructor(
                     _uiMessage.value = UiMessage("User deleted successfully", MessageType.INFO)
                 }
                 is Resource.Error -> {
-                    _uiMessage.value = UiMessage(result.message ?: "Error deleting user", MessageType.ERROR)
+                    _uiMessage.value = UiMessage(result.message, MessageType.ERROR)
                 }
-
-                Resource.Loading -> TODO()
             }
             _uiState.value = AdminUiState.Idle
         }

@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
@@ -29,7 +28,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -38,6 +36,7 @@ import com.es.trackmyrideapp.LocalNavController
 import com.es.trackmyrideapp.LocalSessionViewModel
 import com.es.trackmyrideapp.R
 import com.es.trackmyrideapp.core.states.MessageType
+import com.es.trackmyrideapp.core.states.UiState
 import com.es.trackmyrideapp.domain.model.Route
 import com.es.trackmyrideapp.ui.components.CustomButton
 import com.es.trackmyrideapp.ui.components.VehicleFilter
@@ -108,6 +107,14 @@ fun RoutesHistoryScreen(
         }
     }
 
+    // CircularProgessIndicator
+    LaunchedEffect(uiState) {
+        when (uiState) {
+            is UiState.Loading -> sessionViewModel.showLoading()
+            else -> sessionViewModel.hideLoading()
+        }
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -119,7 +126,7 @@ fun RoutesHistoryScreen(
     ) {
         VehicleFilterSelector(
             selectedFilter = selectedFilter,
-            onFilterSelected = { selectedFilter = it } ,
+            onFilterSelected = { selectedFilter = it },
             paddingScreen = 60.dp,
             true
         )
@@ -177,7 +184,7 @@ fun RoutesHistoryScreen(
 
 
             // Mostrar boton de get premium cuando no lo sea
-            if (showButtonGoPremium){
+            if (showButtonGoPremium) {
                 CustomButton(
                     onclick = onGetPremiumClicked,
                     buttonColor = colorResource(R.color.orangeButton),
@@ -220,18 +227,6 @@ fun RoutesHistoryScreen(
                     }
                 }
             )
-        }
-    }
-
-    // Indicador de carga
-    if (uiState is RoutesHistoryUiState.Loading) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.4f)),
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator()
         }
     }
 }

@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.es.trackmyrideapp.core.states.MessageType
 import com.es.trackmyrideapp.core.states.UiMessage
+import com.es.trackmyrideapp.core.states.UiState
 import com.es.trackmyrideapp.data.remote.dto.VehicleUpdateDTO
 import com.es.trackmyrideapp.data.remote.mappers.Resource
 import com.es.trackmyrideapp.domain.model.Vehicle
@@ -32,20 +33,28 @@ class VehiclesViewModel @Inject constructor(
 
     var name by mutableStateOf("")
         private set
+
     var brand by mutableStateOf("")
         private set
+
     var model by mutableStateOf("")
         private set
+
     var year by mutableStateOf("")
         private set
+
     var fuelType by mutableStateOf("")
         private set
+
     var tankCapacity by mutableStateOf("")
         private set
+
     var efficiency by mutableStateOf("")
         private set
+
     var notes by mutableStateOf("")
         private set
+
     var bikeType by mutableStateOf("")
         private set
 
@@ -57,10 +66,10 @@ class VehiclesViewModel @Inject constructor(
     val vehicles: StateFlow<List<Vehicle>> = _vehicles
 
     // UI State
-    private val _uiState = MutableStateFlow<VehicleUiState>(VehicleUiState.Idle)
-    val uiState: StateFlow<VehicleUiState> = _uiState
+    private val _uiState = MutableStateFlow<UiState>(UiState.Idle)
+    val uiState: StateFlow<UiState> = _uiState
 
-
+    // Ui Messages
     private val _uiMessage = MutableStateFlow<UiMessage?>(null)
     val uiMessage: StateFlow<UiMessage?> = _uiMessage
 
@@ -90,32 +99,31 @@ class VehiclesViewModel @Inject constructor(
 
     private fun loadUserVehicles() {
         viewModelScope.launch {
-            _uiState.value = VehicleUiState.Loading
+            _uiState.value = UiState.Loading
             try {
                 // Primero intentar obtener los vehiculos existentes
                 when (val result = getAllVehiclesUseCase()) {
                     is Resource.Success -> {
-                        Log.d("VehiclesViewModel", "Vehicles loaded successfully. ")
                         if (result.data.isNotEmpty()) {
                             Log.d("VehiclesViewModel", "DATA: ${result.data} ")
                             _vehicles.value = result.data
-                            Log.d("VehiclesViewModel", "loadVehicleDataForSelectedType CALLED ")
                             loadVehicleDataForSelectedType()
-                            _uiState.value = VehicleUiState.Success
                         } else {
                             Log.d("VehiclesViewModel", "createInitialVehicles CALLED ")
                             // Si no hay, crear los iniciales
                             createInitialVehicles()
                         }
+                        _uiState.value = UiState.Idle
                     }
                     is Resource.Error -> {
-                        _uiState.value = VehicleUiState.Error(result.message )
+                        _uiMessage.value = UiMessage("Error loading vehicles. Please try again later", MessageType.ERROR)
+                        _uiState.value = UiState.Idle
                     }
-                    Resource.Loading -> Unit // Ya estamos en estado loading
                 }
             } catch (e: Exception) {
                 Log.d("VehiclesViewModel", "loadUserVehicles failed. ${e.message} ")
-                _uiState.value = VehicleUiState.Error(e.message ?: "Unknown error")
+                _uiMessage.value = UiMessage(e.message ?: "Unknown error", MessageType.ERROR)
+                _uiState.value = UiState.Idle
             }
         }
     }
@@ -126,13 +134,12 @@ class VehiclesViewModel @Inject constructor(
                 Log.d("VehiclesViewModel", "createInitialVehicles succes ")
                 _vehicles.value = result.data
                 loadVehicleDataForSelectedType()
-                _uiState.value = VehicleUiState.Success
+                
             }
             is Resource.Error -> {
                 Log.d("VehiclesViewModel", "createInitialVehicles error ${result.message} ")
-                _uiState.value = VehicleUiState.Error(result.message ?: "Error creating initial vehicles")
+                _uiState.value = UiState.Idle
             }
-            Resource.Loading -> Unit // Ya estamos en estado loading
         }
     }
 
@@ -183,19 +190,22 @@ class VehiclesViewModel @Inject constructor(
 
     fun updateVehicle() {
         viewModelScope.launch {
-            _uiState.value = VehicleUiState.Loading
+            _uiState.value = UiState.Loading
 
             val type = when (val filter = selectedFilter.value) {
                 is VehicleFilter.Type -> filter.type
                 VehicleFilter.All -> {
-                    _uiState.value = VehicleUiState.Error("Please select a vehicle type")
+                    _uiState.value = UiState.Idle
+                    _uiMessage.value = UiMessage("Please select a vehicle type", MessageType.ERROR)
+                    
                     return@launch
                 }
             }
 
             val vehicleId = _vehicles.value.firstOrNull { it.type == type }?.id
                 ?: run {
-                    _uiState.value = VehicleUiState.Error("Vehicle not found")
+                    _uiState.value = UiState.Idle
+                    _uiMessage.value = UiMessage("Vehicle selected not found. Trya gain later", MessageType.ERROR)
                     return@launch
                 }
 
@@ -214,16 +224,17 @@ class VehiclesViewModel @Inject constructor(
             when (val result = updateVehicleUseCase(type, updateData)) {
                 is Resource.Success -> {
                     // Actualizar la lista de vehiculos con los nuevos datos
+                    _uiState.value = UiState.Idle
                     _vehicles.value = _vehicles.value.map {
                         if (it.id == vehicleId) result.data else it
                     }
-                    _uiState.value = VehicleUiState.Success
+                    
                     _uiMessage.value = UiMessage("Vehicle updated successfully", MessageType.INFO)
                 }
                 is Resource.Error -> {
-                    _uiState.value = VehicleUiState.Error(result.message )
+                    _uiMessage.value = UiMessage("Vehicle update failed. Try again later.", MessageType.ERROR)
+                    _uiState.value = UiState.Idle
                 }
-                Resource.Loading -> Unit // Ya estamos en estado loading
             }
         }
     }
@@ -237,27 +248,27 @@ class VehiclesViewModel @Inject constructor(
                 false
             }
             brand.isBlank() -> {
-                _uiState.value = VehicleUiState.Error("Brand cannot be empty")
+                _uiMessage.value = UiMessage("Brand cannot be empty", MessageType.ERROR)
                 false
             }
             model.isBlank() -> {
-                _uiState.value = VehicleUiState.Error("Model cannot be empty")
+                _uiMessage.value = UiMessage("Model cannot be empty", MessageType.ERROR)
                 false
             }
             year.isBlank() || year.toIntOrNull() == null -> {
-                _uiState.value = VehicleUiState.Error("Invalid year")
+                _uiMessage.value = UiMessage("Invalid year", MessageType.ERROR)
                 false
             }
             currentFilter is VehicleFilter.Type &&
                     currentFilter.type != VehicleType.BIKE &&
                     (fuelType.isBlank() || tankCapacity.isBlank() || efficiency.isBlank()) -> {
-                _uiState.value = VehicleUiState.Error("Please fill all engine vehicle fields")
+                _uiMessage.value = UiMessage("Please fill all engine vehicle fields", MessageType.ERROR)
                 false
             }
             currentFilter is VehicleFilter.Type &&
                     currentFilter.type == VehicleType.BIKE &&
                     bikeType.isBlank() -> {
-                _uiState.value = VehicleUiState.Error("Please select bike type")
+                _uiMessage.value = UiMessage("Please select bike type", MessageType.ERROR)
                 false
             }
             else -> true

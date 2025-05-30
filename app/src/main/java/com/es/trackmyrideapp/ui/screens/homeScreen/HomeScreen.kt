@@ -5,9 +5,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -15,6 +19,8 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.es.trackmyrideapp.core.states.MessageType
+import com.es.trackmyrideapp.core.states.UiState
 import com.es.trackmyrideapp.ui.permissions.AppPermission
 import com.es.trackmyrideapp.ui.permissions.BlockedDialog
 import com.es.trackmyrideapp.ui.permissions.RationaleDialog
@@ -27,7 +33,8 @@ fun HomeScreen(
 ){
     val homeViewModel: HomeViewModel = hiltViewModel()
     val tracking = homeViewModel.trackingState.value
-    val uiMessage = homeViewModel.uiMessage.value
+    val uiMessage by homeViewModel.uiMessage.collectAsState()
+    val uiState by homeViewModel.uiState.collectAsState()
     val bottomPadding = if (tracking) 108.dp else 32.dp
 
     val (permissionState, requestPermission) = rememberPermissionHandler(
@@ -35,10 +42,15 @@ fun HomeScreen(
     )
 
 
+    // Snackbar msg
     LaunchedEffect(uiMessage) {
-        uiMessage?.let { msg ->
-            snackbarHostState.showSnackbar(msg.message)
-            homeViewModel.clearUiMessage()
+        uiMessage?.let { message ->
+            snackbarHostState.showSnackbar(
+                message = message.message,
+                withDismissAction = message.type == MessageType.ERROR,
+                duration = SnackbarDuration.Short
+            )
+            homeViewModel.consumeUiMessage()
         }
     }
 
@@ -75,6 +87,18 @@ fun HomeScreen(
             LaunchedEffect(Unit) {
                 requestPermission()
             }
+        }
+    }
+
+    // Indicador de carga
+    if (uiState is UiState.Loading) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.2f)),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
         }
     }
 }

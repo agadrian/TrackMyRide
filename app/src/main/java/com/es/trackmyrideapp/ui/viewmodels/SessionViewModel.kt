@@ -1,6 +1,8 @@
 package com.es.trackmyrideapp.ui.viewmodels
 
 import android.util.Log
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.es.trackmyrideapp.core.states.AuthState
@@ -57,6 +59,17 @@ class SessionViewModel @Inject constructor(
 
     private val _profileImageUrl = MutableStateFlow<String?>(null)
     val profileImageUrl = _profileImageUrl.asStateFlow()
+
+    private val _isLoading = mutableStateOf(false)
+    val isLoading: State<Boolean> = _isLoading
+
+    fun showLoading() {
+        _isLoading.value = true
+    }
+
+    fun hideLoading() {
+        _isLoading.value = false
+    }
 
 
     init {
@@ -154,9 +167,6 @@ class SessionViewModel @Inject constructor(
                 is Resource.Error -> {
                     Log.d("Flujotest", "Error comprobando IsPremium")
                 }
-                Resource.Loading -> {
-                    // Nada
-                }
             }
         }
     }
@@ -169,9 +179,6 @@ class SessionViewModel @Inject constructor(
                 }
                 is Resource.Error -> {
                     Log.e("SessionViewModel", "Error activando premium: ${result.message}")
-                }
-                Resource.Loading -> {
-                    // nada
                 }
             }
         }
@@ -192,9 +199,6 @@ class SessionViewModel @Inject constructor(
                         Log.e("Flujotest", "Error loading username: ${result.message}")
                     _userName.value = "TrackMyRide User"
                 }
-                Resource.Loading -> {
-                    // No hacer nada
-                }
             }
         }
     }
@@ -208,9 +212,6 @@ class SessionViewModel @Inject constructor(
                 is Resource.Error -> {
                     Log.e("SessionViewModel", "Error loading profile image: ${result.message}")
                     _profileImageUrl.value = null
-                }
-                Resource.Loading -> {
-                    // Nada
                 }
             }
         }
@@ -298,9 +299,6 @@ class SessionViewModel @Inject constructor(
             }
             is Resource.Error -> {
                 Log.e("SessionViewModel", "Error creando vehículos: ${result.message}")
-            }
-            Resource.Loading -> {
-               // Nada
             }
         }
     }

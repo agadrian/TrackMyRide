@@ -3,7 +3,6 @@ package com.es.trackmyrideapp.ui.screens.vehiclesScreen
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,7 +14,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.PedalBike
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
@@ -24,14 +22,14 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.es.trackmyrideapp.LocalSessionViewModel
 import com.es.trackmyrideapp.R
 import com.es.trackmyrideapp.core.states.MessageType
+import com.es.trackmyrideapp.core.states.UiState
 import com.es.trackmyrideapp.ui.components.CustomButton
 import com.es.trackmyrideapp.ui.components.VehicleFilter
 import com.es.trackmyrideapp.ui.components.VehicleFilterSelector
@@ -44,13 +42,14 @@ fun VehiclesScreen(
     snackbarHostState: SnackbarHostState
 ){
     val vehicleViewModel: VehiclesViewModel = hiltViewModel()
+    val sessionViewModel = LocalSessionViewModel.current
     val uiMessage by vehicleViewModel.uiMessage.collectAsState()
     val uiState by vehicleViewModel.uiState.collectAsState()
     val selectedFilter by vehicleViewModel.selectedFilter.collectAsState()
     val focusManager = LocalFocusManager.current
 
 
-    // Mostrar info  en snackbar
+    // Snackbar msg
     LaunchedEffect(uiMessage) {
         uiMessage?.let { message ->
             snackbarHostState.showSnackbar(
@@ -59,6 +58,14 @@ fun VehiclesScreen(
                 duration = SnackbarDuration.Short
             )
             vehicleViewModel.consumeUiMessage()
+        }
+    }
+
+    // CircularProgessIndicator
+    LaunchedEffect(uiState) {
+        when (uiState) {
+            is UiState.Loading -> sessionViewModel.showLoading()
+            else -> sessionViewModel.hideLoading()
         }
     }
 
@@ -173,18 +180,6 @@ fun VehiclesScreen(
                 buttonColor = MaterialTheme.colorScheme.primary,
                 fontColor = MaterialTheme.colorScheme.onBackground
             )
-        }
-    }
-
-    // Indicador de carga
-    if (uiState is VehicleUiState.Loading) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.4f)),
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator()
         }
     }
 }

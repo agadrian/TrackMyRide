@@ -38,6 +38,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.es.trackmyrideapp.LocalSessionViewModel
 import com.es.trackmyrideapp.R
 import com.es.trackmyrideapp.core.states.MessageType
+import com.es.trackmyrideapp.core.states.UiState
 import com.es.trackmyrideapp.ui.components.ConfirmationDialog
 import com.es.trackmyrideapp.ui.components.CustomButton
 import com.es.trackmyrideapp.ui.components.VehicleType
@@ -60,6 +61,8 @@ fun RouteDetailScreen(
     val uiMessage by routeDetailViewModel.uiMessage.collectAsState()
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
+    val scrollState = rememberScrollState()
+    val uiState by routeDetailViewModel.uiState.collectAsState()
 
     //  Llamo con launchedeffect a la api para comprobar el premium, y luego miro el estado obtenido
     val sessionViewModel = LocalSessionViewModel.current
@@ -70,7 +73,6 @@ fun RouteDetailScreen(
         sessionViewModel.checkPremiumStatus()
     }
 
-    val scrollState = rememberScrollState()
 
     val title by routeDetailViewModel.title
     val date by routeDetailViewModel.startDateTime
@@ -122,7 +124,15 @@ fun RouteDetailScreen(
         }
     }
 
-    // Mostrar info  en snackbar
+    // CircularProgessIndicator
+    LaunchedEffect(uiState) {
+        when (uiState) {
+            is UiState.Loading -> sessionViewModel.showLoading()
+            else -> sessionViewModel.hideLoading()
+        }
+    }
+
+    // Snackbar msg
     LaunchedEffect(uiMessage) {
         uiMessage?.let { message ->
             snackbarHostState.showSnackbar(
@@ -314,6 +324,7 @@ fun RouteDetailScreen(
             }
         )
     }
+
 
     if (showMapDialog) {
         DialogMap(

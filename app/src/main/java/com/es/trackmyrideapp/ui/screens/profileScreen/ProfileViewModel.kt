@@ -193,8 +193,6 @@ class ProfileViewModel @Inject constructor(
                     _uiMessage.value = UiMessage(result.message, MessageType.ERROR)
                     _uiState.value = UiState.Idle
                 }
-
-                Resource.Loading -> TODO()
             }
         }
     }
@@ -229,8 +227,6 @@ class ProfileViewModel @Inject constructor(
                     _uiMessage.value = UiMessage(result.message, MessageType.ERROR)
                     _uiState.value = UiState.Idle
                 }
-
-                Resource.Loading -> TODO()
             }
         }
     }
@@ -415,9 +411,7 @@ class ProfileViewModel @Inject constructor(
                     if (message.message.isNotEmpty()) {
                         _uiMessage.value = message
                     }
-
                 }
-                Resource.Loading -> {}
             }
         }
     }

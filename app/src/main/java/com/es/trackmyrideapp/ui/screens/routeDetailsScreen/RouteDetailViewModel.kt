@@ -14,6 +14,7 @@ import com.es.trackmyrideapp.RouteDetailsConstants
 import com.es.trackmyrideapp.core.extensions.round
 import com.es.trackmyrideapp.core.states.MessageType
 import com.es.trackmyrideapp.core.states.UiMessage
+import com.es.trackmyrideapp.core.states.UiState
 import com.es.trackmyrideapp.data.remote.dto.RouteImageRequest
 import com.es.trackmyrideapp.data.remote.dto.RouteUpdateDTO
 import com.es.trackmyrideapp.data.remote.mappers.Resource
@@ -56,6 +57,9 @@ class RouteDetailViewModel @Inject constructor(
 
     private val _uiMessage = MutableStateFlow<UiMessage?>(null)
     val uiMessage: StateFlow<UiMessage?> = _uiMessage
+
+    private val _uiState = MutableStateFlow<UiState>(UiState.Idle)
+    val uiState: StateFlow<UiState> = _uiState
 
     fun consumeUiMessage() {
         _uiMessage.value = null
@@ -115,10 +119,8 @@ class RouteDetailViewModel @Inject constructor(
     var vehicleType = mutableStateOf<VehicleType?>(null)
         private set
 
-
     var uploadedImages = mutableStateListOf<RouteImage>()
         private set
-
 
     fun onTitleChanged(newName: String) {
         title.value = newName
@@ -158,15 +160,19 @@ class RouteDetailViewModel @Inject constructor(
 
     fun uploadImage(uri: Uri) {
         viewModelScope.launch {
+            _uiState.value = UiState.Loading
             val imageUrl = uploadImageToCloudinaryUseCase(uri)
-            imageUrl?.let { url ->
+            if (imageUrl != null) {
                 val request = RouteImageRequest(
-                    imageUrl = url,
+                    imageUrl = imageUrl,
                     description = null
                 )
                 uploadRouteImageUseCase(routeId, request)
-                // Volver a cargar desde el servidor:
                 fetchRouteImages()
+                _uiState.value = UiState.Idle
+            } else {
+                _uiMessage.value = UiMessage("Image upload failed", MessageType.ERROR)
+                _uiState.value = UiState.Idle
             }
         }
     }
@@ -184,6 +190,7 @@ class RouteDetailViewModel @Inject constructor(
 
     private fun fetchRouteImages() {
         viewModelScope.launch {
+            _uiState.value = UiState.Loading
             when (val result = getRouteImagesUseCase(routeId)) {
                 is Resource.Success -> {
                     result.data.let { images ->
@@ -192,23 +199,26 @@ class RouteDetailViewModel @Inject constructor(
                     }
                 }
                 is Resource.Error -> {
-                    Log.e("Flujotest", "Error fetching route images: ${result.message}")
+                    _uiMessage.value = UiMessage("Error loading images", MessageType.ERROR)
                 }
-                else -> Unit
             }
+            _uiState.value = UiState.Idle
         }
     }
 
+
     fun deleteImage(imageId: Long) {
         viewModelScope.launch {
+            _uiState.value = UiState.Loading
             when (val result = deleteRouteImageUseCase(routeId, imageId)) {
                 is Resource.Success -> {
                     fetchRouteImages()
+                    _uiState.value = UiState.Idle
                 }
                 is Resource.Error -> {
-                    Log.e("RouteDetailVM", "Failed to delete image: ${result.message}")
+                    _uiMessage.value = UiMessage("Failed to delete image.", MessageType.ERROR)
+                    _uiState.value = UiState.Idle
                 }
-                else -> Unit
             }
         }
     }
@@ -216,6 +226,7 @@ class RouteDetailViewModel @Inject constructor(
 
     private fun fetchRouteAndPopulateStates() {
         viewModelScope.launch {
+            _uiState.value = UiState.Loading
             when (val result = getRouteByIdUseCase(routeId)) {
                 is Resource.Success -> {
                     result.data?.let { route ->
@@ -240,14 +251,15 @@ class RouteDetailViewModel @Inject constructor(
                     }
 
                     routePoints.value = getDecodedRoutePoints()
+                    _uiState.value = UiState.Idle
                 }
 
 
                 is Resource.Error -> {
                     Log.e("RouteDetailVM", "Error loading route: ${result.message}")
+                    _uiState.value = UiState.Idle
+                    // TODO("Usar ApiErrorHandler")
                 }
-
-                else -> Unit
             }
         }
     }
@@ -269,6 +281,7 @@ class RouteDetailViewModel @Inject constructor(
 
     fun updateRoute() {
         viewModelScope.launch {
+            _uiState.value = UiState.Loading
             val routeUpdateDTO = RouteUpdateDTO(
                 name = title.value,
                 description = description.value,
@@ -277,14 +290,15 @@ class RouteDetailViewModel @Inject constructor(
             when (val result = updateRouteUseCase(routeId, routeUpdateDTO)) {
                 is Resource.Success -> {
                     _uiMessage.value = UiMessage("Route updated successfully", MessageType.INFO)
+                    _uiState.value = UiState.Idle
                     fetchRouteAndPopulateStates() // Recargar datos actualizados
                 }
 
                 is Resource.Error -> {
                     _uiMessage.value = UiMessage("Error updating route: ${result.message}", MessageType.ERROR)
+                    _uiState.value = UiState.Idle
+                    // TODO("Usar ApiErrorHandler")
                 }
-
-                else -> Unit
             }
         }
     }

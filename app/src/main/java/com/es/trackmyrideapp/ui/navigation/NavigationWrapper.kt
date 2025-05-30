@@ -1,9 +1,11 @@
 package com.es.trackmyrideapp.ui.navigation
 
 import android.util.Log
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.material3.DrawerValue
@@ -26,6 +28,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.es.trackmyrideapp.LocalNavController
 import com.es.trackmyrideapp.LocalSessionViewModel
+import com.es.trackmyrideapp.ui.components.GlobalLoadingOverlay
 
 
 @Composable
@@ -43,6 +46,7 @@ fun NavigationWrapper(
     val nameState by sessionViewModel.userName.collectAsState()
     val profileImageUrl by sessionViewModel.profileImageUrl.collectAsState()
     val userPlanState = if (isPremium) "Premium Account" else "Free Account"
+    val isLoading by sessionViewModel.isLoading
 
 
     // Obtener la ruta actual
@@ -111,64 +115,69 @@ fun NavigationWrapper(
                 }
             }
         ) {
-            if (showAppBars){
-                Scaffold(
-                    // Quitar padding por defecto superior
-                    contentWindowInsets = WindowInsets(0, 0, 0, 0),
-                    snackbarHost = {
-                        SnackbarHost(snackbarHostState)
-                    },
-                    topBar = {
-                        AppTopBar(
-                            currentDestination = currentDestination,
-                            scope = scope,
-                            drawerState = drawerState,
-                            navigateToHomeClicked = {
-                                navController.navigate(Home) {
-                                    popUpTo<Home> { inclusive = true }
-                                    launchSingleTop = true
-                                } },
-                            navigateToHistoryClicked = {
-                                navController.navigate(RoutesHistory) {
-                                    popUpTo<RoutesHistory> { inclusive = true }
-                                    launchSingleTop = true
-                                } },
-                            showBackButton = showBackButton,
-                            onBackClicked = { navController.popBackStack() },
-                            onMapTypeChanged = { mapType ->
-                                sessionViewModel.setMapType(mapType)
-                            },
-                            currentMapType = sessionViewModel.mapType.collectAsState().value,
-                            onVehicleTypeChanged = { vehicle ->
-                                sessionViewModel.selectVehicle(vehicle)
-                            },
-                            currentVehicleType = sessionViewModel.selectedVehicle.collectAsState().value,
-                            onLogoutAdminClicked = {
-                                sessionViewModel.logout()
-                                navController.navigate(Login) {
-                                    popUpTo(0)
-                                    launchSingleTop = true
-                                }},
-                            showDrawerMenuButton = showDrawer,
-                            onRefreshAdminScreen = { sessionViewModel.triggerAdminRefresh() }
+            Box(modifier = Modifier.fillMaxSize()) {
+
+                if (showAppBars){
+                    Scaffold(
+                        // Quitar padding por defecto superior
+                        contentWindowInsets = WindowInsets(0, 0, 0, 0),
+                        snackbarHost = {
+                            SnackbarHost(snackbarHostState)
+                        },
+                        topBar = {
+                            AppTopBar(
+                                currentDestination = currentDestination,
+                                scope = scope,
+                                drawerState = drawerState,
+                                navigateToHomeClicked = {
+                                    navController.navigate(Home) {
+                                        popUpTo<Home> { inclusive = true }
+                                        launchSingleTop = true
+                                    } },
+                                navigateToHistoryClicked = {
+                                    navController.navigate(RoutesHistory) {
+                                        popUpTo<RoutesHistory> { inclusive = true }
+                                        launchSingleTop = true
+                                    } },
+                                showBackButton = showBackButton,
+                                onBackClicked = { navController.popBackStack() },
+                                onMapTypeChanged = { mapType ->
+                                    sessionViewModel.setMapType(mapType)
+                                },
+                                currentMapType = sessionViewModel.mapType.collectAsState().value,
+                                onVehicleTypeChanged = { vehicle ->
+                                    sessionViewModel.selectVehicle(vehicle)
+                                },
+                                currentVehicleType = sessionViewModel.selectedVehicle.collectAsState().value,
+                                onLogoutAdminClicked = {
+                                    sessionViewModel.logout()
+                                    navController.navigate(Login) {
+                                        popUpTo(0)
+                                        launchSingleTop = true
+                                    }},
+                                showDrawerMenuButton = showDrawer,
+                                onRefreshAdminScreen = { sessionViewModel.triggerAdminRefresh() }
+                            )
+                        }
+                    ) { innerPadding ->
+
+                        MainNavHost(
+                            navController = navController,
+                            innerPadding = innerPadding,
+                            startDestination = startDestination,
+                            snackbarHostState = snackbarHostState
                         )
                     }
-                ) { innerPadding ->
-
+                }else{
                     MainNavHost(
                         navController = navController,
-                        innerPadding = innerPadding,
+                        innerPadding = PaddingValues(0.dp),
                         startDestination = startDestination,
                         snackbarHostState = snackbarHostState
                     )
                 }
-            }else{
-                MainNavHost(
-                    navController = navController,
-                    innerPadding = PaddingValues(0.dp),
-                    startDestination = startDestination,
-                    snackbarHostState = snackbarHostState
-                )
+                //  CircularProgess Global
+                GlobalLoadingOverlay(isLoading = isLoading)
             }
         }
     }

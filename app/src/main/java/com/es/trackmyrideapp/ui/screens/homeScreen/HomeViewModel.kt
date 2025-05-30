@@ -15,6 +15,7 @@ import com.es.trackmyrideapp.HomeScreenConstants
 import com.es.trackmyrideapp.core.extensions.round
 import com.es.trackmyrideapp.core.states.MessageType
 import com.es.trackmyrideapp.core.states.UiMessage
+import com.es.trackmyrideapp.core.states.UiState
 import com.es.trackmyrideapp.data.remote.dto.RouteCreateDTO
 import com.es.trackmyrideapp.data.remote.mappers.Resource
 import com.es.trackmyrideapp.data.repository.SessionRepository
@@ -30,6 +31,8 @@ import com.google.android.gms.location.Priority
 import com.google.android.gms.maps.model.LatLng
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDateTime
@@ -74,13 +77,18 @@ class HomeViewModel @Inject constructor(
     private var _routePointsTest = mutableStateOf<List<LatLng>>(emptyList())
     val routePointsTest: State<List<LatLng>> = _routePointsTest
 
-    private val _uiMessage = mutableStateOf<UiMessage?>(null)
-    val uiMessage: State<UiMessage?> = _uiMessage
+    // UI State
+    private val _uiState = MutableStateFlow<UiState>(UiState.Idle)
+    val uiState: StateFlow<UiState> = _uiState
 
-    fun clearUiMessage() {
+    // Ui Messages
+    private val _uiMessage = MutableStateFlow<UiMessage?>(null)
+    val uiMessage: StateFlow<UiMessage?> = _uiMessage
+
+
+    fun consumeUiMessage() {
         _uiMessage.value = null
     }
-
 
     init {
         getLastKnownLocation()
@@ -201,7 +209,7 @@ class HomeViewModel @Inject constructor(
         Log.d("Tracking", "Timer detenido. Tiempo preciso: ${preciseElapsedTime}ms")
 
         // Guardar ruta
-        saveCurrentRoute(){
+        saveCurrentRoute{
             clearRoute()
             routeTracker.reset()
         }
@@ -230,6 +238,7 @@ class HomeViewModel @Inject constructor(
         val selectedVehicle = sessionRepository.selectedVehicle.value
 
         viewModelScope.launch {
+            _uiState.value = UiState.Loading
             when (val result = getVehicleByTypeUseCase(selectedVehicle)) {
                 is Resource.Success -> {
                     val vehicle = result.data
@@ -259,25 +268,26 @@ class HomeViewModel @Inject constructor(
                         vehicleType = selectedVehicle,
                         compressedPath = simplifyCurrentRoute(points)
                     )
-                    val createResult = createRouteUseCase(routeCreateDTO)
+
 
                     onComplete()
-                    if (createResult is Resource.Success) {
-                        _uiMessage.value = UiMessage("Route saved successfully", MessageType.INFO)
-                        Log.d("Tracking", "Ruta enviada correctamente.")
-                    } else {
-                        Log.e("Tracking", "Error al guardar ruta: ${createResult}")
-                        if (createResult is Resource.Error){
+                    when (val createResult = createRouteUseCase(routeCreateDTO)){
+                        is Resource.Success -> {
+                            _uiState.value = UiState.Idle
+                            _uiMessage.value = UiMessage("Route saved successfully", MessageType.INFO)
+                            Log.d("Tracking", "Ruta enviada correctamente.")
+                        }
+                        is Resource.Error -> {
+                            _uiState.value = UiState.Idle
                             _uiMessage.value = UiMessage("Error saving route", MessageType.ERROR)
                             Log.e("Tracking", "Error al guardar ruta: ${createResult.message}. Code: ${createResult.code}")
-
                         }
                     }
                 }
                 is Resource.Error -> {
                     Log.e("Tracking", "Error obteniendo datos del vehículo: ${result.message}")
+                    _uiState.value = UiState.Idle
                 }
-                Resource.Loading -> TODO()
             }
         }
     }
@@ -302,34 +312,6 @@ class HomeViewModel @Inject constructor(
             "Not available"
         }
     }
-
-    /**
-     * Comprimir ruta:
-     * - 1º RouteSimplifier.simplify(points, 0.00005) -> Simplified
-     * - 2º compressRouteWithDelta(simplifiedPoints) -> BinaryData
-     * - 3º Base64.encodeToString(binaryData, Base64.NO_WRAP) -> Base 64
-     */
-//    fun loadGpxRoute() {
-//        viewModelScope.launch {
-//            val points = parseWikilocGpx(appContext, R.raw.miruta)
-//            val startPoint = points.firstOrNull()
-//            val endPoint = points.lastOrNull()
-//
-//            val startStreet = startPoint?.let { getStreetAndNumber(it.latitude, it.longitude) }
-//            val endStreet = endPoint?.let { getStreetAndNumber(it.latitude, it.longitude) }
-//
-//            val base64ForApi =RouteSimplifier.compressRoute(points, 0.00005)
-//
-//            Log.d("Tracking", "Puntos cargados: ${points.size}. Puntos simplificados: ${simpli.size}. Puntos binarydata:  ${binaryData.size}. Base64: ${base64ForApi.length}. Start street: $startStreet. End street: $endStreet")
-//            Log.d("Tracking", "Base64: $base64ForApi")
-//
-////            val binaryDecompressed = Base64.decode(base64ForApi, Base64.NO_WRAP)
-////            val pointsDecompressed = decompressRoute(binaryDecompressed)
-////            Log.d("Tracking", "Puntos descomprimidos: ${pointsDecompressed.size}")
-//
-//        }
-//    }
-
 
 
     private fun updateRoutePoints(latLng: LatLng) {
@@ -376,25 +358,6 @@ class HomeViewModel @Inject constructor(
     private fun simplifyCurrentRoute(points: List<LatLng>, tolerance: Double = 0.00005): String{
         return RouteSimplifier.compressRoute(points, tolerance)
     }
-
-//    private fun simplifyCurrentRoute(
-//        points: List<LatLng>
-//    ): String {
-//        val simpli = RouteSimplifier.simplify(points, 0.00005)
-//        val binaryData = compressRouteWithDelta(simpli)
-//        val base64ForApi = Base64.encodeToString(binaryData, Base64.NO_WRAP)
-//
-//        return base64ForApi
-//    }
-
-//    fun generateMockRouteFromStartPoint() {
-//        val start = LatLng(36.4392883, -5.4440983)
-//        val simulated = generateRealisticSampleRoute(start.latitude, start.longitude, pointCount = 600)
-//        _routePointsTest.value = simulated
-//        val adelgazado = RouteSimplifier.simplify(simulated, tolerance = 0.0005	)
-//        Log.d("Tracking", "Ruta generada: ${_routePointsTest.value.count()} Ruta adelgazada: ${adelgazado.count()}")
-//    }
-
 }
 
 

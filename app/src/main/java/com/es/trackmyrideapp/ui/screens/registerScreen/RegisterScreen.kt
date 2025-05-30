@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -19,9 +18,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.es.trackmyrideapp.LocalSessionViewModel
 
 
 @Composable
@@ -33,6 +32,7 @@ fun RegisterScreen(
     snackbarHostState: SnackbarHostState
 ){
     val registerViewModel: RegisterViewModel = hiltViewModel()
+    val sessionViewModel = LocalSessionViewModel.current
     val uiState by registerViewModel.uiState.collectAsState()
     val errorMessage by registerViewModel.errorMessage.collectAsState()
 
@@ -61,6 +61,14 @@ fun RegisterScreen(
             } else {
                 navigateToHome()
             }
+        }
+    }
+
+    // CircularProgessIndicator
+    LaunchedEffect(uiState) {
+        when (uiState) {
+            is RegisterUiState.Loading -> sessionViewModel.showLoading()
+            else -> sessionViewModel.hideLoading()
         }
     }
 
@@ -138,19 +146,6 @@ fun RegisterScreen(
             hostState = snackbarHostState,
             modifier = Modifier.align(Alignment.BottomCenter)
         )
-
-        // Indicador de carga
-        if (uiState is RegisterUiState.Loading) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.4f)),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
-            }
-        }
     }
-
 }
 
