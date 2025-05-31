@@ -1,6 +1,8 @@
 package com.es.trackmyrideapp.ui.screens.registerScreen
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -16,8 +18,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.es.trackmyrideapp.LocalSessionViewModel
@@ -35,6 +39,7 @@ fun RegisterScreen(
     val sessionViewModel = LocalSessionViewModel.current
     val uiState by registerViewModel.uiState.collectAsState()
     val errorMessage by registerViewModel.errorMessage.collectAsState()
+    val focusManager = LocalFocusManager.current
 
     val email by registerViewModel.email
     val username by registerViewModel.username
@@ -55,11 +60,13 @@ fun RegisterScreen(
     // Navegar si exitoso
     LaunchedEffect(uiState) {
         if (uiState is RegisterUiState.Success) {
+            sessionViewModel.onUserLoggedIn()
             val role = (uiState as RegisterUiState.Success).role
             if (role == "ADMIN") {
                 navigateToAdminScreen()
             } else {
                 navigateToHome()
+
             }
         }
     }
@@ -82,7 +89,15 @@ fun RegisterScreen(
     }
 
     Box(
-        modifier = modifier.fillMaxSize()
+        modifier = modifier
+            .fillMaxSize()
+            .clickable(
+                // Evita que el click consuma otros eventos
+                indication = null,
+                interactionSource = remember { MutableInteractionSource() }
+            ) {
+                focusManager.clearFocus()
+            },
     ){
 
         Column (

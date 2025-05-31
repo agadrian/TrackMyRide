@@ -25,11 +25,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.es.trackmyrideapp.R
 import com.es.trackmyrideapp.ui.components.CustomTextField
@@ -57,7 +57,9 @@ fun Body(
             label = "Email",
             icon = Icons.Default.Email,
             value = email,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("email_input"),
             onValueChange = onEmailChanged
         )
 
@@ -79,7 +81,9 @@ fun Body(
             },
             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("password_input"),
             colors = TextFieldDefaults.colors(
                 focusedContainerColor = Color.Transparent,
                 unfocusedContainerColor = Color.Transparent,
@@ -114,15 +118,4 @@ fun Body(
             }
         }
     }
-
-
-}
-
-
-@Preview(showBackground = true)
-@Composable
-fun preview() {
-    Body(
-        "", "", {}, {}, false, {}, false, {}, {}
-    )
 }

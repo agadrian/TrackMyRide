@@ -1,5 +1,6 @@
 package com.es.trackmyrideapp.ui.screens.routesHistoryScreen
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.es.trackmyrideapp.RoutesHistoryConstants
@@ -39,10 +40,6 @@ class RoutesHistoryViewModel @Inject constructor(
     }
 
 
-    init {
-        fetchRoutes()
-    }
-
     fun getFilteredRoutes(isPremium: Boolean, filter: VehicleFilter): List<RouteWithVehicleType> {
         val filtered = when (filter) {
             is VehicleFilter.All -> _routes.value
@@ -57,6 +54,7 @@ class RoutesHistoryViewModel @Inject constructor(
 
 
     fun fetchRoutes() {
+        Log.d("flujotest", "FetchRutes llamado ")
         viewModelScope.launch {
             _uiState.value = UiState.Loading
             when (val result = getRoutesByUserUseCase()) {
@@ -68,7 +66,7 @@ class RoutesHistoryViewModel @Inject constructor(
                     _uiState.value = UiState.Idle
                 }
                 is Resource.Error -> {
-                    _uiMessage.value = UiMessage("Error loading routes, please try again altger.", MessageType.ERROR)
+                    _uiMessage.value = UiMessage("Error loading routes, please try again later.", MessageType.ERROR)
                     _uiState.value = UiState.Idle
                 }
             }
@@ -76,6 +74,7 @@ class RoutesHistoryViewModel @Inject constructor(
     }
 
     fun deleteRoute(routeId: Long) {
+        Log.d("flujotest", "Deleteroute llamado ")
         viewModelScope.launch {
             _uiState.value = UiState.Loading
             when (val result = deleteRouteUseCase(routeId)) {
@@ -103,6 +102,23 @@ class RoutesHistoryViewModel @Inject constructor(
 
         return !isPremium && selectedFilter is VehicleFilter.All && filtered.count() > 4
     }
+
+//    suspend fun showSnackbar(
+//        snackbarHostState: SnackbarHostState,
+//        message: String,
+//        type: MessageType,
+//        actionLabel: String? = null
+//    ) {
+//        snackbarHostState.showSnackbar(
+//            visuals = AppSnackbarVisuals(
+//                message = message,
+//                messageType = type,
+//                actionLabel = actionLabel,
+//                duration = SnackbarDuration.Short,
+//                withDismissAction = false
+//            )
+//        )
+//    }
 }
 
 

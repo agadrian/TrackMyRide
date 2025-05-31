@@ -1,6 +1,6 @@
 package com.es.trackmyrideapp.data.remote
 
-import com.es.trackmyrideapp.data.repository.TokenRepository
+import com.es.trackmyrideapp.domain.repository.TokenRepository
 import kotlinx.coroutines.runBlocking
 import okhttp3.Authenticator
 import okhttp3.Request
@@ -13,24 +13,21 @@ class TokenAuthenticator @Inject constructor(
 ) : Authenticator {
 
     override fun authenticate(route: Route?, response: Response): Request? {
-        // Ya intentó autenticarse con este token
         if (responseCount(response) >= 2) return null
 
         val newToken = try {
             runBlocking {
                 val result = tokenRefreshRepo.get().refreshToken()
-                if (result.isSuccess) result.getOrNull()?.authenticatedUser?.jwtToken else null
+                if (result.isSuccess) result.getOrNull()?.jwtToken else null
             }
         } catch (e: Exception) {
             null
         }
 
-        return if (!newToken.isNullOrBlank()) {
+        return newToken?.let {
             response.request.newBuilder()
-                .header("Authorization", "Bearer $newToken")
+                .header("Authorization", "Bearer $it")
                 .build()
-        } else {
-            null
         }
     }
 

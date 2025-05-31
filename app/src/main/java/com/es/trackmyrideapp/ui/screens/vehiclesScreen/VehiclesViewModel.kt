@@ -98,6 +98,7 @@ class VehiclesViewModel @Inject constructor(
     }
 
     private fun loadUserVehicles() {
+        Log.d("flujotest", "loaduserbehicle llamado ")
         viewModelScope.launch {
             _uiState.value = UiState.Loading
             try {
@@ -129,6 +130,7 @@ class VehiclesViewModel @Inject constructor(
     }
 
     private suspend fun createInitialVehicles() {
+        Log.d("flujotest", "createinnitialvehicles llamado ")
         when (val result = createInitialVehiclesUseCase()) {
             is Resource.Success -> {
                 Log.d("VehiclesViewModel", "createInitialVehicles succes ")
@@ -189,6 +191,7 @@ class VehiclesViewModel @Inject constructor(
 
 
     fun updateVehicle() {
+        Log.d("flujotest", "updatevehicle llamado ")
         viewModelScope.launch {
             _uiState.value = UiState.Loading
 

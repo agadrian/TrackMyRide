@@ -269,8 +269,8 @@ class HomeViewModel @Inject constructor(
                         compressedPath = simplifyCurrentRoute(points)
                     )
 
-
                     onComplete()
+
                     when (val createResult = createRouteUseCase(routeCreateDTO)){
                         is Resource.Success -> {
                             _uiState.value = UiState.Idle
@@ -287,6 +287,7 @@ class HomeViewModel @Inject constructor(
                 is Resource.Error -> {
                     Log.e("Tracking", "Error obteniendo datos del vehículo: ${result.message}")
                     _uiState.value = UiState.Idle
+                    _uiMessage.value = UiMessage("Error getting vehicle data, please try again later", MessageType.ERROR)
                 }
             }
         }

@@ -2,9 +2,9 @@ package com.es.trackmyrideapp.di
 
 import com.es.trackmyrideapp.data.remote.api.AuthApi
 import com.es.trackmyrideapp.data.repository.AuthRepositoryImpl
-import com.es.trackmyrideapp.data.repository.TokenRepository
 import com.es.trackmyrideapp.data.repository.TokenRepositoryImpl
 import com.es.trackmyrideapp.domain.repository.AuthRepository
+import com.es.trackmyrideapp.domain.repository.TokenRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

@@ -159,6 +159,7 @@ class RouteDetailViewModel @Inject constructor(
 
 
     fun uploadImage(uri: Uri) {
+        Log.d("flujotest", "uploadimage llamado ")
         viewModelScope.launch {
             _uiState.value = UiState.Loading
             val imageUrl = uploadImageToCloudinaryUseCase(uri)
@@ -189,6 +190,7 @@ class RouteDetailViewModel @Inject constructor(
 
 
     private fun fetchRouteImages() {
+        Log.d("flujotest", "fetchrouteimages llamado ")
         viewModelScope.launch {
             _uiState.value = UiState.Loading
             when (val result = getRouteImagesUseCase(routeId)) {
@@ -207,7 +209,8 @@ class RouteDetailViewModel @Inject constructor(
     }
 
 
-    fun deleteImage(imageId: Long) {
+    private fun deleteImage(imageId: Long) {
+        Log.d("flujotest", "deleteimage llamado ")
         viewModelScope.launch {
             _uiState.value = UiState.Loading
             when (val result = deleteRouteImageUseCase(routeId, imageId)) {
@@ -225,6 +228,7 @@ class RouteDetailViewModel @Inject constructor(
 
 
     private fun fetchRouteAndPopulateStates() {
+        Log.d("flujotest", "FetchRutesandpopulatesttates llamado ")
         viewModelScope.launch {
             _uiState.value = UiState.Loading
             when (val result = getRouteByIdUseCase(routeId)) {
@@ -280,6 +284,7 @@ class RouteDetailViewModel @Inject constructor(
     }
 
     fun updateRoute() {
+        Log.d("flujotest", "updateroute llamado ")
         viewModelScope.launch {
             _uiState.value = UiState.Loading
             val routeUpdateDTO = RouteUpdateDTO(

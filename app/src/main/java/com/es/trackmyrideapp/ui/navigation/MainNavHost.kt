@@ -68,7 +68,8 @@ fun MainNavHost(
         // Forgot Password Screen
         composable<ForgotPassword> {
             ForgotPasswordScreen(
-                modifier = Modifier.padding(innerPadding)
+                modifier = Modifier.padding(innerPadding),
+                snackbarHostState = snackbarHostState
             )
         }
 

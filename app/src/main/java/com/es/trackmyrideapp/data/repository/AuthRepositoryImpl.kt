@@ -21,7 +21,7 @@ class AuthRepositoryImpl @Inject constructor(
     private val authPreferences: AuthPreferences
 ) : AuthRepository {
 
-    override suspend fun signIn(email: String, password: String): Result<AuthResult> {
+    override suspend fun signIn(email: String, password: String): Result<AuthenticatedUser> {
         return try {
             val idToken = getFirebaseIdToken(email, password)
 
@@ -39,7 +39,7 @@ class AuthRepositoryImpl @Inject constructor(
 
             Log.d("FlujoTest", "authrepoimpl setJwtToken y setreefreshtoken llamados. jwt: ${authUser.jwtToken} refresh: ${authUser.refreshToken} ")
 
-            Result.success(AuthResult(authUser))
+            Result.success(authUser)
         } catch (e: Exception) {
             Result.failure(Exception(ErrorMessageMapper.getMessage(e, AuthFlow.Login)))
         }
@@ -53,7 +53,7 @@ class AuthRepositoryImpl @Inject constructor(
         email: String,
         password: String,
         registrationDTO: UserRegistrationDTO
-    ): Result<AuthResult> {
+    ): Result<AuthenticatedUser> {
         return try {
             // Creo usuario en fireabse
             Log.d("FlujoTest", "AuthRepositoryImpl. register llamado")
@@ -84,7 +84,7 @@ class AuthRepositoryImpl @Inject constructor(
             Log.d("FlujoTest", "AuthRepositoryImpl. register. tokens registrados. jwt: ${authenticatedUser.jwtToken} refresh: ${authenticatedUser.refreshToken} ")
 
             // Devolver AuthResult con el AuthenticatedUser
-            Result.success(AuthResult(authenticatedUser))
+            Result.success(authenticatedUser)
 
         } catch (e: Exception) {
             Log.d("FlujoTest", "authrepoimpl register excepcion: ${e.message} ")
@@ -121,14 +121,5 @@ class AuthRepositoryImpl @Inject constructor(
             Result.failure(Exception(ErrorMessageMapper.getMessage(e, AuthFlow.ForgotPassword)))
         }
     }
-
-
-
 }
-
-data class AuthResult(
-    //val firebaseUser: FirebaseUser,
-    val authenticatedUser: AuthenticatedUser
-)
-
 

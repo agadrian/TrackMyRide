@@ -166,6 +166,7 @@ class ProfileViewModel @Inject constructor(
 
 
     private fun loadUserProfile() {
+        Log.d("flujotest", "loaduserporofile llamado ")
         viewModelScope.launch {
             _uiState.value = UiState.Loading
             val userId = authPreferences.getUserIdFromToken() ?: run {
@@ -199,6 +200,7 @@ class ProfileViewModel @Inject constructor(
 
 
     fun updateProfile() {
+        Log.d("flujotest", "updatesuerprofile llamado ")
         viewModelScope.launch {
             _uiState.value = UiState.Loading
             val userId = authPreferences.getUserIdFromToken() ?: run {
@@ -360,6 +362,7 @@ class ProfileViewModel @Inject constructor(
     val profileImageUrl: StateFlow<String?> = _profileImageUrl
 
     fun uploadProfileImage(uri: Uri) {
+        Log.d("flujotest", "uploasdprofileimage llamado ")
         viewModelScope.launch {
             _uiState.value = UiState.Loading
             try {
@@ -391,6 +394,7 @@ class ProfileViewModel @Inject constructor(
     }
 
     private fun fetchProfileImage() {
+        Log.d("flujotest", "fetchprofileimage llamado ")
         viewModelScope.launch {
             _uiState.value = UiState.Loading
 

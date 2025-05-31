@@ -5,7 +5,7 @@ import androidx.annotation.RequiresApi
 import com.es.trackmyrideapp.data.local.AuthPreferences
 import com.es.trackmyrideapp.data.remote.AuthInterceptor
 import com.es.trackmyrideapp.data.remote.TokenAuthenticator
-import com.es.trackmyrideapp.data.repository.TokenRepository
+import com.es.trackmyrideapp.domain.repository.TokenRepository
 import com.es.trackmyrideapp.utils.LocalDateTimeAdapter
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder

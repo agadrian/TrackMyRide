@@ -1,7 +1,8 @@
 package com.es.trackmyrideapp.ui.screens.forgotPasswordScreen
 
-import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -12,18 +13,17 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -34,29 +34,22 @@ import com.es.trackmyrideapp.ui.screens.loginScreen.LoginViewModel
 @Composable
 fun ForgotPasswordScreen(
     modifier: Modifier,
+    snackbarHostState: SnackbarHostState,
 ) {
     val loginViewModel: LoginViewModel = hiltViewModel()
-
-    val errorMessage by loginViewModel.errorMessage.collectAsState()
+    val uiMessage by loginViewModel.uiMessage.collectAsState()
     val forgotPasswordUiState by loginViewModel.forgotPasswordUiState.collectAsState()
+    val email by loginViewModel.emailForgotScreen
+    val emailError by loginViewModel.emailForgotError
+    val focusManager = LocalFocusManager.current
 
-    var email by rememberSaveable { mutableStateOf("") }
-    val context = LocalContext.current
-
-    LaunchedEffect(forgotPasswordUiState) {
-        when (forgotPasswordUiState) {
-            is ForgotPasswordUiState.Success -> {
-                Toast.makeText(context, "Email sent", Toast.LENGTH_LONG).show()
-                loginViewModel.resetForgotPasswordState()
-            }
-            else -> Unit
-        }
-    }
-
-    LaunchedEffect(errorMessage) {
-        errorMessage?.let {
-            Toast.makeText(context, it, Toast.LENGTH_LONG).show()
-            loginViewModel.consumeErrorMessage()
+    LaunchedEffect(uiMessage) {
+        uiMessage?.let { message ->
+            snackbarHostState.showSnackbar(
+                message = message,
+                duration = SnackbarDuration.Short
+            )
+            loginViewModel.consumeUiMessage()
         }
     }
 
@@ -66,7 +59,14 @@ fun ForgotPasswordScreen(
             .background(MaterialTheme.colorScheme.background)
             .padding(horizontal = 30.dp)
             .padding(top = 16.dp)
-            .navigationBarsPadding(),
+            .navigationBarsPadding()
+            .clickable(
+                // Evita que el click consuma otros eventos
+                indication = null,
+                interactionSource = remember { MutableInteractionSource() }
+            ) {
+                focusManager.clearFocus()
+            },
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -82,20 +82,25 @@ fun ForgotPasswordScreen(
         CustomTextFieldWithoutIcon(
             label = "Please enter your email",
             value = email,
-            onValueChange = { email = it },
+            onValueChange = { loginViewModel.updateEmaiForgotScreen(it) },
             modifier = Modifier.fillMaxWidth()
         )
+
+        if (emailError != null) {
+            Text(
+                text = emailError ?: "",
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier
+                    .align(Alignment.Start)
+                    .padding(start = 4.dp, top = 4.dp)
+            )
+        }
 
         Spacer(modifier = Modifier.height(24.dp))
 
         Button(
-            onClick = {
-                if (email.isNotBlank()) {
-                    loginViewModel.sendPasswordReset(email)
-                } else {
-                    Toast.makeText(context, "Enter a valid email", Toast.LENGTH_LONG).show()
-                }
-            },
+            onClick = { loginViewModel.sendPasswordReset(email) },
             enabled = forgotPasswordUiState != ForgotPasswordUiState.Loading,
             modifier = Modifier.fillMaxWidth()
         ) {

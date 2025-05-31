@@ -15,7 +15,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -35,7 +34,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import com.es.trackmyrideapp.LocalNavController
 import com.es.trackmyrideapp.LocalSessionViewModel
 import com.es.trackmyrideapp.R
-import com.es.trackmyrideapp.core.states.MessageType
+import com.es.trackmyrideapp.core.states.UiSnackbar
 import com.es.trackmyrideapp.core.states.UiState
 import com.es.trackmyrideapp.domain.model.Route
 import com.es.trackmyrideapp.ui.components.CustomButton
@@ -73,10 +72,12 @@ fun RoutesHistoryScreen(
 
     val navController = LocalNavController.current
     val currentBackStackEntry = navController.currentBackStackEntryAsState()
+    var lastRoute by remember { mutableStateOf<String?>(null) }
 
-    LaunchedEffect(currentBackStackEntry.value) {
+    LaunchedEffect(currentBackStackEntry.value?.destination?.route) {
         val route = currentBackStackEntry.value?.destination?.route
-        if (route == RoutesHistory::class.qualifiedName) {
+        if (route == RoutesHistory::class.qualifiedName && route != lastRoute) {
+            lastRoute = route
             Log.d("flujotest", "RoutesHistoryScreen: Refreshing. ")
             routesHistoryViewModel.fetchRoutes()
         }else{
@@ -98,14 +99,20 @@ fun RoutesHistoryScreen(
     // Snackbar msg
     LaunchedEffect(uiMessage) {
         uiMessage?.let { message ->
-            snackbarHostState.showSnackbar(
-                message = message.message,
-                withDismissAction = message.type == MessageType.ERROR,
-                duration = SnackbarDuration.Short
+            sessionViewModel.showSnackbar(
+                UiSnackbar(
+                    message = message.message,
+                    messageType = message.type,
+                    withDismissAction = true
+                )
             )
             routesHistoryViewModel.consumeUiMessage()
         }
     }
+
+//    LaunchedEffect(uiMessage) {
+//        routesHistoryViewModel.showSnackbar(snackbarHostState, "Error al guardar", MessageType.ERROR)
+//    }
 
     // CircularProgessIndicator
     LaunchedEffect(uiState) {

@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
@@ -28,6 +27,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.es.trackmyrideapp.LocalNavController
 import com.es.trackmyrideapp.LocalSessionViewModel
+import com.es.trackmyrideapp.ui.components.AppSnackbarHost
 import com.es.trackmyrideapp.ui.components.GlobalLoadingOverlay
 
 
@@ -47,6 +47,7 @@ fun NavigationWrapper(
     val profileImageUrl by sessionViewModel.profileImageUrl.collectAsState()
     val userPlanState = if (isPremium) "Premium Account" else "Free Account"
     val isLoading by sessionViewModel.isLoading
+    val uiSnackbar by sessionViewModel.uiSnackbar.collectAsState()
 
 
     // Obtener la ruta actual
@@ -122,7 +123,7 @@ fun NavigationWrapper(
                         // Quitar padding por defecto superior
                         contentWindowInsets = WindowInsets(0, 0, 0, 0),
                         snackbarHost = {
-                            SnackbarHost(snackbarHostState)
+                            AppSnackbarHost(uiSnackbar = uiSnackbar, onDismiss = { sessionViewModel.dismissSnackbar() })
                         },
                         topBar = {
                             AppTopBar(

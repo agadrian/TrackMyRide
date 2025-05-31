@@ -1,6 +1,7 @@
 package com.es.trackmyrideapp.ui.screens.loginScreen
 
 import android.util.Log
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -17,43 +18,62 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+
+interface ILoginViewModel {
+    val email: String
+    val password: String
+    val passwordVisible: Boolean
+    val rememberMe: Boolean
+
+    val uiState: StateFlow<LoginUiState>
+    val uiMessage: StateFlow<String?>
+
+    fun updateEmail(newEmail: String)
+    fun updatePassword(newPassword: String)
+    fun togglePasswordVisibility()
+    fun toggleRememberMe()
+    fun signIn()
+    fun consumeUiMessage()
+}
+
+
 @HiltViewModel
 class LoginViewModel @Inject constructor(
     private val signInUseCase: SignInUseCase,
     private val sendPasswordResetUseCase: SendPasswordResetUseCase,
     private val rememberMePreferences: RememberMePreferences,
     private val authPreferences: AuthPreferences
-) : ViewModel() {
+) : ViewModel(), ILoginViewModel {
 
     // Estados del formulario
-    var email by mutableStateOf("")
+    override var email by mutableStateOf("")
         private set
-    var password by mutableStateOf("")
+    override var password by mutableStateOf("")
         private set
-    var passwordVisible by mutableStateOf(false)
+    override var passwordVisible by mutableStateOf(false)
         private set
-    var rememberMe by mutableStateOf(false)
+    override var rememberMe by mutableStateOf(false)
         private set
 
     // UI State
     private val _uiState = MutableStateFlow<LoginUiState>(LoginUiState.Idle)
-    val uiState: StateFlow<LoginUiState> = _uiState
+    override val uiState: StateFlow<LoginUiState> = _uiState
 
-    // Error message
-    private val _errorMessage = MutableStateFlow<String?>(null)
-    val errorMessage: StateFlow<String?> = _errorMessage
+    // Ui message
+    private val _uiMessage = MutableStateFlow<String?>(null)
+    override val uiMessage: StateFlow<String?> = _uiMessage
 
     private val _forgotPasswordUiState = MutableStateFlow<ForgotPasswordUiState>(ForgotPasswordUiState.Idle)
     val forgotPasswordUiState: StateFlow<ForgotPasswordUiState> = _forgotPasswordUiState
 
     // Funciones para actualizar los estados
-    fun updateEmail(newEmail: String) { email = newEmail }
-    fun updatePassword(newPassword: String) { password = newPassword }
-    fun togglePasswordVisibility() { passwordVisible = !passwordVisible }
-    fun toggleRememberMe() { rememberMe = !rememberMe }
+    override fun updateEmail(newEmail: String) { email = newEmail }
+    override fun updatePassword(newPassword: String) { password = newPassword }
+    override fun togglePasswordVisibility() { passwordVisible = !passwordVisible }
+    override fun toggleRememberMe() { rememberMe = !rememberMe }
 
     // LOGIN
-    fun signIn() {
+    override fun signIn() {
         viewModelScope.launch {
             _uiState.value = LoginUiState.Loading
             val result = signInUseCase(email, password)
@@ -61,7 +81,7 @@ class LoginViewModel @Inject constructor(
             Log.d("FlujoTest", "authviewmodel: signInUseCase llamado")
 
             result.fold(
-                onSuccess = { authResult  ->
+                onSuccess = {
                     if (rememberMe) rememberMePreferences.setRememberMe(true)
 
                     Log.d("FlujoTest", "authviewmodel: signInUseCase onsucces")
@@ -79,14 +99,33 @@ class LoginViewModel @Inject constructor(
                 onFailure = { exception ->
                     Log.d("FlujoTest", "authviewmodel: signInUseCase llamado onfailure. exception: ${exception.message} ")
                     _uiState.value = LoginUiState.Idle
-                    _errorMessage.value = exception.message ?: "Unknown error. Try Again Later"
+                    _uiMessage.value = exception.message ?: "Unknown error. Try Again Later"
                 }
             )
         }
     }
 
     //  FORGOT PASSWORD
+
+    private val _emailForgotScreen = mutableStateOf("")
+    val emailForgotScreen: State<String> get() = _emailForgotScreen
+
+    fun updateEmaiForgotScreen(newEmail: String) {
+        _emailForgotScreen.value = newEmail
+    }
+
+    private val _emailForgotError = mutableStateOf<String?>(null)
+    val emailForgotError: State<String?> get() = _emailForgotError
+
     fun sendPasswordReset(email: String) {
+
+        if (email.isBlank()) {
+            _emailForgotError.value = "Email cannot be empty"
+            return
+        }
+
+        _emailForgotError.value = null
+
         viewModelScope.launch {
             _forgotPasswordUiState.value = ForgotPasswordUiState.Loading
 
@@ -95,10 +134,11 @@ class LoginViewModel @Inject constructor(
             result.fold(
                 onSuccess = {
                     _forgotPasswordUiState.value = ForgotPasswordUiState.Success
+                    _uiMessage.value = "Password reset email sent"
                 },
-                onFailure = { exception ->
+                onFailure = {
                     _forgotPasswordUiState.value = ForgotPasswordUiState.Idle
-                    _errorMessage.value = exception.message ?: "Unknown error during reseting your password"
+                    _uiMessage.value = it.message ?: "Error during reseting your password. Try again later..."
                 }
             )
         }
@@ -108,7 +148,7 @@ class LoginViewModel @Inject constructor(
         _forgotPasswordUiState.value = ForgotPasswordUiState.Idle
     }
 
-    fun consumeErrorMessage() {
-        _errorMessage.value = null
+    override fun consumeUiMessage() {
+        _uiMessage.value = null
     }
 }

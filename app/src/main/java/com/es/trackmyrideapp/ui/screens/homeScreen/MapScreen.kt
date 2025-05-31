@@ -17,7 +17,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FiberManualRecord
 import androidx.compose.material.icons.filled.Stop
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -33,7 +32,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.es.trackmyrideapp.LocalSessionViewModel
 import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.model.CameraPosition
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapUiSettings
@@ -82,9 +80,7 @@ fun MapScreen(
     // Centrar mapa en la ubicación actual
     LaunchedEffect(currentLocationState) {
         currentLocationState?.let { location ->
-            if (cameraPositionState.position != CameraPosition.fromLatLngZoom(location, 16f)) {
-                cameraPositionState.position = CameraPosition.fromLatLngZoom(location, 16f)
-            }
+            cameraPositionState.move(CameraUpdateFactory.newLatLngZoom(location, 16f))
         }
     }
 
@@ -96,6 +92,15 @@ fun MapScreen(
                 CameraUpdateFactory.newLatLng(lastPoint),
                 durationMs = 1000
             )
+        }
+    }
+
+    // Circularprogress
+    LaunchedEffect(currentLocationState) {
+        if (currentLocationState == null) {
+            sessionViewModel.showLoading()
+        }else{
+            sessionViewModel.hideLoading()
         }
     }
 
@@ -144,9 +149,6 @@ fun MapScreen(
 //                            width = 6f
 //                        )
                     }
-                    // TODO()
-                } else {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                 }
             }
             // Información de la ruta

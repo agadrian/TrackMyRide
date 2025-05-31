@@ -32,7 +32,7 @@ fun CustomTextField(
     errorMessage: String? = null
 ) {
     Column(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxWidth()
     ) {
 

@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.es.trackmyrideapp.core.states.AuthState
+import com.es.trackmyrideapp.core.states.UiSnackbar
 import com.es.trackmyrideapp.data.local.AuthPreferences
 import com.es.trackmyrideapp.data.local.RememberMePreferences
 import com.es.trackmyrideapp.data.remote.mappers.Resource
@@ -27,8 +28,15 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeout
 import javax.inject.Inject
+
+
+interface ISessionViewModel {
+    fun showLoading()
+    fun hideLoading()
+    fun onUserLoggedIn()
+    val isLoading: State<Boolean>
+}
 
 @HiltViewModel
 class SessionViewModel @Inject constructor(
@@ -43,10 +51,13 @@ class SessionViewModel @Inject constructor(
     private val setPremiumUseCase: SetPremiumUseCase,
     private val getUserByIdUseCase: GetUserByIdUseCase,
     private val getProfileImageUseCase: GetProfileImageUseCase
-) : ViewModel() {
+) : ViewModel(), ISessionViewModel {
 
     private val _authState = MutableStateFlow<AuthState>(AuthState.Loading)
     val authState: StateFlow<AuthState> = _authState
+
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing = _isRefreshing.asStateFlow()
 
     private val _userRole = MutableStateFlow<String?>(null)
     val userRole = _userRole.asStateFlow()
@@ -61,13 +72,13 @@ class SessionViewModel @Inject constructor(
     val profileImageUrl = _profileImageUrl.asStateFlow()
 
     private val _isLoading = mutableStateOf(false)
-    val isLoading: State<Boolean> = _isLoading
+    override val isLoading: State<Boolean> = _isLoading
 
-    fun showLoading() {
+    override fun showLoading() {
         _isLoading.value = true
     }
 
-    fun hideLoading() {
+    override fun hideLoading() {
         _isLoading.value = false
     }
 
@@ -81,17 +92,21 @@ class SessionViewModel @Inject constructor(
 
     private fun checkAuthState() {
         viewModelScope.launch {
-            Log.d("FlujoTest", "- Verificando el estado de la autenticación...")
-            val shouldAutoLogin = rememberMePreferences.isRememberMe() && getCurrentUserUseCase() != null
-            Log.d("FlujoTest", "sesionviewmodel -> shouldAutoLogin: $shouldAutoLogin")
 
+            if (_isRefreshing.value) return@launch
+            _isRefreshing.value = true
 
-            if (shouldAutoLogin) {
-                try {
-                    Log.d("FlujoTest", "sesionviewmodel -> shouldAutoLogin...")
-                    Log.d("FlujoTest", "Intentando refrescar token si es necesario...")
-                    // Comprobar que el jwt guardado sea valido, y renovarlo en cado de que no
-                    withTimeout(6000) {
+            try{
+                Log.d("FlujoTest", "- Verificando el estado de la autenticación...")
+                val shouldAutoLogin = rememberMePreferences.isRememberMe() && getCurrentUserUseCase() != null
+                Log.d("FlujoTest", "sesionviewmodel -> shouldAutoLogin: $shouldAutoLogin")
+
+                if (shouldAutoLogin) {
+                    try {
+                        Log.d("FlujoTest", "sesionviewmodel -> shouldAutoLogin...")
+                        Log.d("FlujoTest", "Intentando refrescar token si es necesario...")
+                        // Comprobar que el jwt guardado sea valido, y renovarlo en cado de que no
+                        //withTimeout(8000) {
                         Log.d("FlujoTest", "Dentro de timeout5000 checkAndRefreshTokenUseCase...")
                         val newToken = checkAndRefreshTokenUseCase()
 
@@ -102,29 +117,32 @@ class SessionViewModel @Inject constructor(
                             _userRole.value = null
                         }
                         Log.d("FlujoTest", "checkAndRefreshTokenUseCase completado correctamente con: $newToken")
+
+
+                        Log.d("FlujoTest", "Saliendo del timeout de 8000 para el chekAndRefreshTokenUseCase...")
+
+                        _authState.value = AuthState.Authenticated
+
+                        // Cargar vehiculos iniciales
+                        loadInitialVehicles()
+                    } catch (e: Throwable) {
+                        Log.d("FlujoTest", "sesionviewmodel -> shouldAutoLogin.. catch. Se llama al logout Exception: ${e.message}")
+                        logout()
+                        _authState.value = AuthState.Unauthenticated
                     }
-
-                    Log.d("FlujoTest", "Saliendo del timeout de 6000 para el chekAndRefreshTokenUseCase...")
-
-                    _authState.value = AuthState.Authenticated
-
-                    // Cargar vehiculos iniciales
-                    loadInitialVehicles()
-                } catch (e: Throwable) {
-                    Log.d("FlujoTest", "sesionviewmodel -> shouldAutoLogin.. catch. Se llama al logout Exception: ${e.message}")
-                    logout()
+                } else {
+                    Log.d("FlujoTest", "sesionviewmodel -> shouldAutoLogin -> false...")
+                    _userRole.value = null
                     _authState.value = AuthState.Unauthenticated
                 }
-            } else {
-                Log.d("FlujoTest", "sesionviewmodel -> shouldAutoLogin -> false...")
-                _userRole.value = null
-                _authState.value = AuthState.Unauthenticated
-            }
 
-             //Cargar datos usuario (Username)
-            Log.d("FlujoTest","userid from token: ${authPreferences.getUserIdFromToken()}")
-            authPreferences.getUserIdFromToken()?.let { uid ->
-                loadUserInfo(uid)
+                //Cargar datos usuario (Username)
+                Log.d("FlujoTest","userid from token: ${authPreferences.getUserIdFromToken()}")
+                authPreferences.getUserIdFromToken()?.let { uid ->
+                    loadUserInfo(uid)
+                }
+            }finally {
+                _isRefreshing.value =  false
             }
         }
     }
@@ -143,8 +161,8 @@ class SessionViewModel @Inject constructor(
     }
 
 
-    // Se llama desde el login screen para cargar datos
-    fun onUserLoggedIn() {
+    // Se llama desde el login/registro screen para cargar datos
+    override fun onUserLoggedIn() {
         val userId = authPreferences.getUserIdFromToken()
         if (userId != null) {
             _authState.value = AuthState.Authenticated
@@ -283,6 +301,20 @@ class SessionViewModel @Inject constructor(
         viewModelScope.launch {
             _refreshAdminTrigger.emit(Unit)
         }
+    }
+
+
+    /* SNACKBAR */
+
+    private val _uiSnackbar = MutableStateFlow<UiSnackbar?>(null)
+    val uiSnackbar: StateFlow<UiSnackbar?> = _uiSnackbar
+
+    fun showSnackbar(snackbar: UiSnackbar) {
+        _uiSnackbar.value = snackbar
+    }
+
+    fun dismissSnackbar() {
+        _uiSnackbar.value = null
     }
 
 

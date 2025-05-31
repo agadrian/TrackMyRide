@@ -90,15 +90,15 @@ fun HomeScreen(
         }
     }
 
-    // Indicador de carga
-    if (uiState is UiState.Loading) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.2f)),
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator()
-        }
-    }
+//    // Indicador de carga
+//    if (uiState is UiState.Loading) {
+//        Box(
+//            modifier = Modifier
+//                .fillMaxSize()
+//                .background(Color.Black.copy(alpha = 0.2f)),
+//            contentAlignment = Alignment.Center
+//        ) {
+//            CircularProgressIndicator()
+//        }
+//    }
 }
