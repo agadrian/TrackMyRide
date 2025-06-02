@@ -36,6 +36,9 @@ interface ISessionViewModel {
     fun hideLoading()
     fun onUserLoggedIn()
     val isLoading: State<Boolean>
+    val uiSnackbar: StateFlow<UiSnackbar?>
+    fun showSnackbar(snackbar: UiSnackbar)
+    fun dismissSnackbar()
 }
 
 @HiltViewModel
@@ -84,9 +87,13 @@ class SessionViewModel @Inject constructor(
 
 
     init {
-        checkAuthState()
-        _userRole.value = authPreferences.getUserRoleFromToken()
-        checkPremiumStatus()
+        if (!rememberMePreferences.isRememberMe()) {
+            logout()
+        }else{
+            checkAuthState()
+            //_userRole.value = authPreferences.getUserRoleFromToken()
+            //checkPremiumStatus()
+        }
     }
 
 
@@ -101,50 +108,92 @@ class SessionViewModel @Inject constructor(
                 val shouldAutoLogin = rememberMePreferences.isRememberMe() && getCurrentUserUseCase() != null
                 Log.d("FlujoTest", "sesionviewmodel -> shouldAutoLogin: $shouldAutoLogin")
 
-                if (shouldAutoLogin) {
-                    try {
-                        Log.d("FlujoTest", "sesionviewmodel -> shouldAutoLogin...")
-                        Log.d("FlujoTest", "Intentando refrescar token si es necesario...")
-                        // Comprobar que el jwt guardado sea valido, y renovarlo en cado de que no
-                        //withTimeout(8000) {
-                        Log.d("FlujoTest", "Dentro de timeout5000 checkAndRefreshTokenUseCase...")
-                        val newToken = checkAndRefreshTokenUseCase()
+                if (!shouldAutoLogin) {
+                    Log.d("FlujoTest", " Auto login no permitido o sin usuario")
+                    logout() // dentro del logout pones _authState = Unauthenticated
+                    return@launch
+                }
 
-                        // Obtener el rol del usuario para comprobar a que pantalla llevarlo
-                        if (newToken != null) {
-                            _userRole.value = authPreferences.getUserRoleFromToken()
-                        }else{
-                            _userRole.value = null
-                        }
-                        Log.d("FlujoTest", "checkAndRefreshTokenUseCase completado correctamente con: $newToken")
+                val newTokenJWT = try {
+                    checkAndRefreshTokenUseCase()
+                } catch (e: Throwable) {
+                    Log.e("FlujoTest", "Error al validar/refrescar token: ${e.message}", e)
+                    null
+                }
 
 
-                        Log.d("FlujoTest", "Saliendo del timeout de 8000 para el chekAndRefreshTokenUseCase...")
-
-                        _authState.value = AuthState.Authenticated
-
-                        // Cargar vehiculos iniciales
-                        loadInitialVehicles()
-                    } catch (e: Throwable) {
-                        Log.d("FlujoTest", "sesionviewmodel -> shouldAutoLogin.. catch. Se llama al logout Exception: ${e.message}")
-                        logout()
-                        _authState.value = AuthState.Unauthenticated
-                    }
+                if (newTokenJWT != null) {
+                    Log.d("FlujoTest", "Token válido o refrescado: $newTokenJWT")
+                    onUserAuthenticated()
                 } else {
-                    Log.d("FlujoTest", "sesionviewmodel -> shouldAutoLogin -> false...")
-                    _userRole.value = null
-                    _authState.value = AuthState.Unauthenticated
+                    Log.w("FlujoTest", "⚠ Token nulo después de validación/refresh")
+                    logout()
                 }
-
-                //Cargar datos usuario (Username)
-                Log.d("FlujoTest","userid from token: ${authPreferences.getUserIdFromToken()}")
-                authPreferences.getUserIdFromToken()?.let { uid ->
-                    loadUserInfo(uid)
-                }
-            }finally {
-                _isRefreshing.value =  false
+            } finally {
+                _isRefreshing.value = false
             }
+
+
+//
+//
+//                if (shouldAutoLogin) {
+//                    try {
+//                        Log.d("FlujoTest", "sesionviewmodel -> shouldAutoLogin...")
+//                        Log.d("FlujoTest", "Intentando refrescar token si es necesario...")
+//                        // Comprobar que el jwt guardado sea valido, y renovarlo en cado de que no
+//                        //withTimeout(8000) {
+//                        Log.d("FlujoTest", "Dentro de timeout5000 checkAndRefreshTokenUseCase...")
+//                        val newTokenJWT = checkAndRefreshTokenUseCase()
+//
+//                        // Obtener el rol del usuario para comprobar a que pantalla llevarlo
+//                        if (newTokenJWT != null) {
+//                            Log.d("FlujoTest", " Token válido o refrescado: $newTokenJWT")
+//                            _userRole.value = authPreferences.getUserRoleFromToken()
+//                            _authState.value = AuthState.Authenticated
+//
+//                            //Cargar datos usuario (Username)
+//
+//                            authPreferences.getUserIdFromToken()?.let { uid ->
+//                                loadUserInfo(uid)
+//                                Log.d("FlujoTest", "👤 ID de usuario desde token: $uid")
+//                            }
+//
+//
+//                            loadInitialVehicles()
+//                        }else{
+//                            Log.w("FlujoTest", "⚠ Token nulo después de validación/refresh")
+//                            _userRole.value = null
+//                            logout()
+//                            _authState.value = AuthState.Unauthenticated
+//                        }
+//                    } catch (e: Throwable) {
+//                        Log.e("FlujoTest", " Error al validar/refrescar token: ${e.message}", e)
+//                        logout()
+//                        _authState.value = AuthState.Unauthenticated
+//                    }
+//                } else {
+//                    Log.d("FlujoTest", " Auto login no permitido o sin usuario")
+//                    _userRole.value = null
+//                    _authState.value = AuthState.Unauthenticated
+//                    return@launch
+//                }
+//
+//
+//            }finally {
+//                _isRefreshing.value =  false
+//            }
         }
+    }
+
+    private suspend fun onUserAuthenticated() {
+        _userRole.value = authPreferences.getUserRoleFromToken()
+        _authState.value = AuthState.Authenticated
+
+        authPreferences.getUserIdFromToken()?.let { uid ->
+            loadUserInfo(uid)
+        }
+        loadInitialVehicles()
+        checkPremiumStatus() // Aquí lo llamas cuando ya sabes que hay usuario
     }
 
     /**
@@ -307,13 +356,13 @@ class SessionViewModel @Inject constructor(
     /* SNACKBAR */
 
     private val _uiSnackbar = MutableStateFlow<UiSnackbar?>(null)
-    val uiSnackbar: StateFlow<UiSnackbar?> = _uiSnackbar
+    override val uiSnackbar: StateFlow<UiSnackbar?> = _uiSnackbar
 
-    fun showSnackbar(snackbar: UiSnackbar) {
+    override fun showSnackbar(snackbar: UiSnackbar) {
         _uiSnackbar.value = snackbar
     }
 
-    fun dismissSnackbar() {
+    override fun dismissSnackbar() {
         _uiSnackbar.value = null
     }
 

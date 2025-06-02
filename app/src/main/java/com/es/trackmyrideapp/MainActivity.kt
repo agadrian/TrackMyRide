@@ -73,7 +73,10 @@ class MainActivity : ComponentActivity() {
                             isDarkTheme = isDarkTheme,
                             onThemeChanged = { isDarkTheme = it },
                             startDestination = when {
-                                authState != AuthState.Authenticated -> Login::class.qualifiedName!!
+                                authState != AuthState.Authenticated -> {
+                                    Log.d("FlujoTest", "userRole: $userRole . Login screen deberian aparecer")
+                                    Login::class.qualifiedName!!
+                                }
                                 userRole == "ADMIN" -> {
                                     Log.d(
                                         "FlujoTest",

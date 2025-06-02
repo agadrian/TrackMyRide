@@ -110,9 +110,6 @@ fun RoutesHistoryScreen(
         }
     }
 
-//    LaunchedEffect(uiMessage) {
-//        routesHistoryViewModel.showSnackbar(snackbarHostState, "Error al guardar", MessageType.ERROR)
-//    }
 
     // CircularProgessIndicator
     LaunchedEffect(uiState) {

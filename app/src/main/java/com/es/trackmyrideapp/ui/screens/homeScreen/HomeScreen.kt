@@ -19,19 +19,22 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.es.trackmyrideapp.LocalSessionViewModel
 import com.es.trackmyrideapp.core.states.MessageType
+import com.es.trackmyrideapp.core.states.UiSnackbar
 import com.es.trackmyrideapp.core.states.UiState
 import com.es.trackmyrideapp.ui.permissions.AppPermission
 import com.es.trackmyrideapp.ui.permissions.BlockedDialog
 import com.es.trackmyrideapp.ui.permissions.RationaleDialog
 import com.es.trackmyrideapp.ui.permissions.rememberPermissionHandler
+import com.es.trackmyrideapp.ui.viewmodels.SessionViewModel
 
 @Composable
 fun HomeScreen(
     modifier: Modifier = Modifier,
-    snackbarHostState: SnackbarHostState
 ){
     val homeViewModel: HomeViewModel = hiltViewModel()
+    val sessionViewModel: SessionViewModel = LocalSessionViewModel.current
     val tracking = homeViewModel.trackingState.value
     val uiMessage by homeViewModel.uiMessage.collectAsState()
     val uiState by homeViewModel.uiState.collectAsState()
@@ -45,10 +48,12 @@ fun HomeScreen(
     // Snackbar msg
     LaunchedEffect(uiMessage) {
         uiMessage?.let { message ->
-            snackbarHostState.showSnackbar(
-                message = message.message,
-                withDismissAction = message.type == MessageType.ERROR,
-                duration = SnackbarDuration.Short
+            sessionViewModel.showSnackbar(
+                UiSnackbar(
+                    message = message.message,
+                    messageType = message.type,
+                    withDismissAction = true
+                )
             )
             homeViewModel.consumeUiMessage()
         }
@@ -89,16 +94,4 @@ fun HomeScreen(
             }
         }
     }
-
-//    // Indicador de carga
-//    if (uiState is UiState.Loading) {
-//        Box(
-//            modifier = Modifier
-//                .fillMaxSize()
-//                .background(Color.Black.copy(alpha = 0.2f)),
-//            contentAlignment = Alignment.Center
-//        ) {
-//            CircularProgressIndicator()
-//        }
-//    }
 }

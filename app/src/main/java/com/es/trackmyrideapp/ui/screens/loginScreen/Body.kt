@@ -31,6 +31,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.es.trackmyrideapp.R
 import com.es.trackmyrideapp.ui.components.CustomTextField
 
@@ -44,7 +45,10 @@ fun Body(
     onPasswordVisibilityChanged: () -> Unit,
     rememberMe: Boolean,
     onRememberMeChanged: (Boolean) -> Unit,
-    onNavigateToForgotPassword: () -> Unit
+    onNavigateToForgotPassword: () -> Unit,
+    emailError: String?,
+    passwordError: String?,
+    attemptedSubmit: Boolean
 ) {
 
     Column(
@@ -60,7 +64,9 @@ fun Body(
             modifier = Modifier
                 .fillMaxWidth()
                 .testTag("email_input"),
-            onValueChange = onEmailChanged
+            onValueChange = onEmailChanged,
+            isError = emailError!= null && attemptedSubmit,
+            errorMessage = emailError
         )
 
 
@@ -87,11 +93,24 @@ fun Body(
             colors = TextFieldDefaults.colors(
                 focusedContainerColor = Color.Transparent,
                 unfocusedContainerColor = Color.Transparent,
+                errorContainerColor = Color.Transparent,
+                errorLabelColor = MaterialTheme.colorScheme.onBackground,
                 focusedIndicatorColor = MaterialTheme.colorScheme.primary,
                 unfocusedIndicatorColor = if (password.isEmpty()) Color.Gray else colorResource(R.color.greenTextFieldFilled),
                 cursorColor = MaterialTheme.colorScheme.primary
-            )
+            ),
+            isError = passwordError!= null && attemptedSubmit
         )
+
+        if (passwordError != null && attemptedSubmit) {
+            Text(
+                text = passwordError,
+                color = MaterialTheme.colorScheme.error,
+                fontSize = 12.sp,
+                modifier = Modifier.padding(start = 16.dp, top = 2.dp)
+            )
+        }
+
 
         Spacer(modifier = Modifier.height(25.dp))
 

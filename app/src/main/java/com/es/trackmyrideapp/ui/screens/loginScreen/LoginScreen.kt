@@ -1,6 +1,5 @@
 package com.es.trackmyrideapp.ui.screens.loginScreen
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -14,8 +13,6 @@ import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -27,6 +24,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.es.trackmyrideapp.LocalSessionViewModel
+import com.es.trackmyrideapp.core.states.UiSnackbar
 import com.es.trackmyrideapp.ui.viewmodels.ISessionViewModel
 
 
@@ -37,15 +35,17 @@ fun LoginScreen(
     navigateToHome: () -> Unit,
     navigateToAdminScreen: () -> Unit,
     navigateToForgotPassword: () -> Unit,
-    snackbarHostState: SnackbarHostState,
     loginViewModel: ILoginViewModel = hiltViewModel<LoginViewModel>(),
     sessionViewModel: ISessionViewModel = LocalSessionViewModel.current
 ) {
     //val loginViewModel: LoginViewModel = hiltViewModel()
     //val sessionViewModel = LocalSessionViewModel.current
     val uiState by loginViewModel.uiState.collectAsState()
-    val errorMessage by loginViewModel.uiMessage.collectAsState()
+    val uiMessage by loginViewModel.uiMessage.collectAsState()
     val focusManager = LocalFocusManager.current
+    val emailError by loginViewModel.emailError
+    val passwordError by loginViewModel.passwordError
+    val attemptedSubmit by loginViewModel.attemptedSubmit
 
     // CircularProgessIndicator
     LaunchedEffect(uiState) {
@@ -68,17 +68,23 @@ fun LoginScreen(
         }
     }
 
-
-    // Mostrar errores
-    LaunchedEffect(errorMessage) {
-        Log.d("LoginScreen", "errorMessage: $errorMessage")
-        errorMessage?.let { message ->
-            snackbarHostState.showSnackbar(message)
+    // Snackbar msg
+    LaunchedEffect(uiMessage) {
+        uiMessage?.let { message ->
+            sessionViewModel.showSnackbar(
+                UiSnackbar(
+                    message = message.message,
+                    messageType = message.type,
+                    withDismissAction = true
+                )
+            )
             loginViewModel.consumeUiMessage()
         }
     }
 
+
     Box(
+
         modifier = modifier
             .fillMaxSize()
             .clickable(
@@ -119,7 +125,10 @@ fun LoginScreen(
                     onPasswordVisibilityChanged = { loginViewModel.togglePasswordVisibility() },
                     rememberMe = loginViewModel.rememberMe,
                     onRememberMeChanged = { loginViewModel.toggleRememberMe() },
-                    onNavigateToForgotPassword = navigateToForgotPassword
+                    onNavigateToForgotPassword = navigateToForgotPassword,
+                    emailError = emailError,
+                    passwordError = passwordError,
+                    attemptedSubmit = attemptedSubmit
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -134,13 +143,6 @@ fun LoginScreen(
                 onSingUpClicked = navigateToRegister
             )
         }
-
-        // SnackbarHost para mostrar el snackbar
-        SnackbarHost(
-            hostState = snackbarHostState,
-            modifier = Modifier.align(Alignment.BottomCenter)
-        )
-
     }
 }
 

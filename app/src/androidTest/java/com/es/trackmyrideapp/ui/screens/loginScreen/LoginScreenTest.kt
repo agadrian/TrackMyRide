@@ -31,7 +31,6 @@ class LoginScreenTest {
                 navigateToHome = { navigatedToHome = true },
                 navigateToAdminScreen = { navigatedToAdmin = true },
                 navigateToForgotPassword = {},
-                snackbarHostState = snackbarHostState,
                 loginViewModel = fakeViewModel,
                 sessionViewModel = fakeSessionViewModel
             )
@@ -84,15 +83,14 @@ class LoginScreenTest {
 
         // El snackbar debe mostrar mensaje de error
         runBlocking {
-            val snackbarText = snackbarHostState.currentSnackbarData?.visuals?.message
-            assert(snackbarText == "Login failed")
+            val snackbarValue = fakeSessionViewModel.uiSnackbar.value
+            assert(snackbarValue?.message == "Login failed")
         }
     }
 
     @Test
     fun loginScreen_noSnackbarShown_onLoginSuccess() {
         val fakeViewModel = FakeLoginViewModel()
-        val snackbarHostState = SnackbarHostState()
         val fakeSessionViewModel = FakeSessionViewModel()
 
         composeTestRule.setContent {
@@ -101,7 +99,6 @@ class LoginScreenTest {
                 navigateToHome = {},
                 navigateToAdminScreen = {},
                 navigateToForgotPassword = {},
-                snackbarHostState = snackbarHostState,
                 loginViewModel = fakeViewModel,
                 sessionViewModel = fakeSessionViewModel
             )
@@ -115,15 +112,14 @@ class LoginScreenTest {
 
         // Verificar que no hay mensaje en el snackbar
         runBlocking {
-            val snackbarText = snackbarHostState.currentSnackbarData?.visuals?.message
-            assert(snackbarText == null)
+            val snackbar = fakeSessionViewModel.uiSnackbar.value
+            assert(snackbar == null)
         }
     }
 
     @Test
     fun loginScreen_showsSnackbar_onLoginError() {
         val fakeViewModel = FakeLoginViewModel()
-        val snackbarHostState = SnackbarHostState()
         val fakeSessionViewModel = FakeSessionViewModel()
 
         composeTestRule.setContent {
@@ -132,7 +128,6 @@ class LoginScreenTest {
                 navigateToHome = {},
                 navigateToAdminScreen = {},
                 navigateToForgotPassword = {},
-                snackbarHostState = snackbarHostState,
                 loginViewModel = fakeViewModel,
                 sessionViewModel = fakeSessionViewModel
             )
@@ -146,7 +141,7 @@ class LoginScreenTest {
 
         // Verificar que el snackbar muestra el mensaje de error
         runBlocking {
-            val snackbarText = snackbarHostState.currentSnackbarData?.visuals?.message
+            val snackbarText = fakeSessionViewModel.uiSnackbar.value?.message
             assert(snackbarText == "Login failed")
         }
     }

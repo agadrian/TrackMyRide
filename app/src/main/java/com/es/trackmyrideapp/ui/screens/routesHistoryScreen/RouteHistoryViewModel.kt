@@ -102,23 +102,6 @@ class RoutesHistoryViewModel @Inject constructor(
 
         return !isPremium && selectedFilter is VehicleFilter.All && filtered.count() > 4
     }
-
-//    suspend fun showSnackbar(
-//        snackbarHostState: SnackbarHostState,
-//        message: String,
-//        type: MessageType,
-//        actionLabel: String? = null
-//    ) {
-//        snackbarHostState.showSnackbar(
-//            visuals = AppSnackbarVisuals(
-//                message = message,
-//                messageType = type,
-//                actionLabel = actionLabel,
-//                duration = SnackbarDuration.Short,
-//                withDismissAction = false
-//            )
-//        )
-//    }
 }
 
 

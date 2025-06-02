@@ -1,15 +1,22 @@
 package com.es.trackmyrideapp.ui.screens.loginScreen
 
-import androidx.compose.runtime.State
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import com.es.trackmyrideapp.ui.viewmodels.ISessionViewModel
+import com.es.trackmyrideapp.core.states.MessageType
+import com.es.trackmyrideapp.core.states.UiMessage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-class FakeLoginViewModel : ILoginViewModel {
+class FakeLoginViewModel(
+
+) : ILoginViewModel {
     // Sobrescribimos las variables para controlarlas manualmente
+    override val emailError: MutableState<String?> = mutableStateOf(null)
+    override val passwordError: MutableState<String?> = mutableStateOf(null)
+    override val attemptedSubmit: MutableState<Boolean> = mutableStateOf(false)
+
     override var email by mutableStateOf("")
     override var password by mutableStateOf("")
     override var passwordVisible by mutableStateOf(false)
@@ -19,8 +26,8 @@ class FakeLoginViewModel : ILoginViewModel {
     private val _uiState = MutableStateFlow<LoginUiState>(LoginUiState.Idle)
     override val uiState: StateFlow<LoginUiState> = _uiState
 
-    private val _errorMessage = MutableStateFlow<String?>(null)
-    override val uiMessage: StateFlow<String?> = _errorMessage
+    private val _errorMessage = MutableStateFlow<UiMessage?>(null)
+    override val uiMessage: StateFlow<UiMessage?> = _errorMessage
 
 
     override fun updateEmail(newEmail: String) { email = newEmail }
@@ -42,7 +49,7 @@ class FakeLoginViewModel : ILoginViewModel {
         } else {
             role = null
             _uiState.value = LoginUiState.Idle
-            _errorMessage.value = "Login failed"
+            _errorMessage.value = UiMessage("Login failed", MessageType.ERROR)
         }
     }
 
@@ -62,28 +69,8 @@ class FakeLoginViewModel : ILoginViewModel {
 
     fun simulateLoginError(message: String) {
         _uiState.value = LoginUiState.Idle
-        _errorMessage.value = message
+        _errorMessage.value = UiMessage(message, MessageType.ERROR)
     }
 }
 
 
-class FakeSessionViewModel : ISessionViewModel {
-
-    // Estado mutable interno que mantiene el valor booleano
-    private val _isLoading = mutableStateOf(false)
-
-    // Propiedad pública inmutable que expone el estado
-    override val isLoading: State<Boolean> = _isLoading
-
-    override fun showLoading() {
-        _isLoading.value = true
-    }
-
-    override fun hideLoading() {
-        _isLoading.value = false
-    }
-
-    override fun onUserLoggedIn() {
-        // Aquí puedes simular lo que necesites, o dejar vacío
-    }
-}

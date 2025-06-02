@@ -118,14 +118,15 @@ fun NavigationWrapper(
         ) {
             Box(modifier = Modifier.fillMaxSize()) {
 
-                if (showAppBars){
-                    Scaffold(
-                        // Quitar padding por defecto superior
-                        contentWindowInsets = WindowInsets(0, 0, 0, 0),
-                        snackbarHost = {
-                            AppSnackbarHost(uiSnackbar = uiSnackbar, onDismiss = { sessionViewModel.dismissSnackbar() })
-                        },
-                        topBar = {
+
+                Scaffold(
+                    // Quitar padding por defecto superior
+                    contentWindowInsets = WindowInsets(0, 0, 0, 0),
+                    snackbarHost = {
+                        AppSnackbarHost(uiSnackbar = uiSnackbar, onDismiss = { sessionViewModel.dismissSnackbar() })
+                    },
+                    topBar = {
+                        if (showAppBars){
                             AppTopBar(
                                 currentDestination = currentDestination,
                                 scope = scope,
@@ -160,23 +161,24 @@ fun NavigationWrapper(
                                 onRefreshAdminScreen = { sessionViewModel.triggerAdminRefresh() }
                             )
                         }
-                    ) { innerPadding ->
-
-                        MainNavHost(
-                            navController = navController,
-                            innerPadding = innerPadding,
-                            startDestination = startDestination,
-                            snackbarHostState = snackbarHostState
-                        )
                     }
-                }else{
+                ) { innerPadding ->
+
                     MainNavHost(
                         navController = navController,
-                        innerPadding = PaddingValues(0.dp),
+                        innerPadding = innerPadding,
                         startDestination = startDestination,
                         snackbarHostState = snackbarHostState
                     )
                 }
+//                }else{
+//                    MainNavHost(
+//                        navController = navController,
+//                        innerPadding = PaddingValues(0.dp),
+//                        startDestination = startDestination,
+//                        snackbarHostState = snackbarHostState
+//                    )
+//                }
                 //  CircularProgess Global
                 GlobalLoadingOverlay(isLoading = isLoading)
             }

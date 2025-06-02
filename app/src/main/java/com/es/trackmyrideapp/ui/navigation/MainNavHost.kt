@@ -55,7 +55,6 @@ fun MainNavHost(
                         launchSingleTop = true
                     }
                 },
-                snackbarHostState = snackbarHostState,
                 navigateToAdminScreen ={
                     navController.navigate(AdminScreen) {
                         popUpTo(0)
@@ -102,7 +101,6 @@ fun MainNavHost(
         composable<Home> {
             HomeScreen(
                 modifier = Modifier.padding(innerPadding),
-                snackbarHostState = snackbarHostState
             )
         }
 

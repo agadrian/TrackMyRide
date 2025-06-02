@@ -38,6 +38,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.es.trackmyrideapp.LocalSessionViewModel
 import com.es.trackmyrideapp.R
 import com.es.trackmyrideapp.core.states.MessageType
+import com.es.trackmyrideapp.core.states.UiSnackbar
 import com.es.trackmyrideapp.core.states.UiState
 import com.es.trackmyrideapp.ui.components.ConfirmationDialog
 import com.es.trackmyrideapp.ui.components.CustomButton
@@ -135,10 +136,12 @@ fun RouteDetailScreen(
     // Snackbar msg
     LaunchedEffect(uiMessage) {
         uiMessage?.let { message ->
-            snackbarHostState.showSnackbar(
-                message = message.message,
-                withDismissAction = message.type == MessageType.ERROR,
-                duration = SnackbarDuration.Short
+            sessionViewModel.showSnackbar(
+                UiSnackbar(
+                    message = message.message,
+                    messageType = message.type,
+                    withDismissAction = true
+                )
             )
             routeDetailViewModel.consumeUiMessage()
         }

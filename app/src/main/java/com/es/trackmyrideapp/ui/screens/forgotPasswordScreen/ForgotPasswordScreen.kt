@@ -13,11 +13,9 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -37,21 +35,14 @@ fun ForgotPasswordScreen(
     snackbarHostState: SnackbarHostState,
 ) {
     val loginViewModel: LoginViewModel = hiltViewModel()
-    val uiMessage by loginViewModel.uiMessage.collectAsState()
+    //val uiMessage by loginViewModel.uiMessage.collectAsState()
     val forgotPasswordUiState by loginViewModel.forgotPasswordUiState.collectAsState()
     val email by loginViewModel.emailForgotScreen
     val emailError by loginViewModel.emailForgotError
     val focusManager = LocalFocusManager.current
 
-    LaunchedEffect(uiMessage) {
-        uiMessage?.let { message ->
-            snackbarHostState.showSnackbar(
-                message = message,
-                duration = SnackbarDuration.Short
-            )
-            loginViewModel.consumeUiMessage()
-        }
-    }
+    // Snackbar msg
+    //todo
 
     Column(
         modifier = modifier

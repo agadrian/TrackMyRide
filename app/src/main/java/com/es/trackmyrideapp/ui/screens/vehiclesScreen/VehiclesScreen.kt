@@ -15,7 +15,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.PedalBike
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -28,7 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.es.trackmyrideapp.LocalSessionViewModel
 import com.es.trackmyrideapp.R
-import com.es.trackmyrideapp.core.states.MessageType
+import com.es.trackmyrideapp.core.states.UiSnackbar
 import com.es.trackmyrideapp.core.states.UiState
 import com.es.trackmyrideapp.ui.components.CustomButton
 import com.es.trackmyrideapp.ui.components.VehicleFilter
@@ -52,10 +51,12 @@ fun VehiclesScreen(
     // Snackbar msg
     LaunchedEffect(uiMessage) {
         uiMessage?.let { message ->
-            snackbarHostState.showSnackbar(
-                message = message.message,
-                withDismissAction = message.type == MessageType.ERROR,
-                duration = SnackbarDuration.Short
+            sessionViewModel.showSnackbar(
+                UiSnackbar(
+                    message = message.message,
+                    messageType = message.type,
+                    withDismissAction = true
+                )
             )
             vehicleViewModel.consumeUiMessage()
         }

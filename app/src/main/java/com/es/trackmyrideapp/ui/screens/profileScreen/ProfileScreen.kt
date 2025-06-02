@@ -50,6 +50,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.es.trackmyrideapp.LocalSessionViewModel
 import com.es.trackmyrideapp.R
+import com.es.trackmyrideapp.core.states.UiSnackbar
 import com.es.trackmyrideapp.core.states.UiState
 import com.es.trackmyrideapp.ui.permissions.AppPermission
 import com.es.trackmyrideapp.ui.permissions.ClosableBlockedDialog
@@ -170,10 +171,16 @@ fun ProfileScreen(
     }
 
 
-    // Mensajes snackbar
+    // Snackbar msg
     LaunchedEffect(uiMessage) {
-        uiMessage?.let { msg ->
-            snackbarHostState.showSnackbar(msg.message)
+        uiMessage?.let { message ->
+            sessionViewModel.showSnackbar(
+                UiSnackbar(
+                    message = message.message,
+                    messageType = message.type,
+                    withDismissAction = true
+                )
+            )
             profileViewModel.consumeUiMessage()
         }
     }
