@@ -27,7 +27,7 @@ class AuthRepositoryImpl @Inject constructor(
 
             // Llamar a la API para iniciar sesión
             val apiResponse = authAPI.login("Bearer $idToken")
-            if (!apiResponse.isSuccessful) throw Exception("API login failed")
+            if (!apiResponse.isSuccessful) throw Exception("Sign In Failed. Try again later.")
 
             val authUser = apiResponse.body()?.toDomain()
                 ?: throw Exception("API login response body null")

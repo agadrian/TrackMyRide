@@ -32,27 +32,35 @@ class RouteTracker {
     private var previousLocation: LatLng? = null
     private var previousTime: Long = 0
 
+    private var _currentSpeedFlow = MutableStateFlow(0.0)
+    val currentSpeedFlow: StateFlow<Double> = _currentSpeedFlow.asStateFlow()
+
+
 
     fun startTimer(scope: CoroutineScope) {
         startTimeMillis = System.currentTimeMillis()
         _elapsedTime.value = 0
+        Log.d("Tracking", "Timer iniciado en: $startTimeMillis (${Date(startTimeMillis)})")
+
 
         timerJob?.cancel()
         timerJob = scope.launch {
             while (isActive) {
                 _elapsedTime.value = System.currentTimeMillis() - startTimeMillis
+                Log.d("Tracking", "Timer update - elapsed: ${_elapsedTime.value} ms")
                 delay(1000)
             }
         }
     }
 
     fun stopTimer() {
-        Log.d("Tracking", "Timer detenido. ${_elapsedTime.value}")
+        Log.d("Tracking", "Deteniendo timer. Elapsed: ${_elapsedTime.value} ms")
         endTimeMillis = System.currentTimeMillis()
         timerJob?.cancel()
         timerJob = null
-        Log.d("Tracking", "Timer detenido final. ${_elapsedTime.value}")
+        Log.d("Tracking", "Timer detenido en: $endTimeMillis (${Date(endTimeMillis)}), total elapsed: ${_elapsedTime.value} ms")
     }
+
 
     fun getElapsedTimeMillis(): Long {
         val now = System.currentTimeMillis()
@@ -60,10 +68,11 @@ class RouteTracker {
         else now - startTimeMillis
 
         Log.d("Tracking", """
-        startTimeMillis: $startTimeMillis (${Date(startTimeMillis)})
-        ${if (endTimeMillis > 0) "endTimeMillis: $endTimeMillis (${Date(endTimeMillis)})" else "now: $now (${Date(now)})"}
-        elapsed: $elapsed ms
-    """.trimIndent())
+            Cálculo elapsedTime:
+            startTimeMillis: $startTimeMillis (${Date(startTimeMillis)})
+            ${if (endTimeMillis > 0) "endTimeMillis: $endTimeMillis (${Date(endTimeMillis)})" else "now: $now (${Date(now)})"}
+            elapsed: $elapsed ms
+        """.trimIndent())
 
         return elapsed
     }
@@ -71,17 +80,16 @@ class RouteTracker {
     fun getDistanceMeters(points: List<LatLng>): Double {
         var total = 0.0
         for (i in 1 until points.size) {
-            total += distanceBetween(points[i - 1], points[i])
+            val dist = distanceBetween(points[i - 1], points[i])
+            total += dist
+            //Log.d("Tracking", "Distancia entre punto $i-1 y $i: $dist metros")
         }
+        //Log.d("Tracking", "Distancia total recorrida: $total metros")
         return total
     }
 
-    fun getAverageSpeedKmh(points: List<LatLng>): Double {
-        val hours = getElapsedTimeMillis() / 1000.0 / 3600.0
-        return if (hours > 0) getDistanceMeters(points) / 1000.0 / hours else 0.0
-    }
 
-    fun distanceBetween(p1: LatLng, p2: LatLng): Double {
+    private fun distanceBetween(p1: LatLng, p2: LatLng): Double {
         val earthRadius = 6371000.0
         val dLat = Math.toRadians(p2.latitude - p1.latitude)
         val dLng = Math.toRadians(p2.longitude - p1.longitude)
@@ -90,14 +98,26 @@ class RouteTracker {
                 cos(Math.toRadians(p1.latitude)) * cos(Math.toRadians(p2.latitude)) *
                 sin(dLng / 2).pow(2.0)
         val c = 2 * atan2(sqrt(a), sqrt(1 - a))
-        return earthRadius * c
+        val distance = earthRadius * c
+        Log.d("Tracking", "Calculando distancia entre puntos: $distance metros")
+        return distance
     }
 
+    fun getAverageSpeedKmh(points: List<LatLng>): Double {
+        val hours = getElapsedTimeMillis() / 1000.0 / 3600.0
+        val avgSpeed = if (hours > 0) getDistanceMeters(points) / 1000.0 / hours else 0.0
+        Log.d("Tracking", "Velocidad promedio calculada: $avgSpeed km/h")
+        return avgSpeed
+    }
+
+
     fun reset() {
+        Log.d("Tracking", "Resetear estado del tracker")
         _elapsedTime.value = 0
         startTimeMillis = 0
         endTimeMillis = 0
         maxSpeedKmh = 0.0
+        _currentSpeedFlow.value = 0.0
         previousLocation = null
         previousTime = 0
         timerJob?.cancel()
@@ -107,23 +127,36 @@ class RouteTracker {
 
     fun updateLocation(newLocation: LatLng) {
         val currentTime = System.currentTimeMillis()
+        Log.d("Tracking", "Update location: $newLocation en ${Date(currentTime)}")
 
-        previousLocation?.let { prevLoc ->
-            val distance = distanceBetween(prevLoc, newLocation)
-            val timeDeltaHours = (currentTime - previousTime) / 1000.0 / 3600.0
+        if (previousLocation != null && previousTime != 0L) {
+            val distance = distanceBetween(previousLocation!!, newLocation)
+            val timeDeltaMillis = currentTime - previousTime
 
-            if (timeDeltaHours > 0) {
-                val speedKmh = (distance / 1000.0) / timeDeltaHours
-                if (speedKmh > maxSpeedKmh) {
-                    maxSpeedKmh = speedKmh
-                }else{
-                    Log.d("Tracking", "No se puede calcular la velocidad max. Distancia: $distance, tiempo: $timeDeltaHours")
-                }
+            // Si esta quieto mas de dos segudnos, poner velocidad a 0
+            if (distance < 0.5 && timeDeltaMillis > 2000){
+                _currentSpeedFlow.value = 0.0
+                Log.d("Tracking", "Velocidad puesta a 0 por inmovilidad.")
             }else{
-                Log.d("Tracking", "No se puede calcular la velocidad max. Tiempo delta: $timeDeltaHours")
+                val timeDeltaHours = (currentTime - previousTime) / 1000.0 / 3600.0
+                Log.d("Tracking", "Distancia desde la ubicación anterior: $distance metros, tiempo transcurrido: $timeDeltaHours horas")
+
+                if (timeDeltaHours > 0) {
+                    val speedKmh = (distance / 1000.0) / timeDeltaHours
+                    _currentSpeedFlow.value = speedKmh
+
+                    Log.d("Tracking", "Velocidad calculada: $speedKmh km/h")
+                    if (speedKmh > maxSpeedKmh) {
+                        Log.d("Tracking", "Nueva velocidad máxima registrada: $speedKmh km/h (antes $maxSpeedKmh km/h)")
+                        maxSpeedKmh = speedKmh
+                    }else {
+                        Log.d("Tracking", "Tiempo delta no es válido para calcular velocidad máxima.")
+                    }
+                } else {
+                    Log.d("Tracking", "No hay ubicación o tiempo previo para calcular velocidad máxima.")
+                }
             }
         }
-
         previousLocation = newLocation
         previousTime = currentTime
     }
@@ -131,9 +164,9 @@ class RouteTracker {
 
     fun getCalculatedStats(points: List<LatLng>, efficiency: Double?): RouteStats {
         val elapsed = getElapsedTimeMillis()
-        Log.d("Tracking", "getCalculatedStats: ${elapsed}")
+        Log.d("Tracking", "Calculando estadísticas con elapsed time: $elapsed ms")
         val distance = getDistanceMeters(points)
-        val avgSpeed = if (elapsed > 0) distance / (elapsed / 1000.0 / 3600.0) else 0.0
+
         val distanceKm = distance / 1000.0
 
         val fuelConsumed = if (efficiency != null && efficiency > 0) {
@@ -143,6 +176,18 @@ class RouteTracker {
         val pace = if (distanceKm > 0) {
             (elapsed / 1000.0 / distanceKm) / 60.0
         } else null
+
+        val avgSpeed = getAverageSpeedKmh(points)
+
+        Log.d("\n\nTracking", """
+            Stats calculados:
+            distanceMeters=$distance,
+            averageSpeedKmh=$avgSpeed,
+            fuelConsumed=$fuelConsumed,
+            efficiency=$efficiency,
+            paceSecondsPerKm=$pace,
+            maxSpeed=$maxSpeedKmh
+        """.trimIndent())
 
         return RouteStats(
             elapsedTimeMillis = elapsed,

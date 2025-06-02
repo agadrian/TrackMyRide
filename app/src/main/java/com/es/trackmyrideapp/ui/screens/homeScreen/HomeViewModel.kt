@@ -12,6 +12,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.es.trackmyrideapp.HomeScreenConstants
+import com.es.trackmyrideapp.HomeScreenConstants.DEFAULT_BEARING
+import com.es.trackmyrideapp.HomeScreenConstants.DEFAULT_TILT
+import com.es.trackmyrideapp.HomeScreenConstants.INTERVAL_MILIS_LOCATION_UPDATES
+import com.es.trackmyrideapp.HomeScreenConstants.MINIMUN_DISTANCE_METERS
+import com.es.trackmyrideapp.HomeScreenConstants.TRACKING_TILT
 import com.es.trackmyrideapp.core.extensions.round
 import com.es.trackmyrideapp.core.states.MessageType
 import com.es.trackmyrideapp.core.states.UiMessage
@@ -29,18 +34,35 @@ import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.Priority
 import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.SphericalUtil
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withTimeoutOrNull
+import java.io.IOException
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import javax.inject.Inject
+import kotlin.coroutines.resume
 import kotlin.random.Random
+
+
+/**
+ * FLUJO:
+ * - Se intenta obtener la ubicacion conocida en el init, si no puede, solicita nuevas para obtener la inicial
+ * - Al pulsar boton de innicar ruta, e activa toogletracking, que actualiza los estados, y llama a la funcion de startLocationUpdates
+ * - Esta funcione mpieza a recibir ubicaciones. añadiendose a la lista de routepoints y actualizando la direcciond e la camara, dibujandose la polilyne etc.
+ * - Al detener, se compruevba que hayan suficientes puntos o no para guardar la ruta, si los hay, se detiene la escucha de ubicaciones, se calcula los datos (tiempo, estadisticas, etc) y se guarda en la bd para posteriormente recuperarla en otr apantalla y poder visualzarla.
+ * - Ademas, se centra la camara en el puntoa ctual, se limpian los estados para si se quiere grabar otra ruta, se resetea timer, y todo.
+ *
+ */
+
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
@@ -62,8 +84,6 @@ class HomeViewModel @Inject constructor(
     private var _routePoints = mutableStateOf<List<LatLng>>(emptyList())
     val routePoints: State<List<LatLng>> = _routePoints
 
-    private val _routePointsSaved = mutableStateOf<List<LatLng>>(emptyList())
-    val routePointsSaved: State<List<LatLng>> = _routePointsSaved
 
     private val _currentLocation = mutableStateOf<LatLng?>(null)
     val currentLocation: State<LatLng?> = _currentLocation
@@ -74,8 +94,22 @@ class HomeViewModel @Inject constructor(
     private val _simplifiedRoutePoints = mutableStateOf<List<LatLng>>(emptyList())
     val simplifiedRoutePoints: State<List<LatLng>> = _simplifiedRoutePoints
 
-    private var _routePointsTest = mutableStateOf<List<LatLng>>(emptyList())
-    val routePointsTest: State<List<LatLng>> = _routePointsTest
+
+    // Velocidad
+    val currentSpeedKmhFlow: StateFlow<Double> = routeTracker.currentSpeedFlow
+
+    private val _bearing = mutableStateOf(DEFAULT_BEARING)
+    val bearing: State<Float> = _bearing
+
+    private val _lastStopLocation = mutableStateOf<LatLng?>(null)
+    val lastStopLocation: State<LatLng?> = _lastStopLocation
+
+    private val _cameraTilt = mutableStateOf(0f)
+    val cameraTilt: State<Float> = _cameraTilt
+
+    private val _shouldResetCamera = mutableStateOf(false)
+    val shouldResetCamera: State<Boolean> = _shouldResetCamera
+
 
     // UI State
     private val _uiState = MutableStateFlow<UiState>(UiState.Idle)
@@ -106,6 +140,10 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Obtiene la última ubicación conocida del dispositivo.
+     * Si falla, solicita una actualización de ubicación manualmente.
+     */
     @SuppressLint("MissingPermission")
     fun getLastKnownLocation() {
         fusedLocationProviderClient.lastLocation
@@ -121,12 +159,14 @@ class HomeViewModel @Inject constructor(
             }
     }
 
+    /**
+     * Solicita una ubicación actualizada solo una vez si no se tiene una última ubicación conocida.
+     */
     @SuppressLint("MissingPermission")
     private fun requestLocationUpdatesForInitialPosition() {
-        // Usamos LocationRequest.Builder() para la nueva API
-        val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 3000).apply {
-            setIntervalMillis(3000)  // El intervalo más rápido
-            setMaxUpdates(1)  // Solo queremos una actualización para la posición inicial
+        val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, INTERVAL_MILIS_LOCATION_UPDATES).apply {
+            setIntervalMillis(INTERVAL_MILIS_LOCATION_UPDATES)  // El intervalo más rápido
+            setMaxUpdates(2) // 2 POR SI FALLARA LA PRIMERA
         }.build()
 
         val locationCallback = object : LocationCallback() {
@@ -147,90 +187,176 @@ class HomeViewModel @Inject constructor(
     }
 
 
+    /**
+     * Establece el estado de tracking y ajusta la cámara del mapa.
+     */
+    private fun setTrackingState(isTracking: Boolean) {
+        _trackingState.value = isTracking
+        updateCameraOrientation(isTracking)
+        _shouldResetCamera.value = !isTracking
+    }
+
+    /**
+     * Actualiza la orientación de la cámara dependiendo del modo de tracking.
+     */
+    private fun updateCameraOrientation(isTracking: Boolean) {
+        _cameraTilt.value = if (isTracking) TRACKING_TILT else DEFAULT_TILT
+        _bearing.value = if (isTracking) _bearing.value else DEFAULT_BEARING
+    }
+
+
+    /**
+     * Activa o desactiva el modo de seguimiento GPS.
+     */
     @RequiresApi(Build.VERSION_CODES.O)
     fun toggleTracking() {
-        if (_trackingState.value) {
-            stopLocationUpdates()
-        } else {
+        val newState = !_trackingState.value
+        setTrackingState(newState)
+
+        if (newState) {
             startLocationUpdates()
+        } else {
+            viewModelScope.launch {
+                stopLocationUpdates()
+                _bearing.value = 0f
+            }
         }
     }
 
 
-
-    // Iniciar actualizaciones de ubicación
+    /**
+     * Solicita la ubicación actual del usuario una sola vez de forma suspendida.
+     * @return LatLng o último punto de ruta si no se puede obtener
+     */
     @SuppressLint("MissingPermission")
-    private fun startLocationUpdates() {
-        val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 2000).apply {
-            setMinUpdateDistanceMeters(5f)  // Distancia minima de 5 metros entre actualizaciones
-            setWaitForAccurateLocation(true)
-        }.build()
-
-        locationCallback = object : LocationCallback() {
-            override fun onLocationResult(locationResult: LocationResult) {
-                super.onLocationResult(locationResult)
-                locationResult.lastLocation?.let { location ->
-                    val latLng = LatLng(location.latitude, location.longitude)
-                    updateRoutePoints(latLng)
-                    Log.d("Tracking", "Nueva ubicación: $latLng. Lista completa: ${_routePoints}")
+    private suspend fun getCurrentLocationOnce(): LatLng? {
+        return try {
+            val location = withTimeoutOrNull(INTERVAL_MILIS_LOCATION_UPDATES) {
+                suspendCancellableCoroutine { cont ->
+                    fusedLocationProviderClient.getCurrentLocation(
+                        Priority.PRIORITY_HIGH_ACCURACY,
+                        null
+                    ).addOnSuccessListener { location ->
+                        cont.resume(location?.let { LatLng(it.latitude, it.longitude) })
+                    }.addOnFailureListener {
+                        cont.resume(null)
+                    }
                 }
             }
+            location ?: _routePoints.value.lastOrNull()
+        } catch (e: Exception) {
+            _routePoints.value.lastOrNull()
         }
-
-        // Iniciar el contador
-        routeTracker.startTimer(viewModelScope)
-
-        //  Observar el elapsedTime de RouteTracker y actualizar el state del ViewModel
-        viewModelScope.launch {
-            routeTracker.elapsedTime.collect { time ->
-                _elapsedTime.value = time
-            }
-        }
-
-        fusedLocationProviderClient.requestLocationUpdates(
-            locationRequest,
-            locationCallback!!,
-            Looper.getMainLooper()
-        )
-        _trackingState.value = true
     }
 
-    // Detener las actualizaciones de ubicación
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun stopLocationUpdates() {
-        locationCallback?.let {
-            fusedLocationProviderClient.removeLocationUpdates(it)
-        }
-        // Parar timer
-        routeTracker.stopTimer()
-        Log.d("Tracking", "Timer detenido. Ruta acabada. Info: \n- Tiempo: ${formatTime(elapsedTime.value)}\n- Distancia: ${getRouteDistance()}\n- Velocidad media: ${getRouteAverageSpeed()}\n-Time: ${getElapsedTime()}")
+    /**
+     * Inicia el seguimiento GPS, actualizaciones de ubicación y el cronómetro.
+     */
+    @SuppressLint("MissingPermission")
+    private fun startLocationUpdates() {
+        viewModelScope.launch {
+            // Obtener ubicación actual real
+            val initialLocation = getCurrentLocationOnce()
 
+            // Agregar primer punto si se obtuvo bien
+            initialLocation?.let {
+                val currentPointsList = _routePoints.value.toMutableList()
+                currentPointsList.add(it)
+                _routePoints.value = currentPointsList
+                Log.d("Tracking", "Primer punto agregado: $it")
+            }
+
+            // Configurar solicitud de ubicación
+            val locationRequest = LocationRequest.Builder(
+                Priority.PRIORITY_HIGH_ACCURACY,
+                INTERVAL_MILIS_LOCATION_UPDATES
+            ).apply {
+                setMinUpdateDistanceMeters(MINIMUN_DISTANCE_METERS)
+                setWaitForAccurateLocation(true)
+            }.build()
+
+            // Definir callback
+            locationCallback = object : LocationCallback() {
+                override fun onLocationResult(locationResult: LocationResult) {
+                    super.onLocationResult(locationResult)
+                    locationResult.lastLocation?.let { location ->
+                        val latLng = LatLng(location.latitude, location.longitude)
+                        updateRoutePoints(latLng)
+                        Log.d("Tracking", "Nueva ubicación: $latLng. Lista completa: ${_routePoints}")
+                    }
+                }
+            }
+
+            // Iniciar el contador
+            routeTracker.startTimer(viewModelScope)
+
+            // Observar tiempo transcurrido
+            launch {
+                routeTracker.elapsedTime.collect { time ->
+                    _elapsedTime.value = time
+                }
+            }
+
+            // Iniciar actualizaciones
+            fusedLocationProviderClient.requestLocationUpdates(
+                locationRequest,
+                locationCallback!!,
+                Looper.getMainLooper()
+            )
+
+            _trackingState.value = true
+        }
+    }
+
+
+    /**
+     * Detiene el seguimiento GPS, guarda la ruta y resetea estados.
+     */
+    @RequiresApi(Build.VERSION_CODES.O)
+    private suspend fun stopLocationUpdates() {
+        locationCallback?.let { callback ->
+            fusedLocationProviderClient.removeLocationUpdates(callback)
+            locationCallback = null
+        }
+
+        // Obtener ubicacion actual y guardarla para centrar el mapa en esta ubicacion al acabar
+        val lastLocation = getCurrentLocationOnce()
+        _lastStopLocation.value = lastLocation
+
+
+        // Parar timer
         val preciseElapsedTime = routeTracker.getElapsedTimeMillis()
-        Log.d("Tracking", "Timer detenido. Tiempo preciso: ${preciseElapsedTime}ms")
+        Log.d("Tracking", "Tiempo preciso antes de detener timer: ${preciseElapsedTime}ms")
+
+        routeTracker.stopTimer()
+        Log.d("Tracking", "Timer detenido. Tiempo despues de stoptimer: ${routeTracker.getElapsedTimeMillis()}ms")
+
 
         // Guardar ruta
-        saveCurrentRoute{
-            clearRoute()
-            routeTracker.reset()
-        }
+        saveCurrentRoute(
+            duration = preciseElapsedTime,
+            onComplete = {
+                clearRoute()
+                routeTracker.reset()
+            }
+        )
         _trackingState.value = false
-
-        Log.d("Tracking", "Timer detenido 2. Ruta acabada. Info: \n- Tiempo: ${formatTime(elapsedTime.value)}\n- Distancia: ${getRouteDistance()}\n- Velocidad media: ${getRouteAverageSpeed()}\n-Time: ${getElapsedTime()}")
     }
 
 
 
-    @RequiresApi(Build.VERSION_CODES.O)
     /**
-     * Guardar la ruta creando un routeCreateDTO, y usando un callback para limpiar los estados al acabar.
+     * Guarda la ruta actual usando los datos recolectados y la API de backend.
+     * @param duration tiempo total de la ruta en milisegundos
+     * @param onComplete callback llamado al finalizar
      */
-    private fun saveCurrentRoute(onComplete: () -> Unit = {}) {
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun saveCurrentRoute(onComplete: () -> Unit = {}, duration: Long) {
         val points = _routePoints.value
-        val duration = routeTracker.getElapsedTimeMillis()
 
         // No guardar si es corta por puntos o tiempo
         if (points.size < HomeScreenConstants.MIN_ROUTE_POINTS || duration < HomeScreenConstants.MIN_DURATION_MILLIS) {
-            _uiMessage.value = UiMessage("Route too short to save", MessageType.INFO)
+            _uiMessage.value = UiMessage("Route too short to save", MessageType.ERROR)
             onComplete()
             return
         }
@@ -243,6 +369,8 @@ class HomeViewModel @Inject constructor(
                 is Resource.Success -> {
                     val vehicle = result.data
                     Log.d("Tracking", "save ruta antes de stats. ${_elapsedTime.value}")
+
+                    // Obtener estadisticas calculadas
                     val stats = routeTracker.getCalculatedStats(points, vehicle.efficiency)
                     Log.d("Tracking", "save ruta despues de stats. ${_elapsedTime.value}")
 
@@ -293,54 +421,90 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-
+    /**
+     * Devuelve una dirección en texto a partir de coordenadas GPS.
+     */
     private fun getStreetAndNumber(lat: Double, lon: Double): String {
         return try {
             val geocoder = Geocoder(appContext, Locale.getDefault())
-            val addresses = geocoder.getFromLocation(lat, lon, 1)
-            val address = addresses?.firstOrNull()
-            if (address != null) {
-                val street = address.thoroughfare ?: ""
-                val number = address.subThoroughfare ?: ""
-                if (street.isNotBlank() && number.isNotBlank()) {
-                    "$street, $number"
-                } else {
-                    street.ifBlank { address.getAddressLine(0) } // fallback
+            if (!Geocoder.isPresent()) return "Geocoder not available"
+
+            val addresses = geocoder.getFromLocation(lat, lon, 1) ?: return "No address found"
+
+            addresses.firstOrNull()?.let { address ->
+                buildString {
+                    append(address.thoroughfare ?: "")
+                    if (!address.subThoroughfare.isNullOrEmpty()) {
+                        if (isNotEmpty()) append(", ")
+                        append(address.subThoroughfare)
+                    }
+                    if (isEmpty()) append(address.getAddressLine(0) ?: "Unnamed location")
                 }
-            } else "Not available"
+            } ?: "No address data"
+        } catch (e: IOException) {
+            Log.e("Tracking", "Network error in geocoding: ${e.message}")
+            "Network error"
+        } catch (e: IllegalArgumentException) {
+            Log.e("Tracking", "Invalid coordinates: ${e.message}")
+            "Invalid location"
         } catch (e: Exception) {
-            Log.e("Tracking", "Error getting street name and number: ${e.message}")
-            "Not available"
+            Log.e("Tracking", "Unexpected geocoding error: ${e.javaClass.simpleName}")
+            "Unknown location"
         }
     }
 
 
+    /**
+     * Añade un nuevo punto a la ruta y calcula el ángulo de dirección par ausar en al camara (bearing).
+     */
     private fun updateRoutePoints(latLng: LatLng) {
         val currentPointsList = _routePoints.value.toMutableList()
         routeTracker.updateLocation(latLng)
         currentPointsList.add(latLng)
         _routePoints.value = currentPointsList // Asignamos nueva lista para notificar el cambio
+
+        // Calcular bearing si hay al menos dos puntos
+        if (currentPointsList.size >= 2) {
+            val lastIndex = currentPointsList.lastIndex
+            val from = currentPointsList[lastIndex - 1]
+            val to = currentPointsList[lastIndex]
+            val bearingDegrees = SphericalUtil.computeHeading(from, to)
+            val adjustedBearing = ((bearingDegrees + 360) % 360).toFloat()
+            _bearing.value = adjustedBearing
+        }
     }
 
-
+    /** Borra todos los puntos de la ruta actual */
     private fun clearRoute() {
         _routePoints.value = emptyList()
     }
 
-    // Obtener la distancia total de la ruta en metros
+    /** Retorna la distancia recorrida en metros */
     fun getRouteDistance(): Double {
         return routeTracker.getDistanceMeters(_routePoints.value)
     }
 
-    // Obtener la velocidad promedio de la ruta en km/h
+    /** Retorna la velocidad promedio en km/h */
     fun getRouteAverageSpeed(): Double {
         return routeTracker.getAverageSpeedKmh(_routePoints.value)
     }
 
-    // Obtener el tiempo transcurrido
+    /** Retorna el tiempo transcurrido en milisegundos */
     fun getElapsedTime(): Long {
         return routeTracker.getElapsedTimeMillis()
     }
+
+
+    /**
+     * Comprime los puntos de una ruta usando un simplificador de rutas.
+     * @param points Lista de LatLng a comprimir
+     * @param tolerance Tolerancia del algoritmo de simplificación
+     * @return Ruta codificada en String
+     */
+    private fun simplifyCurrentRoute(points: List<LatLng>, tolerance: Double = 0.00005): String{
+        return RouteSimplifier.compressRoute(points, tolerance)
+    }
+
 
     fun generateSampleRoute() {
         val startLat = 40.730610 // Latitud inicial
@@ -354,10 +518,6 @@ class HomeViewModel @Inject constructor(
             LatLng(randomLat, randomLng)
         }
         _routePoints.value = sampleRoute
-    }
-
-    private fun simplifyCurrentRoute(points: List<LatLng>, tolerance: Double = 0.00005): String{
-        return RouteSimplifier.compressRoute(points, tolerance)
     }
 }
 

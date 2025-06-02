@@ -26,8 +26,9 @@ object RoutesHistoryConstants {
 object HomeScreenConstants {
     const val MIN_ROUTE_POINTS = 3
     const val MIN_DURATION_MILLIS = 10_000L
-//    const val DEFAULT_BEARING = 0f
-//    const val DEFAULT_TILT = 0f
-//    const val TRACKING_TILT = 45f // Inclinación cuando se está grabando
-//    const val BEARING_SMOOTHING_FACTOR = 0.3f // Factor de suavizado para el bearing
+    const val DEFAULT_TILT = 0f
+    const val TRACKING_TILT = 45f
+    const val DEFAULT_BEARING = 0f
+    const val MINIMUN_DISTANCE_METERS = 3f
+    const val INTERVAL_MILIS_LOCATION_UPDATES = 2000L
 }

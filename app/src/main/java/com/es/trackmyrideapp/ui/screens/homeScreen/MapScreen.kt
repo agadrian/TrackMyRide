@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.es.trackmyrideapp.LocalSessionViewModel
 import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.model.CameraPosition
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapUiSettings
@@ -52,13 +53,15 @@ fun MapScreen(
     val currentLocationState = homeViewModel.currentLocation.value
     val testPoints = homeViewModel.routePoints
     val simplifiedPoints = homeViewModel.simplifiedRoutePoints.value
-    val testRoute = homeViewModel.routePointsTest.value
 
 
     val elapsedTime = homeViewModel.elapsedTime.value  // Tiempo transcurrido
     val distance = homeViewModel.getRouteDistance()  // Distancia total de la ruta
-    val averageSpeed = homeViewModel.getRouteAverageSpeed()  // Velocidad promedio
-
+    val realTimeSpeed = homeViewModel.currentSpeedKmhFlow.collectAsState().value // Velocidad actual
+    val shouldResetCamera = homeViewModel.shouldResetCamera.value
+    val lastStopLocation = homeViewModel.lastStopLocation.value
+    val cameraTilt = homeViewModel.cameraTilt.value
+    val bearing = homeViewModel.bearing.value
 
 
 //    LaunchedEffect(Unit) {
@@ -76,24 +79,42 @@ fun MapScreen(
     }
 
 
+    LaunchedEffect(routePoints, trackingState, shouldResetCamera) {
+        val target = when {
+            // Al detener el tracking, usar lastStopLocation SI está disponible
+            shouldResetCamera && lastStopLocation != null -> lastStopLocation
 
-    // Centrar mapa en la ubicación actual
-    LaunchedEffect(currentLocationState) {
-        currentLocationState?.let { location ->
-            cameraPositionState.move(CameraUpdateFactory.newLatLngZoom(location, 16f))
+            // Durante tracking, usar el último punto de la ruta
+            trackingState -> routePoints.lastOrNull()
+
+            // Por defecto, usar currentLocation
+            else -> currentLocationState
         }
-    }
 
-    // Observamos cambios en routePoints
-    LaunchedEffect(routePoints) {
-        val lastPoint = routePoints.lastOrNull()
-        if (lastPoint != null && trackingState) {
+        target?.let {
+            val cameraPosition = CameraPosition.builder()
+                .target(it)
+                .zoom(16f)
+                .tilt(if (trackingState) cameraTilt else 0f)
+                .bearing(if (trackingState) bearing else 0f)
+                .build()
+
             cameraPositionState.animate(
-                CameraUpdateFactory.newLatLng(lastPoint),
+                CameraUpdateFactory.newCameraPosition(cameraPosition),
                 durationMs = 1000
             )
         }
     }
+
+
+    // Centrar mapa en la ubicación actual, si no se esta grabando ni reseteandocamara
+    LaunchedEffect(currentLocationState, trackingState, shouldResetCamera) {
+        if (currentLocationState != null && !trackingState && !shouldResetCamera) {
+            cameraPositionState.move(CameraUpdateFactory.newLatLngZoom(currentLocationState, 16f))
+        }
+    }
+
+
 
     // Circularprogress
     LaunchedEffect(currentLocationState) {
@@ -156,7 +177,7 @@ fun MapScreen(
                 InfoPanel(
                     elapsedTime = elapsedTime,
                     distance = distance,
-                    averageSpeed = averageSpeed
+                    realSpeed = realTimeSpeed
                 )
             }
         }
@@ -168,7 +189,7 @@ fun MapScreen(
 fun InfoPanel(
     elapsedTime: Long,
     distance: Double,
-    averageSpeed: Double,
+    realSpeed: Double,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -181,7 +202,7 @@ fun InfoPanel(
     ) {
         StatItem(label = "Time", value = formatTime(elapsedTime))
         StatItem(label = "Distance", value = "%.2f km".format(distance / 1000))
-        StatItem(label = "Avg Speed", value = "%.2f km/h".format(averageSpeed))
+        StatItem(label = "Speed", value = "%.2f km/h".format(realSpeed))
     }
 }
 

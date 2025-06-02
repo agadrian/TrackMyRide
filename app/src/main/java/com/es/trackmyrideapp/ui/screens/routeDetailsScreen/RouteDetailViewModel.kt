@@ -272,9 +272,10 @@ class RouteDetailViewModel @Inject constructor(
         val encoded = loadedRoute?.compressedRoute
         return if (!encoded.isNullOrEmpty()) {
             try {
-                RouteSimplifier.decompressRoute(encoded)
+                val puntosDecoded = RouteSimplifier.decompressRoute(encoded)
+                Log.d("decoded", "Puntos decoded: $puntosDecoded")
+                puntosDecoded
             } catch (e: Exception) {
-                // Puedes loggear o mostrar error si algo va mal
                 Log.e("FlujoTest", "Error decoding route: ${e.message}")
                 emptyList()
             }
