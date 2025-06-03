@@ -75,6 +75,13 @@ class HomeViewModel @Inject constructor(
 
     private val routeTracker = RouteTracker()
 
+    private val _mapLoading = MutableStateFlow(true)
+    val mapLoading: StateFlow<Boolean> = _mapLoading
+
+    fun setMapLoaded() {
+        _mapLoading.value = false
+    }
+
     private val _elapsedTime = mutableStateOf(0L)
     val elapsedTime: State<Long> = _elapsedTime
 

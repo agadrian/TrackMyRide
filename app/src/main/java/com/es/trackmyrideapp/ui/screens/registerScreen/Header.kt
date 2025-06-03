@@ -18,7 +18,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.es.trackmyrideapp.R
@@ -27,7 +26,7 @@ import com.es.trackmyrideapp.R
 @Composable
 fun Header(
     lineColor: Color
-){
+) {
     Box(
         Modifier.fillMaxWidth()
     ) {
@@ -35,8 +34,7 @@ fun Header(
             painter = painterResource(id = R.drawable.img_register),
             modifier = Modifier
                 .fillMaxWidth()
-                .height(250.dp)
-            ,
+                .height(250.dp),
             contentDescription = "Register image",
             contentScale = ContentScale.Crop,
         )
@@ -73,11 +71,4 @@ fun Header(
             )
         }
     }
-}
-
-
-@Preview
-@Composable
-fun prepre(){
-    Header(Color.Red)
 }

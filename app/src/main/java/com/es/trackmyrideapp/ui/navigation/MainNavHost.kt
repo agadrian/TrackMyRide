@@ -67,8 +67,7 @@ fun MainNavHost(
         // Forgot Password Screen
         composable<ForgotPassword> {
             ForgotPasswordScreen(
-                modifier = Modifier.padding(innerPadding),
-                snackbarHostState = snackbarHostState
+                modifier = Modifier.padding(innerPadding)
             )
         }
 
@@ -109,7 +108,6 @@ fun MainNavHost(
             RoutesHistoryScreen(
                 onViewDetailsClicked = { routeId -> navController.navigate(RouteDetails(routeId = routeId)) },
                 modifier = Modifier.padding(innerPadding),
-                snackbarHostState = snackbarHostState,
                 onGetPremiumClicked = {
                     navController.navigate(Premium) {
                         popUpTo<RoutesHistory> { inclusive = true }
@@ -144,8 +142,7 @@ fun MainNavHost(
                         popUpTo<Profile> { inclusive = true }
                         launchSingleTop = true
                     }
-                },
-                snackbarHostState = snackbarHostState
+                }
             )
         }
 

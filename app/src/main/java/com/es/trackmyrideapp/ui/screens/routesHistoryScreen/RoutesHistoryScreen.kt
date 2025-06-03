@@ -4,18 +4,21 @@ import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -49,8 +52,7 @@ import com.es.trackmyrideapp.utils.TimeFormatter
 fun RoutesHistoryScreen(
     onViewDetailsClicked: (Long) -> Unit,
     onGetPremiumClicked: () -> Unit,
-    modifier: Modifier,
-    snackbarHostState: SnackbarHostState
+    modifier: Modifier
 ){
     val routesHistoryViewModel: RoutesHistoryViewModel = hiltViewModel()
     var selectedFilter by remember { mutableStateOf<VehicleFilter>(VehicleFilter.All) }
@@ -61,6 +63,7 @@ fun RoutesHistoryScreen(
     //  Llamo con launchedeffect a la api para comprobar el premium, y luego miro el estado obtenido
     val sessionViewModel = LocalSessionViewModel.current
     val isPremium by sessionViewModel.isPremium.collectAsState()
+
 
     LaunchedEffect(Unit){
         sessionViewModel.checkPremiumStatus()
@@ -137,30 +140,31 @@ fun RoutesHistoryScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Mostrar las rutas filtradas
-        Column(
+
+        LazyColumn(
             modifier = Modifier
                 .weight(1f)
-                .verticalScroll(scrollState)
+                .fillMaxWidth(),
+            contentPadding = PaddingValues(vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            Spacer(modifier = Modifier.height(8.dp))
-
             if (filteredRoutes.isEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(top = 64.dp),
-                    contentAlignment = Alignment.TopCenter
-                ) {
-                    Text(
-                        text = "You haven't completed any routes yet.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillParentMaxSize()
+                            .padding(top = 64.dp),
+                        contentAlignment = Alignment.TopCenter
+                    ) {
+                        Text(
+                            text = "You haven't completed any routes yet.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
                 }
-            } else {
-                filteredRoutes.forEach { item ->
-
+            }else{
+                items(filteredRoutes, key = { it.route.id }) { item ->
                     val route = item.route
                     val title = route.name
                     val distance = "${route.distanceKm} Km"
@@ -182,21 +186,18 @@ fun RoutesHistoryScreen(
                         vehicleType = route.vehicleType
                     )
 
-                    Spacer(modifier = Modifier.height(24.dp))
+                    // Mostrar boton de get premium cuando no lo sea
+                    if (showButtonGoPremium) {
+                        CustomButton(
+                            onclick = onGetPremiumClicked,
+                            buttonColor = colorResource(R.color.orangeButton),
+                            fontColor = colorResource(R.color.black),
+                            text = "Go Premium to see more"
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
                 }
-            }
-
-
-            // Mostrar boton de get premium cuando no lo sea
-            if (showButtonGoPremium) {
-                CustomButton(
-                    onclick = onGetPremiumClicked,
-                    buttonColor = colorResource(R.color.orangeButton),
-                    fontColor = colorResource(R.color.black),
-                    text = "Go Premium to see more"
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
             }
         }
 

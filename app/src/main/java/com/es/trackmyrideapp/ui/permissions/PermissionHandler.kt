@@ -91,7 +91,7 @@ fun rememberPermissionHandler(
         Log.d("PermissionHandler", "Launching system permission dialog with: ${permission.permissions}")
         LaunchedEffect(Unit) {
             launcher.launch(permission.permissions.toTypedArray())
-            state = state.copy(shouldShowSystemDialog = false) //TODO: MIRAR ESTO BIEN
+            state = state.copy(shouldShowSystemDialog = false)
         }
     }
 

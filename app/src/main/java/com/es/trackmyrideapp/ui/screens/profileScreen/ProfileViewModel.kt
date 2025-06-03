@@ -6,6 +6,9 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.es.trackmyrideapp.RegisterScreenConstants.MAX_PHONE_LENGTH
+import com.es.trackmyrideapp.RegisterScreenConstants.MAX_USERNAME_LENGTH
+import com.es.trackmyrideapp.RegisterScreenConstants.MIN_PASSWORD_LENGTH
 import com.es.trackmyrideapp.core.states.MessageType
 import com.es.trackmyrideapp.core.states.UiMessage
 import com.es.trackmyrideapp.core.states.UiState
@@ -134,7 +137,7 @@ class ProfileViewModel @Inject constructor(
     private fun validateUsername(value: String): String? {
         return when {
             value.isBlank() -> "Username cannot be empty"
-            value.length > 10 -> "Max 10 characters"
+            value.length > MAX_USERNAME_LENGTH -> "Max $MAX_USERNAME_LENGTH characters"
             else -> null
         }
     }
@@ -146,7 +149,7 @@ class ProfileViewModel @Inject constructor(
 
     private fun validatePhone(value: String): String? {
         return when {
-            value.length > 9 -> "Max 9 characters"
+            value.length > MAX_PHONE_LENGTH -> "Max $MAX_PHONE_LENGTH characters"
             else -> null
         }
     }
@@ -278,9 +281,9 @@ class ProfileViewModel @Inject constructor(
                 "Enter new password"
             }
 
-            new.length < 8 -> {
+            new.length < MIN_PASSWORD_LENGTH -> {
                 valid = false
-                "Must be at least 8 characters"
+                "Must be at least $MIN_PASSWORD_LENGTH characters"
             }
 
             new == current -> {

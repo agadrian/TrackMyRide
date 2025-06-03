@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -25,7 +26,6 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -60,8 +60,7 @@ import com.es.trackmyrideapp.ui.permissions.rememberPermissionHandler
 @Composable
 fun ProfileScreen(
     modifier: Modifier = Modifier,
-    onPremiumScreenClicked: () -> Unit,
-    snackbarHostState: SnackbarHostState
+    onPremiumScreenClicked: () -> Unit
 ) {
 
     val profileViewModel: ProfileViewModel = hiltViewModel()
@@ -201,6 +200,7 @@ fun ProfileScreen(
             .padding(horizontal = 30.dp)
             .padding(top = 16.dp)
             .navigationBarsPadding()
+            .imePadding()
             .clickable(
                 // Evita que el click consuma otros eventos
                 indication = null,

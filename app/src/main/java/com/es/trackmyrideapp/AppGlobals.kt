@@ -31,4 +31,11 @@ object HomeScreenConstants {
     const val DEFAULT_BEARING = 0f
     const val MINIMUN_DISTANCE_METERS = 3f
     const val INTERVAL_MILIS_LOCATION_UPDATES = 2000L
+    const val MAX_REASONABLE_SPEED_KMH = 299
+}
+
+object RegisterScreenConstants {
+    const val MIN_PASSWORD_LENGTH = 8
+    const val MAX_USERNAME_LENGTH = 10
+    const val MAX_PHONE_LENGTH = 12
 }

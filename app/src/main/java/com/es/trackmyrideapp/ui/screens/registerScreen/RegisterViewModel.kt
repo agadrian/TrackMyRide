@@ -4,6 +4,9 @@ import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.es.trackmyrideapp.RegisterScreenConstants.MAX_PHONE_LENGTH
+import com.es.trackmyrideapp.RegisterScreenConstants.MAX_USERNAME_LENGTH
+import com.es.trackmyrideapp.RegisterScreenConstants.MIN_PASSWORD_LENGTH
 import com.es.trackmyrideapp.data.local.AuthPreferences
 import com.es.trackmyrideapp.data.remote.dto.UserRegistrationDTO
 import com.es.trackmyrideapp.domain.usecase.RegisterUseCase
@@ -64,22 +67,22 @@ class RegisterViewModel @Inject constructor(
     private fun validateUsername(value: String): String? {
         return when {
             value.isBlank() -> "Username cannot be empty"
-            value.length > 15 -> "Max 15 characters allowed"
+            value.length > MAX_USERNAME_LENGTH -> "Max $MAX_USERNAME_LENGTH characters allowed"
             else -> null
         }
     }
 
     private fun validatePhone(value: String): String? {
-        return if (value.length > 12) "Max 12 characters allowed" else null
+        return if (value.length > MAX_PHONE_LENGTH) "Max $MAX_PHONE_LENGTH characters allowed" else null
     }
 
     private fun validatePassword(value: String): String? {
-        return if (value.length < 8) "Minimum 8 characters required" else null
+        return if (value.length < MIN_PASSWORD_LENGTH) "Minimum $MIN_PASSWORD_LENGTH characters required" else null
     }
 
     private fun validatePassword2(value: String, password: String): String? {
         return when {
-            value.length < 8 -> "Minimum 8 characters required"
+            value.length < MIN_PASSWORD_LENGTH -> "Minimum $MIN_PASSWORD_LENGTH characters required"
             value != password -> "Passwords do not match"
             else -> null
         }

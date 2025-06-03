@@ -38,6 +38,7 @@ import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
+import kotlinx.coroutines.delay
 
 @Composable
 @SuppressLint("MissingPermission") // El permiso ya llega aqui controlado
@@ -48,6 +49,7 @@ fun MapScreen(
 
     val cameraPositionState = rememberCameraPositionState()
     val mapType by sessionViewModel.mapType.collectAsState()
+    val isMapLoading by homeViewModel.mapLoading.collectAsState()
     val trackingState = homeViewModel.trackingState.value
     val routePoints = homeViewModel.routePoints.value
     val currentLocationState = homeViewModel.currentLocation.value
@@ -64,13 +66,9 @@ fun MapScreen(
     val bearing = homeViewModel.bearing.value
 
 
-//    LaunchedEffect(Unit) {
-//        homeViewModel.loadGpxRoute()
-//    }
-
-
     // Efecto para obtener ubicación inicial si no hay ninguna
     LaunchedEffect(Unit) {
+        delay(300) // Pequeño delay para minimizar el microlag de cargar.
         Log.d("Tracking", "Obteniendo ubicación inicial")
         Log.d("Tracking", "Maptype: $mapType")
         if (currentLocationState == null) {
@@ -94,7 +92,7 @@ fun MapScreen(
         target?.let {
             val cameraPosition = CameraPosition.builder()
                 .target(it)
-                .zoom(16f)
+                .zoom(if (trackingState) 18f else 16f)
                 .tilt(if (trackingState) cameraTilt else 0f)
                 .bearing(if (trackingState) bearing else 0f)
                 .build()
@@ -117,8 +115,8 @@ fun MapScreen(
 
 
     // Circularprogress
-    LaunchedEffect(currentLocationState) {
-        if (currentLocationState == null) {
+    LaunchedEffect(isMapLoading, currentLocationState) {
+        if (isMapLoading || currentLocationState == null) {
             sessionViewModel.showLoading()
         }else{
             sessionViewModel.hideLoading()
@@ -141,34 +139,20 @@ fun MapScreen(
                             myLocationButtonEnabled = true,
                             zoomControlsEnabled = true
                         ),
+                        onMapLoaded = {
+                            homeViewModel.setMapLoaded()
+                        }
 
 
                     ) {
-                        // Test
-                        //                Log.d("Tracking", "TestPoints: ${testPoints}")
-                        //                if (testPoints.value.isNotEmpty()) {
-                        //                    Polyline(
-                        //                        points = testPoints.value,
-                        //                        color = Color.Blue,
-                        //                        width = 8f
-                        //                    )
-                        //                }
-
-                        // Usamos routePoints.value para acceder a la lista
+                        // Trazar la ruta con PolyLine
                         if (routePoints.size > 1) {
                             Polyline(
                                 points = routePoints,
                                 color = Color.Blue,
-                                width = 8f
+                                width = 16f
                             )
                         }
-
-
-//                        Polyline(
-//                            points = testRoute,
-//                            color = Color.Red, // O cualquier otro color
-//                            width = 6f
-//                        )
                     }
                 }
             }
@@ -256,26 +240,3 @@ fun TrackingButton(
     }
 }
 
-@Composable
-fun TestButton(
-    modifier: Modifier = Modifier,
-    homeViewModel: HomeViewModel
-) {
-    val trackingState = homeViewModel.trackingState.value
-
-    Box(
-        modifier = modifier
-            .size(40.dp)
-            .background(Color.Blue, shape = CircleShape)
-            .clickable { homeViewModel.generateSampleRoute() },
-        contentAlignment = Alignment.Center
-    ) {
-        val icon = if (trackingState) Icons.Default.Stop else Icons.Default.FiberManualRecord
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = Color.White,
-            modifier = Modifier.size(26.dp)
-        )
-    }
-}

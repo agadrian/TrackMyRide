@@ -76,6 +76,7 @@ fun AppTopBar(
 
     val title = when {
         currentDestination == Home::class.qualifiedName -> "Home"
+        currentDestination == ForgotPassword::class.qualifiedName -> "Reset Password"
         currentDestination == Profile::class.qualifiedName -> "My Profile"
         currentDestination == Premium::class.qualifiedName -> "Premium"
         currentDestination == AboutUs::class.qualifiedName -> "About Us"

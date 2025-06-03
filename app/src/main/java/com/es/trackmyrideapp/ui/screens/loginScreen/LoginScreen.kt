@@ -6,9 +6,9 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -93,19 +93,19 @@ fun LoginScreen(
                 interactionSource = remember { MutableInteractionSource() }
             ) {
                 focusManager.clearFocus()
-            },
+            }
+            .systemBarsPadding(),
     ){
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .systemBarsPadding() // Paddings status + navigation bar
+                .imePadding()
                 .background(MaterialTheme.colorScheme.background)
         ){
             Column(
-                modifier = Modifier
-                    .fillMaxHeight(),
+                modifier = Modifier,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
 

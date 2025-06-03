@@ -31,6 +31,7 @@ class RoutesHistoryViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<UiState>(UiState.Idle)
     val uiState: StateFlow<UiState> = _uiState
 
+
     // Ui Messages
     private val _uiMessage = MutableStateFlow<UiMessage?>(null)
     val uiMessage: StateFlow<UiMessage?> = _uiMessage
@@ -81,7 +82,6 @@ class RoutesHistoryViewModel @Inject constructor(
                 is Resource.Success -> {
                     _uiMessage.value = UiMessage("Route deleted successfully", MessageType.INFO)
                     fetchRoutes()
-                    _uiState.value = UiState.Idle
                 }
                 is Resource.Error -> {
                     _uiMessage.value = UiMessage("Error deleting route, please try again later.", MessageType.ERROR)

@@ -24,7 +24,6 @@ object RouteSimplifier {
     private val geometryFactory = GeometryFactory()
 
     fun compressRoute(points: List<LatLng>, tolerance: Double): String {
-        //if (points.size < 3) return "Not enough points" //TODO
 
         // Simplificar la ruta utilizando Douglas-Peucker
         val coords = points.map { Coordinate(it.longitude, it.latitude) }.toTypedArray()

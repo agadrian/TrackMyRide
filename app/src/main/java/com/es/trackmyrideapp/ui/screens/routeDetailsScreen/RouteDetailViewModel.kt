@@ -334,31 +334,6 @@ class RouteDetailViewModel @Inject constructor(
         }
     }
 
-    /*
-    fun importGpxFromUri(uri: Uri, context: Context) {
-        viewModelScope.launch {
-            try {
-                context.contentResolver.openInputStream(uri)?.use { inputStream ->
-                    val gpxContent = inputStream.bufferedReader().use { it.readText() }
-                    // Aquí parseamos el GPX con tu parser
-                    val points = GPXParser.parseGpx(gpxContent)
-
-                    if (points.isNotEmpty()) {
-                        //routePoints.value = points
-                        _uiMessage.value = UiMessage("GPX imported successfully", MessageType.INFO)
-                    } else {
-                        _uiMessage.value = UiMessage("The GPX file contains no points", MessageType.ERROR)
-                    }
-                } ?: run {
-                    _uiMessage.value = UiMessage("Could not open the selected file", MessageType.ERROR)
-                }
-            } catch (e: Exception) {
-                _uiMessage.value = UiMessage("Error importing GPX: ${e.message}", MessageType.ERROR)
-            }
-        }
-    }
-    */
-
     /* Gestion estados imagenes */
 
     var selectedImage = mutableStateOf<RouteImage?>(null)

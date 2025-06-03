@@ -1,6 +1,5 @@
 package com.es.trackmyrideapp.ui.screens.aboutUsScreen
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,9 +13,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -26,11 +23,11 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.es.trackmyrideapp.LocalIsDarkTheme
 import com.es.trackmyrideapp.R
+import com.es.trackmyrideapp.ui.components.LinkOutlinedButton
 
 
 @Composable
@@ -100,35 +97,19 @@ fun Body(){
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            OutlinedButton(onClick = { /* TODO: Follow on LinkedIn */ }) {
-                Image(
-                    painter = if (LocalIsDarkTheme.current) painterResource(id = R.drawable.logo_linkedin_wh) else painterResource(id = R.drawable.logo_linkedin_bl),
-                    contentDescription = "LinkedIn",
-                    modifier = Modifier.size(24.dp)
-                )
+            LinkOutlinedButton(
+                url = "https://www.linkedin.com/",
+                label = "Follow me",
+                iconPainter = painterResource(id = if (LocalIsDarkTheme.current) R.drawable.logo_linkedin_wh else R.drawable.logo_linkedin_bl),
+                iconDescription = "LinkedIn logo"
+            )
 
-                Spacer(modifier = Modifier.width(8.dp))
-
-                Text(
-                    text = "Follow me",
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-            }
-            OutlinedButton(onClick = { /* TODO: Contact me */ }) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_github),
-                    tint = MaterialTheme.colorScheme.onBackground,
-                    contentDescription = "LinkedIn",
-                    modifier = Modifier.size(24.dp)
-                )
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                Text(
-                    text = "Reach me",
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-            }
+            LinkOutlinedButton(
+                url = "https://github.com/agadrian",
+                label = "Reach me",
+                iconPainter = painterResource(id = R.drawable.ic_github),
+                iconDescription = "GitHub logo"
+            )
         }
 
         Spacer(Modifier.height(30.dp))
@@ -156,7 +137,7 @@ fun FeatureItem(
         Box(
             modifier = Modifier
                 .size(28.dp)
-                .background( colorResource(R.color.grayCircle), shape = CircleShape),
+                .background(colorResource(R.color.grayCircle), shape = CircleShape),
             contentAlignment = Alignment.Center
         ) {
             Text(
@@ -178,12 +159,4 @@ fun FeatureItem(
             )
         }
     }
-}
-
-
-
-@Composable
-@Preview
-fun test2(){
-    AboutUsScreen()
 }

@@ -39,6 +39,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -89,7 +91,7 @@ fun AppSnackbarHost(
         uiSnackbar?.let { snackbar ->
             // Auto-dismiss después de 5 segundos con animación
             LaunchedEffect(snackbar) {
-                delay(5000L)
+                delay(3000L)
                 // Primero activamos la animación de salida
                 isVisible = false
                 // Esperamos a que termine la animación antes de llamar onDismiss
@@ -158,7 +160,7 @@ fun AppSnackbarHost(
                         color = Color.White,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f).semantics { contentDescription = "SnackbarMessage" }
                     )
 
                     // Acción o botón de cerrar

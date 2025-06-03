@@ -2,6 +2,7 @@ package com.es.trackmyrideapp.domain.tracker
 
 
 import android.util.Log
+import com.es.trackmyrideapp.HomeScreenConstants.MAX_REASONABLE_SPEED_KMH
 import com.es.trackmyrideapp.core.extensions.round
 import com.es.trackmyrideapp.domain.model.RouteStats
 import com.google.android.gms.maps.model.LatLng
@@ -134,7 +135,7 @@ class RouteTracker {
             val timeDeltaMillis = currentTime - previousTime
 
             // Si esta quieto mas de dos segudnos, poner velocidad a 0
-            if (distance < 0.5 && timeDeltaMillis > 2000){
+            if (distance < 0.4 && timeDeltaMillis > 2000){
                 _currentSpeedFlow.value = 0.0
                 Log.d("Tracking", "Velocidad puesta a 0 por inmovilidad.")
             }else{
@@ -143,6 +144,12 @@ class RouteTracker {
 
                 if (timeDeltaHours > 0) {
                     val speedKmh = (distance / 1000.0) / timeDeltaHours
+
+                    if (speedKmh > MAX_REASONABLE_SPEED_KMH) {
+                        Log.w("Tracking", "Velocidad irreal detectada: $speedKmh km/h. Ignorando punto.")
+                        return
+                    }
+
                     _currentSpeedFlow.value = speedKmh
 
                     Log.d("Tracking", "Velocidad calculada: $speedKmh km/h")
