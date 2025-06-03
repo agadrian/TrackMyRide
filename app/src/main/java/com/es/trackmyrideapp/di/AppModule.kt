@@ -36,17 +36,4 @@ object AppModule {
     fun provideAuthPreferences(@ApplicationContext context: Context): AuthPreferences {
         return AuthPreferences(context)
     }
-
-
-
-
-
-
-    // Aqui mas proveedores si fuera necesario
-    // Ej
-    /*
-    @Provides
-    @Singleton
-    fun provideFirestore(): FirebaseFirestore = FirebaseFirestore.getInstance()
-     */
 }

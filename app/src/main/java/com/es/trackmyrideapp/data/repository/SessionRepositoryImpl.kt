@@ -1,5 +1,6 @@
 package com.es.trackmyrideapp.data.repository
 
+import com.es.trackmyrideapp.domain.repository.SessionRepository
 import com.es.trackmyrideapp.ui.components.VehicleType
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -18,7 +19,3 @@ class SessionRepositoryImpl @Inject constructor() : SessionRepository {
 }
 
 
-interface SessionRepository {
-    val selectedVehicle: StateFlow<VehicleType>
-    fun setSelectedVehicle(vehicle: VehicleType)
-}

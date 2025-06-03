@@ -1,7 +1,7 @@
 package com.es.trackmyrideapp.di
 
-import com.es.trackmyrideapp.data.repository.SessionRepository
 import com.es.trackmyrideapp.data.repository.SessionRepositoryImpl
+import com.es.trackmyrideapp.domain.repository.SessionRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

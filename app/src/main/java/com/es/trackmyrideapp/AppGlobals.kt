@@ -16,6 +16,8 @@ object RouteDetailsConstants {
     const val MAX_DESC_LENGTH = 80
     const val MAX_IMAGES_NO_PREMIUM = 3
     const val MAX_IMAGES_PREMIUM = 10
+    const val MAX_TITLE_LENGTH = 10
+    const val MAX_DESCRIPTION_LENGTH = 15
 }
 
 object RoutesHistoryConstants {

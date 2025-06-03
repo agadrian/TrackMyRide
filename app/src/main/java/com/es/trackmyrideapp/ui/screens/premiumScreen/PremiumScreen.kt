@@ -46,7 +46,6 @@ import com.es.trackmyrideapp.ui.screens.payment.PaymentWebViewActivity
 fun PremiumScreen(
     modifier: Modifier = Modifier
 ){
-
     val context = LocalContext.current
 
     //  Llamo con launchedeffect a la api para comprobar el premium, y luego miro el estado obtenido
@@ -68,9 +67,7 @@ fun PremiumScreen(
         }
     }
 
-//    LaunchedEffect(Unit){
-//        sessionViewModel.checkPremiumStatus()
-//    }
+
     if (!isPremium){
 
         Box(

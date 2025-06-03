@@ -19,4 +19,13 @@
     <color name="lightGray">#F6F6F6</color>
     <color name="redButton">#D40000</color>
 
+
+    <color name="delete_background">#FEF2F2</color>
+    <color name="delete_border">#F87171</color>
+    <color name="delete_icon_background">#FECDD3</color>
+    <color name="delete_icon_tint">#DC2626</color>
+    <color name="delete_text_primary">#991B1B</color>
+    <color name="delete_text_secondary">#DC2626</color>
+    <color name="delete_button">#EF4444</color>
+
 </resources>

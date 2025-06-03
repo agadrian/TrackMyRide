@@ -69,7 +69,7 @@ class ProfileViewModel @Inject constructor(
     var memberSince: MutableState<String> = mutableStateOf("")
         private set
 
-    // Change password button. Passwordsa y errores
+    // Change password button. Passwords y errores
     val showChangePasswordDialog = MutableStateFlow(false)
 
     val currentPassword = MutableStateFlow("")

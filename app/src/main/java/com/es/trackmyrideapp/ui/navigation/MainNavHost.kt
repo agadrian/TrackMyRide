@@ -123,7 +123,6 @@ fun MainNavHost(
             RouteDetailScreen(
                 modifier = Modifier.padding(innerPadding),
                 idRoute = routeDetail.routeId,
-                snackbarHostState = snackbarHostState,
                 onGoPremiumClicked = {
                     navController.navigate(Premium) {
                         popUpTo<RouteDetails> { inclusive = true }
@@ -164,7 +163,6 @@ fun MainNavHost(
         composable<Vehicles> {
             VehiclesScreen(
                 modifier = Modifier.padding(innerPadding),
-                snackbarHostState = snackbarHostState
             )
         }
 

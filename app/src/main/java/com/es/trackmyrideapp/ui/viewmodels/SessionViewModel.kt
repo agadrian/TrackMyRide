@@ -10,10 +10,10 @@ import com.es.trackmyrideapp.core.states.UiSnackbar
 import com.es.trackmyrideapp.data.local.AuthPreferences
 import com.es.trackmyrideapp.data.local.RememberMePreferences
 import com.es.trackmyrideapp.data.remote.mappers.Resource
-import com.es.trackmyrideapp.data.repository.SessionRepository
-import com.es.trackmyrideapp.domain.usecase.GetCurrentUserUseCase
-import com.es.trackmyrideapp.domain.usecase.SignOutUseCase
+import com.es.trackmyrideapp.domain.repository.SessionRepository
 import com.es.trackmyrideapp.domain.usecase.auth.CheckAndRefreshTokenUseCase
+import com.es.trackmyrideapp.domain.usecase.auth.GetCurrentUserUseCase
+import com.es.trackmyrideapp.domain.usecase.auth.SignOutUseCase
 import com.es.trackmyrideapp.domain.usecase.profileImages.GetProfileImageUseCase
 import com.es.trackmyrideapp.domain.usecase.users.GetUserByIdUseCase
 import com.es.trackmyrideapp.domain.usecase.users.IsUserPremiumUseCase

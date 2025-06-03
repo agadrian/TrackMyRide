@@ -90,7 +90,7 @@ fun FullscreenImageDialog(
             ) {
                 Icon(
                     imageVector = Icons.Default.Delete,
-                    contentDescription = "Eliminar",
+                    contentDescription = "Delete",
                     tint = Color.White,
                     modifier = Modifier.size(24.dp)
                 )

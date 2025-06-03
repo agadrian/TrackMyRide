@@ -5,25 +5,33 @@ import android.net.Uri
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
+import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.es.trackmyrideapp.RouteDetailsConstants
+import com.es.trackmyrideapp.RouteDetailsConstants.MAX_DESCRIPTION_LENGTH
+import com.es.trackmyrideapp.RouteDetailsConstants.MAX_TITLE_LENGTH
 import com.es.trackmyrideapp.core.extensions.round
 import com.es.trackmyrideapp.core.states.MessageType
 import com.es.trackmyrideapp.core.states.UiMessage
 import com.es.trackmyrideapp.core.states.UiState
 import com.es.trackmyrideapp.data.remote.dto.RouteImageRequest
+import com.es.trackmyrideapp.data.remote.dto.RoutePinRequestDTO
 import com.es.trackmyrideapp.data.remote.dto.RouteUpdateDTO
 import com.es.trackmyrideapp.data.remote.mappers.Resource
 import com.es.trackmyrideapp.domain.model.Route
 import com.es.trackmyrideapp.domain.model.RouteImage
+import com.es.trackmyrideapp.domain.model.RoutePin
 import com.es.trackmyrideapp.domain.usecase.images.DeleteRouteImageUseCase
 import com.es.trackmyrideapp.domain.usecase.images.GetRouteImagesUseCase
 import com.es.trackmyrideapp.domain.usecase.images.UploadImageToCloudinaryUseCase
 import com.es.trackmyrideapp.domain.usecase.images.UploadRouteImagesUseCase
+import com.es.trackmyrideapp.domain.usecase.routePins.CreateRoutePinUseCase
+import com.es.trackmyrideapp.domain.usecase.routePins.DeleteRoutePinUseCase
+import com.es.trackmyrideapp.domain.usecase.routePins.GetPinsByRouteUseCase
 import com.es.trackmyrideapp.domain.usecase.routes.GetRouteByIdUseCase
 import com.es.trackmyrideapp.domain.usecase.routes.UpdateRouteUseCase
 import com.es.trackmyrideapp.ui.components.VehicleType
@@ -48,7 +56,10 @@ class RouteDetailViewModel @Inject constructor(
     private val uploadRouteImageUseCase: UploadRouteImagesUseCase,
     private val getRouteImagesUseCase: GetRouteImagesUseCase,
     private val deleteRouteImageUseCase: DeleteRouteImageUseCase,
-    private val updateRouteUseCase: UpdateRouteUseCase
+    private val updateRouteUseCase: UpdateRouteUseCase,
+    private val addRoutePinUseCase: CreateRoutePinUseCase,
+    private val getPinsByRouteUseCase: GetPinsByRouteUseCase,
+    private val deleteRoutePinUseCase: DeleteRoutePinUseCase
 ) : ViewModel() {
 
     private val routeId: Long = checkNotNull(savedStateHandle["routeId"])
@@ -377,6 +388,7 @@ class RouteDetailViewModel @Inject constructor(
     val showMapDialog: StateFlow<Boolean> = _showMapDialog
 
     fun openMapDialog() {
+        fetchPinsForRoute()
         _showMapDialog.value = true
     }
 
@@ -390,4 +402,138 @@ class RouteDetailViewModel @Inject constructor(
     }
 
 
+    /* ESTADOS DIALOGO MAPA PINES CUSTOM*/
+
+    private val _showAddPinDialog = mutableStateOf(false)
+    val showAddPinDialog: State<Boolean> = _showAddPinDialog
+
+    private val _newPinPosition = mutableStateOf<LatLng?>(null)
+    val newPinPosition: State<LatLng?> = _newPinPosition
+
+    private val _pinTitle = mutableStateOf("")
+    val pinTitle: State<String> = _pinTitle
+
+    private val _pinDescription = mutableStateOf("")
+    val pinDescription: State<String> = _pinDescription
+
+    // Lista de pines personalizados
+    val customPins = mutableStateListOf<RoutePin>()
+
+    // Erroress dialogos
+    val pinTitleError = mutableStateOf<String?>(null)
+    val pinDescriptionError = mutableStateOf<String?>(null)
+
+    // Abre el diálogo para añadir pin en la posición dada
+    fun openAddPinDialog(position: LatLng) {
+        _newPinPosition.value = position
+        _pinTitle.value = ""
+        _pinDescription.value = ""
+        _showAddPinDialog.value = true
+    }
+
+    // Cierra el diálogo y limpia estados
+    fun closeAddPinDialog() {
+        _showAddPinDialog.value = false
+        _newPinPosition.value = null
+        _pinTitle.value = ""
+        _pinDescription.value = ""
+    }
+
+    // Actualiza el título del pin
+    fun onPinTitleChange(newTitle: String) {
+        _pinTitle.value = newTitle
+    }
+
+    // Actualiza la descripción del pin
+    fun onPinDescriptionChange(newDescription: String) {
+        _pinDescription.value = newDescription
+    }
+
+    /**
+     * Crear un nuevo pin relacionado a la ruta actual. Validacion previa de campos.
+     */
+    fun addPin() {
+        if (!validatePinInputs()) return
+        val position = newPinPosition.value ?: return
+        if (pinTitle.value.isBlank()) return
+
+        val newPin = RoutePinRequestDTO(
+            latitude = position.latitude,
+            longitude = position.longitude,
+            title = pinTitle.value.trim(),
+            description = pinDescription.value.trim().takeIf { it.isNotEmpty() },
+            routeId = routeId
+        )
+
+        viewModelScope.launch {
+            _uiState.value = UiState.Loading
+            when (val result = addRoutePinUseCase(newPin)){
+                is Resource.Success -> {
+                    customPins.add(result.data) // Añadirlo localmente para mostrarlo
+                    closeAddPinDialog()
+                    _uiState.value = UiState.Idle
+                }
+                is Resource.Error -> {
+                    // Cerrar dialog de pin y el mapa para mostrar la snackbar conn el error.
+                    closeAddPinDialog()
+                    closeMapDialog()
+                    _uiMessage.value = UiMessage("Error adding pin: ${result.message}", MessageType.ERROR)
+                    UiState.Idle
+                }
+            }
+        }
+    }
+
+    private fun fetchPinsForRoute() {
+        viewModelScope.launch {
+            _uiState.value = UiState.Loading
+            when (val result = getPinsByRouteUseCase(routeId)) {
+                is Resource.Success -> {
+                    customPins.clear()
+                    customPins.addAll(result.data)
+                }
+                is Resource.Error -> {
+                    _uiMessage.value = UiMessage("Error loading pins", MessageType.ERROR)
+                }
+            }
+            _uiState.value = UiState.Idle
+        }
+    }
+
+    fun deletePin(pin: RoutePin) {
+        viewModelScope.launch {
+            _uiState.value = UiState.Loading
+
+
+            when(deleteRoutePinUseCase(pin.id!!)) {
+                is Resource.Success -> {
+                    // Quitar pin localmente para que desaparezca de la UI
+                    // No muestro snackbar porque quedaria por debajo del dialog, y ademas ya se vecomo se borra el punto.
+                    customPins.remove(pin)
+                    _uiState.value = UiState.Idle
+                }
+                is Resource.Error -> {
+                    _uiState.value = UiState.Idle
+
+                }
+            }
+        }
+    }
+
+
+
+    private fun validatePinTitle(value: String): String? {
+        return if (value.length > MAX_TITLE_LENGTH) "Max $MAX_TITLE_LENGTH characters allowed" else null
+    }
+
+    private fun validatePinDescription(value: String): String? {
+        return if (value.length > MAX_DESCRIPTION_LENGTH) "Max $MAX_DESCRIPTION_LENGTH characters allowed" else null
+    }
+
+    private fun validatePinInputs(): Boolean {
+        pinTitleError.value = validatePinTitle(pinTitle.value)
+        pinDescriptionError.value = validatePinDescription(pinDescription.value)
+
+        return listOf(pinTitleError.value, pinDescriptionError.value).all { it == null }
+    }
 }

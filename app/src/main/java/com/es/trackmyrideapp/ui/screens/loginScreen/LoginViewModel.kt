@@ -12,8 +12,8 @@ import com.es.trackmyrideapp.core.states.MessageType
 import com.es.trackmyrideapp.core.states.UiMessage
 import com.es.trackmyrideapp.data.local.AuthPreferences
 import com.es.trackmyrideapp.data.local.RememberMePreferences
-import com.es.trackmyrideapp.domain.usecase.SendPasswordResetUseCase
-import com.es.trackmyrideapp.domain.usecase.SignInUseCase
+import com.es.trackmyrideapp.domain.usecase.auth.SendPasswordResetUseCase
+import com.es.trackmyrideapp.domain.usecase.auth.SignInUseCase
 import com.es.trackmyrideapp.ui.screens.forgotPasswordScreen.ForgotPasswordUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow

@@ -9,7 +9,7 @@ import com.es.trackmyrideapp.RegisterScreenConstants.MAX_USERNAME_LENGTH
 import com.es.trackmyrideapp.RegisterScreenConstants.MIN_PASSWORD_LENGTH
 import com.es.trackmyrideapp.data.local.AuthPreferences
 import com.es.trackmyrideapp.data.remote.dto.UserRegistrationDTO
-import com.es.trackmyrideapp.domain.usecase.RegisterUseCase
+import com.es.trackmyrideapp.domain.usecase.auth.RegisterUseCase
 import com.es.trackmyrideapp.domain.usecase.vehicles.CreateInitialVehiclesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow

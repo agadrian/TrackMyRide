@@ -5,8 +5,8 @@
     </style>
 
     <style name="Theme.TrackMyRideApp.Splash" parent="Theme.SplashScreen">
-        <item name="windowSplashScreenBackground">@color/white</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/logo</item>
+        <item name="windowSplashScreenBackground">@color/black</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/logo_modo_oscuro</item>
         <item name="postSplashScreenTheme">@style/Theme.TrackMyRideApp</item>
     </style>
 </resources>

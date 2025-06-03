@@ -200,7 +200,7 @@ fun AppSnackbarHost(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Close,
-                                contentDescription = "Cerrar",
+                                contentDescription = "Close",
                                 tint = Color.White.copy(alpha = 0.7f),
                                 modifier = Modifier.size(16.dp)
                             )

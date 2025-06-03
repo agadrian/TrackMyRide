@@ -1,4 +1,4 @@
-package com.es.trackmyrideapp.ui.permissions
+package com.es.trackmyrideapp.core.states
 
 data class PermissionRequestState(
     val shouldShowSystemDialog: Boolean = false,

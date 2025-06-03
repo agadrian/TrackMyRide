@@ -23,7 +23,7 @@ import com.es.trackmyrideapp.core.states.UiMessage
 import com.es.trackmyrideapp.core.states.UiState
 import com.es.trackmyrideapp.data.remote.dto.RouteCreateDTO
 import com.es.trackmyrideapp.data.remote.mappers.Resource
-import com.es.trackmyrideapp.data.repository.SessionRepository
+import com.es.trackmyrideapp.domain.repository.SessionRepository
 import com.es.trackmyrideapp.domain.tracker.RouteTracker
 import com.es.trackmyrideapp.domain.usecase.routes.CreateRouteUseCase
 import com.es.trackmyrideapp.domain.usecase.vehicles.GetVehicleByTypeUseCase

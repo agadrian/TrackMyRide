@@ -11,7 +11,7 @@ import javax.inject.Inject
 class CheckAndRefreshTokenUseCase @Inject constructor(
     private val tokenRepository: TokenRepository
 ) {
-    private val refreshMutex = Mutex()  // Mover el Mutex aquí para proteger toda la operación
+    private val refreshMutex = Mutex()  // Mutex para hacer peticiones unicas
 
     suspend operator fun invoke(): String? {
         return refreshMutex.withLock {  // Proteger toda la operación, no solo el refresh

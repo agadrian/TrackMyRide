@@ -191,13 +191,6 @@ fun UserProfileSection(
                     tint = MaterialTheme.colorScheme.primary
                 )
             }
-
-//            Icon(
-//                imageVector = Icons.Default.Person,
-//                contentDescription = "Profile",
-//                tint = Color.White,
-//                modifier = Modifier.size(32.dp)
-//            )
         }
 
         Spacer(modifier = Modifier.height(8.dp))

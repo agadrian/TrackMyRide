@@ -37,7 +37,7 @@ fun Header(){
             contentDescription = "TrackMyRide Logo",
             modifier = Modifier
                 .size(80.dp)
-                .clip(CircleShape), // opcional si quieres que se vea redondo
+                .clip(CircleShape),
             contentScale = ContentScale.Crop
         )
 

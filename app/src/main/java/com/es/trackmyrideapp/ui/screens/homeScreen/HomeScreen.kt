@@ -37,7 +37,6 @@ fun HomeScreen(
     val sessionViewModel: SessionViewModel = LocalSessionViewModel.current
     val tracking = homeViewModel.trackingState.value
     val uiMessage by homeViewModel.uiMessage.collectAsState()
-    val uiState by homeViewModel.uiState.collectAsState()
     val bottomPadding = if (tracking) 108.dp else 32.dp
 
     val (permissionState, requestPermission) = rememberPermissionHandler(

@@ -1,4 +1,4 @@
-package com.es.trackmyrideapp.domain.usecase
+package com.es.trackmyrideapp.domain.usecase.auth
 
 import com.es.trackmyrideapp.domain.model.AuthenticatedUser
 import com.es.trackmyrideapp.domain.repository.AuthRepository

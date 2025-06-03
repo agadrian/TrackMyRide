@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -38,7 +37,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.es.trackmyrideapp.LocalSessionViewModel
 import com.es.trackmyrideapp.R
-import com.es.trackmyrideapp.core.states.MessageType
 import com.es.trackmyrideapp.core.states.UiSnackbar
 import com.es.trackmyrideapp.core.states.UiState
 import com.es.trackmyrideapp.ui.components.ConfirmationDialog
@@ -55,8 +53,7 @@ import com.es.trackmyrideapp.ui.permissions.rememberPermissionHandler
 fun RouteDetailScreen(
     modifier: Modifier = Modifier,
     onGoPremiumClicked: () -> Unit,
-    idRoute: Long,
-    snackbarHostState: SnackbarHostState
+    idRoute: Long
 ){
 
     val routeDetailViewModel: RouteDetailViewModel = hiltViewModel()
@@ -100,6 +97,15 @@ fun RouteDetailScreen(
     val endPointName by routeDetailViewModel.endPoint
 
     val images = routeDetailViewModel.uploadedImages
+
+    // Dialog Mapa
+    val showAddPinDialog = routeDetailViewModel.showAddPinDialog.value
+    val newPinPosition = routeDetailViewModel.newPinPosition.value
+    val pinTitle = routeDetailViewModel.pinTitle.value
+    val pinDescription = routeDetailViewModel.pinDescription.value
+    val customPins = routeDetailViewModel.customPins
+    val pinTitleError by routeDetailViewModel.pinTitleError
+    val pinDescriptionError by routeDetailViewModel.pinDescriptionError
 
 
     // Imagen del dialog grande
@@ -299,6 +305,7 @@ fun RouteDetailScreen(
         }
     }
 
+    // Dialogo imagenes en grande
     selectedImage?.let { image ->
         FullscreenImageDialog(
             image = image,
@@ -309,6 +316,7 @@ fun RouteDetailScreen(
         )
     }
 
+    // Dialogo confirmacion
     imagePendingDeletion?.let {
         ConfirmationDialog(
             title = "Delete Image",
@@ -324,13 +332,28 @@ fun RouteDetailScreen(
         )
     }
 
-
+    // Dialogo mapa
     if (showMapDialog) {
         DialogMap(
             onDismissRequest = { routeDetailViewModel.closeMapDialog() },
             routePoints = routePoints,
             startPointName = startPointName,
-            endPointName = endPointName
+            endPointName = endPointName,
+            customPins = customPins,
+            showAddPinDialog = showAddPinDialog,
+            newPinPosition = newPinPosition,
+            pinTitle = pinTitle,
+            pinDescription = pinDescription,
+            onTitleChange = { routeDetailViewModel.onPinTitleChange(it) },
+            onDescriptionChange = { routeDetailViewModel.onPinDescriptionChange(it) },
+            onDismissAddPinDialog = { routeDetailViewModel.closeAddPinDialog() },
+            onAddPin = { routeDetailViewModel.addPin() },
+            onMapLongClick = { latLng -> routeDetailViewModel.openAddPinDialog(latLng) },
+            titleError = pinTitleError,
+            descriptionError = pinDescriptionError,
+            onDeletePin = {pin ->
+                routeDetailViewModel.deletePin(pin)
+            }
         )
     }
 

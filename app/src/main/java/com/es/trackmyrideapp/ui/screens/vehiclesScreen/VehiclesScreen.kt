@@ -16,7 +16,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.PedalBike
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -38,8 +37,7 @@ import com.es.trackmyrideapp.ui.components.VehicleType
 
 @Composable
 fun VehiclesScreen(
-    modifier: Modifier = Modifier,
-    snackbarHostState: SnackbarHostState
+    modifier: Modifier = Modifier
 ){
     val vehicleViewModel: VehiclesViewModel = hiltViewModel()
     val sessionViewModel = LocalSessionViewModel.current
