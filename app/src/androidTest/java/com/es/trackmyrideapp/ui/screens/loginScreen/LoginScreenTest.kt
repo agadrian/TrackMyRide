@@ -4,6 +4,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import kotlinx.coroutines.runBlocking
 import org.junit.Rule
@@ -145,4 +146,84 @@ class LoginScreenTest {
             assert(snackbarText == "Login failed")
         }
     }
+
+    @Test
+    fun rememberMeCheckbox_toggleChangesState() {
+        val fakeViewModel = FakeLoginViewModel()
+        composeTestRule.setContent {
+            LoginScreen(
+                navigateToRegister = {},
+                navigateToHome = {},
+                navigateToAdminScreen = {},
+                navigateToForgotPassword = {},
+                loginViewModel = fakeViewModel,
+                sessionViewModel = FakeSessionViewModel()
+            )
+        }
+
+        // Estado inicial: false
+        assert(!fakeViewModel.rememberMe)
+
+        // Hacer clic en checkbox
+        composeTestRule.onNodeWithTag("remember_me_checkbox").performClick()
+
+        // El estado debe cambiar a true
+        assert(fakeViewModel.rememberMe)
+    }
+
+
+
+    @Test
+    fun passwordField_updatesViewModel_onTextInput() {
+        val fakeViewModel = FakeLoginViewModel()
+
+        composeTestRule.setContent {
+            LoginScreen(
+                navigateToRegister = {},
+                navigateToHome = {},
+                navigateToAdminScreen = {},
+                navigateToForgotPassword = {},
+                loginViewModel = fakeViewModel,
+                sessionViewModel = FakeSessionViewModel()
+            )
+        }
+
+        composeTestRule.onNodeWithTag("password_input")
+            .performTextInput("miPassword123")
+
+        assert(fakeViewModel.password == "miPassword123")
+    }
+
+
+    @Test
+    fun passwordVisibilityToggle_changesState() {
+        val fakeViewModel = FakeLoginViewModel()
+
+        composeTestRule.setContent {
+            LoginScreen(
+                navigateToRegister = {},
+                navigateToHome = {},
+                navigateToAdminScreen = {},
+                navigateToForgotPassword = {},
+                loginViewModel = fakeViewModel,
+                sessionViewModel = FakeSessionViewModel()
+            )
+        }
+
+        // Estado inicial false
+        assert(!fakeViewModel.passwordVisible)
+
+        // Hacer clic para mostrar la contraseña
+        composeTestRule.onNodeWithTag("password_visibility_toggle").performClick()
+
+        assert(fakeViewModel.passwordVisible)
+
+        // Clic para ocultar
+        composeTestRule.onNodeWithTag("password_visibility_toggle").performClick()
+
+        assert(!fakeViewModel.passwordVisible)
+    }
+
+
+
 }

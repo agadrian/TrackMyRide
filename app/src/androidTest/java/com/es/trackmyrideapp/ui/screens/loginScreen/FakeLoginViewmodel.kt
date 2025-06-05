@@ -17,6 +17,15 @@ class FakeLoginViewModel(
     override val passwordError: MutableState<String?> = mutableStateOf(null)
     override val attemptedSubmit: MutableState<Boolean> = mutableStateOf(false)
 
+
+    fun setEmailError(error: String?) {
+        emailError.value = error
+    }
+
+    fun setAttemptedSubmit(value: Boolean) {
+        attemptedSubmit.value = value
+    }
+
     override var email by mutableStateOf("")
     override var password by mutableStateOf("")
     override var passwordVisible by mutableStateOf(false)

@@ -84,7 +84,6 @@ fun LoginScreen(
 
 
     Box(
-
         modifier = modifier
             .fillMaxSize()
             .clickable(

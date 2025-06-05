@@ -148,7 +148,7 @@ fun RoutesHistoryScreen(
             contentPadding = PaddingValues(vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            if (filteredRoutes.isEmpty()) {
+            if (filteredRoutes.isEmpty() && uiState !is UiState.Loading) {
                 item {
                     Box(
                         modifier = Modifier
@@ -185,9 +185,11 @@ fun RoutesHistoryScreen(
                         onViewDetailsClicked = { onViewDetailsClicked(route.id) },
                         vehicleType = route.vehicleType
                     )
+                }
 
-                    // Mostrar boton de get premium cuando no lo sea
-                    if (showButtonGoPremium) {
+                // Mostrar boton de get premium cuando no lo sea
+                if (showButtonGoPremium) {
+                    item {
                         CustomButton(
                             onclick = onGetPremiumClicked,
                             buttonColor = colorResource(R.color.orangeButton),

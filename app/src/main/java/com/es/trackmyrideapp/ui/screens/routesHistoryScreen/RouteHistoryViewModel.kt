@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.es.trackmyrideapp.RoutesHistoryConstants
+import com.es.trackmyrideapp.RoutesHistoryConstants.MAX_ROUTES_NO_PREMIUM
 import com.es.trackmyrideapp.core.states.MessageType
 import com.es.trackmyrideapp.core.states.UiMessage
 import com.es.trackmyrideapp.core.states.UiState
@@ -78,7 +79,7 @@ class RoutesHistoryViewModel @Inject constructor(
         Log.d("flujotest", "Deleteroute llamado ")
         viewModelScope.launch {
             _uiState.value = UiState.Loading
-            when (val result = deleteRouteUseCase(routeId)) {
+            when (deleteRouteUseCase(routeId)) {
                 is Resource.Success -> {
                     _uiMessage.value = UiMessage("Route deleted successfully", MessageType.INFO)
                     fetchRoutes()
@@ -100,7 +101,7 @@ class RoutesHistoryViewModel @Inject constructor(
             is VehicleFilter.Type -> _routes.value.filter { it.vehicleType == selectedFilter.type }
         }
 
-        return !isPremium && selectedFilter is VehicleFilter.All && filtered.count() > 4
+        return !isPremium && selectedFilter is VehicleFilter.All && filtered.count() > MAX_ROUTES_NO_PREMIUM
     }
 }
 

@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -29,7 +30,9 @@ fun CustomTextField(
     singleLine: Boolean = true,
     enabled: Boolean = true,
     isError: Boolean = false,
-    errorMessage: String? = null
+    errorMessage: String? = null,
+    testTag: String? = null,
+    errorTestTag: String? = null
 ) {
     Column(
         modifier = Modifier
@@ -51,7 +54,9 @@ fun CustomTextField(
                     .padding(top = 2.dp),
                 tint = MaterialTheme.colorScheme.secondary
             ) },
-            modifier = modifier,
+            modifier = modifier.then(
+                if (testTag != null) Modifier.testTag(testTag) else Modifier
+            ),
             singleLine = singleLine,
             enabled = enabled,
             colors = TextFieldDefaults.colors(
@@ -77,7 +82,11 @@ fun CustomTextField(
                 text = errorMessage,
                 color = MaterialTheme.colorScheme.error,
                 fontSize = 12.sp,
-                modifier = Modifier.padding(start = 16.dp, top = 2.dp)
+                modifier = Modifier
+                    .padding(start = 16.dp, top = 2.dp)
+                    .then(
+                        if (errorTestTag != null) Modifier.testTag(errorTestTag) else Modifier
+                    )
             )
         }
     }

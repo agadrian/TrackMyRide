@@ -170,6 +170,8 @@ dependencies {
     // Imagenes en la nube
     implementation("com.cloudinary:cloudinary-android:3.0.2")
 
+    implementation("androidx.cardview:cardview:1.0.0")
+
 
 
 }

@@ -194,7 +194,7 @@ class RouteDetailViewModel @Inject constructor(
         return if (currentImageCount < maxImages) {
             true
         } else {
-            _uiMessage.value = UiMessage("You have reached the maximum number of images ($maxImages) ${if (!isPremium) "Get premium to add more" else ""}", MessageType.INFO)
+            _uiMessage.value = UiMessage("You have reached the maximum number of images ($maxImages) ${if (!isPremium) "Get premium to add more" else ""}", MessageType.ERROR)
             false
         }
     }

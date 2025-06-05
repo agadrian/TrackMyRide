@@ -22,7 +22,7 @@ object RouteDetailsConstants {
 
 object RoutesHistoryConstants {
     const val MAX_ROUTES_PREMIUM = 100
-    const val MAX_ROUTES_NO_PREMIUM = 4
+    const val MAX_ROUTES_NO_PREMIUM = 5
 }
 
 object HomeScreenConstants {

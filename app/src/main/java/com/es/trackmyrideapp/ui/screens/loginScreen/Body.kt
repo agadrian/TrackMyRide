@@ -66,7 +66,9 @@ fun Body(
                 .testTag("email_input"),
             onValueChange = onEmailChanged,
             isError = emailError!= null && attemptedSubmit,
-            errorMessage = emailError
+            errorMessage = emailError,
+            testTag = "email_input",
+            errorTestTag = "email_error_text"
         )
 
 
@@ -80,7 +82,8 @@ fun Body(
             trailingIcon = {
                 val image = if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility
                 IconButton(
-                    onClick = onPasswordVisibilityChanged
+                    onClick = onPasswordVisibilityChanged,
+                    modifier = Modifier.testTag("password_visibility_toggle")
                 ) {
                     Icon(image, contentDescription = "Toggle Password Visibility")
                 }
@@ -123,6 +126,7 @@ fun Body(
                 Checkbox(
                     checked = rememberMe,
                     onCheckedChange =onRememberMeChanged,
+                    modifier = Modifier.testTag("remember_me_checkbox")
                 )
                 Text(
                     text = "Remember Me",
