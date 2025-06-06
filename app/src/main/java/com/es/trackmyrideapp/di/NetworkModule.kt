@@ -23,8 +23,7 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
-    //private const val BASE_URL = "http://192.168.1.134:8080"
-    private const val BASE_URL = "https://613f-79-116-214-36.ngrok-free.app"
+    private const val BASE_URL = "https://trackmyrideapi.onrender.com"
 
     @RequiresApi(Build.VERSION_CODES.O)
     @Provides

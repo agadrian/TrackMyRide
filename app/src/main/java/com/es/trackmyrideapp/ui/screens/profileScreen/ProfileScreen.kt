@@ -103,8 +103,9 @@ fun ProfileScreen(
         }
     }
 
-    LaunchedEffect(username) {
-        sessionViewModel.updateUserName(username)
+    // Actualizar el savbedUsername en el sessionviewmodel para mostrarlo en el drawer
+    LaunchedEffect(savedUsername) {
+        sessionViewModel.updateUserName(savedUsername)
     }
 
 

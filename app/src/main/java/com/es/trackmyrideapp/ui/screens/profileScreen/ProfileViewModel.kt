@@ -134,6 +134,7 @@ class ProfileViewModel @Inject constructor(
         usernameError.value = validateUsername(newUsername)
     }
 
+
     private fun validateUsername(value: String): String? {
         return when {
             value.isBlank() -> "Username cannot be empty"
@@ -148,8 +149,14 @@ class ProfileViewModel @Inject constructor(
     }
 
     private fun validatePhone(value: String): String? {
+        if (value.isBlank()) return null
+
+        // Regex: puede empezar con + opcional, seguido solo de números
+        val phoneRegex = Regex("^\\+?\\d*\$")
+
         return when {
             value.length > MAX_PHONE_LENGTH -> "Max $MAX_PHONE_LENGTH characters"
+            !phoneRegex.matches(value) -> "Invalid phone format"
             else -> null
         }
     }
@@ -220,8 +227,8 @@ class ProfileViewModel @Inject constructor(
             when (val result = updateUserUseCase(userId, updateData)) {
                 is Resource.Success -> {
                     result.data.let { user ->
-                        username.value = user.username
-                        savedUsername.value = user.username
+                        username.value = user.username.replaceFirstChar { it.uppercaseChar() }
+                        savedUsername.value = user.username.replaceFirstChar { it.uppercaseChar() }
                         phone.value = user.phone ?: ""
                         _uiMessage.value = UiMessage("Profile updated successfully", MessageType.INFO)
                         _uiState.value = UiState.Idle
@@ -360,7 +367,6 @@ class ProfileViewModel @Inject constructor(
     }
 
     /*  Imagenes perfil  */
-
     private val _profileImageUrl = MutableStateFlow<String?>(null)
     val profileImageUrl: StateFlow<String?> = _profileImageUrl
 

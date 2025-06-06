@@ -102,7 +102,6 @@ fun Body(
                     icon = Icons.Default.Person,
                     value = username,
                     onValueChange = onUsernameChanged,
-                    enabled = true,
                     isError = usernameError != null,
                     errorMessage = usernameError
                 )
@@ -124,6 +123,7 @@ fun Body(
                 )
             }else{
                 CustomTextField(
+                    modifier = Modifier.fillMaxWidth(),
                     label = "Phone",
                     icon = Icons.Default.Phone,
                     value = phone,

@@ -73,7 +73,16 @@ class RegisterViewModel @Inject constructor(
     }
 
     private fun validatePhone(value: String): String? {
-        return if (value.length > MAX_PHONE_LENGTH) "Max $MAX_PHONE_LENGTH characters allowed" else null
+        if (value.isBlank()) return null
+
+        // Regex: puede empezar con + opcional, seguido solo de números
+        val phoneRegex = Regex("^\\+?\\d*\$")
+
+        return when {
+            value.length > MAX_PHONE_LENGTH -> "Max $MAX_PHONE_LENGTH characters"
+            !phoneRegex.matches(value) -> "Invalid phone format"
+            else -> null
+        }
     }
 
     private fun validatePassword(value: String): String? {
@@ -88,7 +97,7 @@ class RegisterViewModel @Inject constructor(
         }
     }
 
-    fun validateAll(): Boolean {
+    private fun validateAll(): Boolean {
         emailError.value = validateEmail(email.value)
         usernameError.value = validateUsername(username.value)
         phoneError.value = validatePhone(phone.value)

@@ -115,8 +115,6 @@ fun NavigationWrapper(
             }
         ) {
             Box(modifier = Modifier.fillMaxSize()) {
-
-
                 Scaffold(
                     // Quitar padding por defecto superior
                     contentWindowInsets = WindowInsets(0, 0, 0, 0),
