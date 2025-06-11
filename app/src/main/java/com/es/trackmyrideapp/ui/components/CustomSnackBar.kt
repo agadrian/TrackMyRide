@@ -101,11 +101,11 @@ fun AppSnackbarHost(
 
             val (backgroundColor, icon) = when (snackbar.messageType) {
                 MessageType.INFO -> Pair(
-                    MaterialTheme.colorScheme.primary.copy(alpha = 0.9f),
+                    MaterialTheme.colorScheme.primary,
                     Icons.Filled.Info
                 )
                 MessageType.ERROR -> Pair(
-                    MaterialTheme.colorScheme.error.copy(alpha = 0.9f),
+                    MaterialTheme.colorScheme.error,
                     Icons.Filled.Error
                 )
             }

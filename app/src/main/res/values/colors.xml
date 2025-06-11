@@ -7,6 +7,7 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="trackingButton">#D32F2F</color>
 
 
     <color name="greenTextFieldFilled">#A9CEA9</color>
@@ -18,6 +19,7 @@
     <color name="cardBorder">#e0e0e0</color>
     <color name="lightGray">#F6F6F6</color>
     <color name="redButton">#D40000</color>
+    <color name="greenCircleLoading">#10b981</color>
 
 
     <color name="delete_background">#FEF2F2</color>

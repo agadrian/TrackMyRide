@@ -1,6 +1,7 @@
 package com.es.trackmyrideapp.data.repository
 
 import com.es.trackmyrideapp.data.remote.api.UserApi
+import com.es.trackmyrideapp.data.remote.dto.AuthResponseDTO
 import com.es.trackmyrideapp.data.remote.dto.UserUpdateDTO
 import com.es.trackmyrideapp.data.remote.mappers.Resource
 import com.es.trackmyrideapp.data.remote.mappers.toDomainModel
@@ -34,9 +35,9 @@ class UserRepositoryImpl @Inject constructor(
             ?: throw Exception("Empty response from API")
     }
 
-    override suspend fun setUserPremium(): Resource<Boolean> = safeApiCall {
-        val response = userApi.setUserPremium()
-        response.isSuccessful && response.body() == true
+    override suspend fun setUserPremium(token: String): Resource<AuthResponseDTO> = safeApiCall {
+        userApi.setUserPremium(token)
+
     }
 
     override suspend fun toggleUserPremiumByAdmin(userId: String): Resource<User> = safeApiCall {

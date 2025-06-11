@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.es.trackmyrideapp.LocalIsDarkTheme
 import com.es.trackmyrideapp.ui.components.CustomTextField
 import com.es.trackmyrideapp.ui.components.IconTextBlock
 import com.es.trackmyrideapp.ui.components.IconTextRow
@@ -38,14 +39,18 @@ fun GeneralInfoCard(
     isEditable: Boolean,
     descriptionError: String?
 ){
+    val isDarkMode = LocalIsDarkTheme.current
+
     Card(
         modifier = Modifier
             .fillMaxWidth(),
         shape = RoundedCornerShape(5.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.background
+            containerColor = MaterialTheme.colorScheme.surface
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        elevation = if (isDarkMode) CardDefaults.cardElevation(defaultElevation = 0.dp) else CardDefaults.cardElevation(
+            defaultElevation = 6.dp
+        ),
     ) {
 
         Column(

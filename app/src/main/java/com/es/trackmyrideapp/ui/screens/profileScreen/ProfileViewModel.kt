@@ -13,7 +13,7 @@ import com.es.trackmyrideapp.core.states.MessageType
 import com.es.trackmyrideapp.core.states.UiMessage
 import com.es.trackmyrideapp.core.states.UiState
 import com.es.trackmyrideapp.data.local.AuthPreferences
-import com.es.trackmyrideapp.data.remote.dto.ProfileImageRequest
+import com.es.trackmyrideapp.data.remote.dto.ProfileImageRequestDTO
 import com.es.trackmyrideapp.data.remote.dto.UserUpdateDTO
 import com.es.trackmyrideapp.data.remote.mappers.Resource
 import com.es.trackmyrideapp.domain.usecase.images.UploadImageToCloudinaryUseCase
@@ -382,7 +382,7 @@ class ProfileViewModel @Inject constructor(
                     return@launch
                 }
 
-                val request = ProfileImageRequest(imageUrl = imageUrl)
+                val request = ProfileImageRequestDTO(imageUrl = imageUrl)
                 val result = uploadProfileImageUseCase(request)
                 _uiState.value = UiState.Idle
 

@@ -77,6 +77,15 @@ class SessionViewModel @Inject constructor(
     private val _isLoading = mutableStateOf(false)
     override val isLoading: State<Boolean> = _isLoading
 
+    private val _premiumActivated = MutableStateFlow(false)
+    val premiumActivated: StateFlow<Boolean> = _premiumActivated
+
+    fun resetPremiumActivationFlag() {
+        _premiumActivated.value = false
+    }
+
+    //val token: String? = authPreferences.getJwtToken()
+
     override fun showLoading() {
         _isLoading.value = true
     }
@@ -140,7 +149,24 @@ class SessionViewModel @Inject constructor(
             loadUserInfo(uid)
         }
         loadInitialVehicles()
-        checkPremiumStatus() // Aquí lo llamas cuando ya sabes que hay usuario
+        checkPremiumStatus()
+    }
+
+    private suspend fun loadInitialVehicles() {
+        when (val result = createInitialVehiclesUseCase()) {
+            is Resource.Success -> {
+                // Verificar que los vehículos se crearon correctamente
+                if (result.data.isNotEmpty()) {
+                    sessionRepository.setSelectedVehicle(VehicleType.CAR)
+
+                } else {
+                    Log.e("SessionViewModel", "Los vehículos ya estaban creados")
+                }
+            }
+            is Resource.Error -> {
+                Log.e("SessionViewModel", "Error creando vehículos: ${result.message}")
+            }
+        }
     }
 
     /**
@@ -176,7 +202,6 @@ class SessionViewModel @Inject constructor(
                     if (_isPremium.value != newIsPremium) {
                         _isPremium.value = newIsPremium
                     }
-
                 }
                 is Resource.Error -> {
                     Log.d("Flujotest", "Error comprobando IsPremium")
@@ -185,11 +210,20 @@ class SessionViewModel @Inject constructor(
         }
     }
 
-    fun activatePremiumUser() {
+
+    /**
+     * Activa el premium y guarda los nuevos tokens que devuelve la API. Se le pasa el token manualmente, en vez de dejarselo al interceptor ya que se envia desde otra Activity y da problemas.
+     */
+    fun activatePremiumUser(token: String) {
+        Log.d("Flujotest", "Activando premium. token $token")
         viewModelScope.launch {
-            when (val result = setPremiumUseCase()) {
+            when (val result = setPremiumUseCase("Bearer $token")) {
                 is Resource.Success -> {
                     _isPremium.value = true
+                    authPreferences.setJwtToken(result.data.token)
+                    authPreferences.setRefreshToken(result.data.refreshToken)
+                    _premiumActivated.value = true
+                    Log.e("SessionViewModel", "Nuevo token y refresh token guardado. Token: ${result.data.token}. \nRefresh: ${result.data.refreshToken}")
                 }
                 is Resource.Error -> {
                     Log.e("SessionViewModel", "Error activando premium: ${result.message}")
@@ -317,22 +351,7 @@ class SessionViewModel @Inject constructor(
     }
 
 
-    private suspend fun loadInitialVehicles() {
-        when (val result = createInitialVehiclesUseCase()) {
-            is Resource.Success -> {
-                // Verificar que los vehículos se crearon correctamente
-                if (result.data.isNotEmpty()) {
-                    sessionRepository.setSelectedVehicle(VehicleType.CAR)
 
-                } else {
-                    Log.e("SessionViewModel", "Los vehículos ya estaban creados")
-                }
-            }
-            is Resource.Error -> {
-                Log.e("SessionViewModel", "Error creando vehículos: ${result.message}")
-            }
-        }
-    }
 }
 
 

@@ -1,4 +1,4 @@
-package com.es.trackmyrideapp.data.remote.mappers
+package com.es.trackmyrideapp.core.states
 
 sealed class AuthFlow {
     object Login : AuthFlow()

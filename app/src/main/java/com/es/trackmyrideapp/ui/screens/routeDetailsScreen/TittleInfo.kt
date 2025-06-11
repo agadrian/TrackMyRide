@@ -14,6 +14,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -25,6 +26,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.es.trackmyrideapp.LocalIsDarkTheme
 import com.es.trackmyrideapp.R
 import com.es.trackmyrideapp.ui.components.CustomTextFieldWithoutIcon
 import com.es.trackmyrideapp.ui.components.VehicleIcon
@@ -42,6 +44,9 @@ fun TittleInfo(
     isEditing: Boolean,
     titleError: String? = null
 ) {
+
+    val isDarkMode = LocalIsDarkTheme.current
+
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -53,7 +58,7 @@ fun TittleInfo(
             modifier = Modifier
                 .size(48.dp)
                 .clip(CircleShape)
-                .background(colorResource(R.color.grayCircle)),
+                .background(colorResource(R.color.grayCircle).copy(alpha = if (isDarkMode) 0.6f else 1f)),
             contentAlignment = Alignment.Center
         ) {
             when (val icon = vehicleType.getIcon()) {
@@ -88,7 +93,7 @@ fun TittleInfo(
                     text = title,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Black
+                    color = MaterialTheme.colorScheme.onBackground
                 )
             }else{
                 CustomTextFieldWithoutIcon(
@@ -110,7 +115,6 @@ fun TittleInfo(
                     imageVector = Icons.Default.CalendarToday,
                     contentDescription = "Calendar",
                     modifier = Modifier.size(14.dp),
-                    tint = Color.Gray
                 )
 
                 Spacer(modifier = Modifier.width(4.dp))
@@ -118,7 +122,7 @@ fun TittleInfo(
                 Text(
                     text = date,
                     fontSize = 14.sp,
-                    color = Color.Gray
+                    color = MaterialTheme.colorScheme.onBackground
                 )
 
                 Spacer(modifier = Modifier.width(8.dp))
@@ -127,14 +131,14 @@ fun TittleInfo(
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(16.dp))
-                        .background(colorResource(R.color.grayCircle))
+                        .background(colorResource(R.color.grayCircle).copy(alpha = if (isDarkMode) 0.6f else 1f))
                         .padding(horizontal = 8.dp, vertical = 2.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = vehicleType.getLabel(),
                         fontSize = 12.sp,
-                        color = Color.DarkGray
+                        color = Color.Black
                     )
                 }
             }

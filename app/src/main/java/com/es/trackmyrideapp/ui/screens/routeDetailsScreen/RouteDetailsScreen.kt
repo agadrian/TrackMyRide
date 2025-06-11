@@ -30,11 +30,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.es.trackmyrideapp.LocalIsDarkTheme
 import com.es.trackmyrideapp.LocalSessionViewModel
 import com.es.trackmyrideapp.R
 import com.es.trackmyrideapp.core.states.UiSnackbar
@@ -55,7 +57,7 @@ fun RouteDetailScreen(
     onGoPremiumClicked: () -> Unit,
     idRoute: Long
 ){
-
+    val isDarkMode = LocalIsDarkTheme.current
     val routeDetailViewModel: RouteDetailViewModel = hiltViewModel()
     val uiMessage by routeDetailViewModel.uiMessage.collectAsState()
     val context = LocalContext.current
@@ -216,7 +218,7 @@ fun RouteDetailScreen(
         // Titulo, fecha, tipo veh
         TittleInfo(
             modifier = Modifier
-                .background(colorResource(R.color.lightGray))
+                .background(if (isDarkMode) Color.Gray.copy(alpha = 0.2f) else colorResource(R.color.lightGray) )
                 .padding(horizontal = 30.dp),
             title = title,
             date = date,

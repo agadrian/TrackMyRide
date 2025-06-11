@@ -21,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.es.trackmyrideapp.LocalIsDarkTheme
 import com.es.trackmyrideapp.R
 
 @Composable
@@ -33,7 +34,7 @@ fun Header(){
     ) {
         // Logo
         Image(
-            painter = painterResource(id = R.drawable.logo),
+            painter = if (LocalIsDarkTheme.current) painterResource(id = R.drawable.logo_darkmode) else painterResource(id = R.drawable.logo_lightmode),
             contentDescription = "TrackMyRide Logo",
             modifier = Modifier
                 .size(80.dp)

@@ -1,6 +1,6 @@
 package com.es.trackmyrideapp.data.remote.dto
 
 
-data class ProfileImageRequest(
+data class ProfileImageRequestDTO(
     val imageUrl: String
 )

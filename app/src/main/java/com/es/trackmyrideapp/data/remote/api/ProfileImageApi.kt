@@ -1,7 +1,7 @@
 package com.es.trackmyrideapp.data.remote.api
 
-import com.es.trackmyrideapp.data.remote.dto.ProfileImageRequest
-import com.es.trackmyrideapp.data.remote.dto.ProfileImageResponse
+import com.es.trackmyrideapp.data.remote.dto.ProfileImageRequestDTO
+import com.es.trackmyrideapp.data.remote.dto.ProfileImageResponseDTO
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -12,11 +12,11 @@ interface ProfileImageApi {
 
     @PUT("/users/profile-image")
     suspend fun uploadImage(
-        @Body request: ProfileImageRequest
-    ): ProfileImageResponse
+        @Body request: ProfileImageRequestDTO
+    ): ProfileImageResponseDTO
 
     @GET("/users/profile-image")
-    suspend fun getImage(): ProfileImageResponse
+    suspend fun getImage(): ProfileImageResponseDTO
 
     @DELETE("/users/profile-image")
     suspend fun deleteImage(): Response<Unit>

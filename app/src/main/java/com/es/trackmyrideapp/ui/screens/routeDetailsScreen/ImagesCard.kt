@@ -24,6 +24,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.outlined.BrokenImage
 import androidx.compose.material.icons.outlined.Image
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -44,6 +45,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
+import com.es.trackmyrideapp.LocalIsDarkTheme
 import com.es.trackmyrideapp.R
 import com.es.trackmyrideapp.domain.model.RouteImage
 
@@ -53,14 +55,18 @@ fun ImagesCard(
     onAddImage: () -> Unit,
     onImageClick: (RouteImage) -> Unit,
 ){
+    val isDarkMode = LocalIsDarkTheme.current
+
     Card(
         modifier = Modifier
             .fillMaxWidth(),
         shape = RoundedCornerShape(5.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.background
+            containerColor = MaterialTheme.colorScheme.surface
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        elevation = if (isDarkMode) CardDefaults.cardElevation(defaultElevation = 0.dp) else CardDefaults.cardElevation(
+            defaultElevation = 6.dp
+        ),
     ) {
         ImageGallery(
             images = images,
@@ -79,17 +85,19 @@ fun ImageGallery(
     onAddImage: () -> Unit,
     onImageClick: (RouteImage) -> Unit,
 ) {
+    val isDarkMode = LocalIsDarkTheme.current
+
     Card(
         modifier = modifier
             .fillMaxWidth()
             ,
         shape = RoundedCornerShape(5.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White
+            containerColor = MaterialTheme.colorScheme.surface
         ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 0.dp
-        )
+        elevation = if (isDarkMode) CardDefaults.cardElevation(defaultElevation = 0.dp) else CardDefaults.cardElevation(
+            defaultElevation = 6.dp
+        ),
     ) {
         Column(
             modifier = Modifier
@@ -114,7 +122,8 @@ fun ImageGallery(
                     Text(
                         text = "Images",
                         fontSize = 18.sp,
-                        fontWeight = FontWeight.Medium
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onBackground
                     )
                 }
 
@@ -124,9 +133,14 @@ fun ImageGallery(
                         .height(36.dp),
                     contentPadding = PaddingValues(8.dp, 0.dp),
                     onClick = onAddImage,
-                    shape = RoundedCornerShape(8.dp)
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = MaterialTheme.colorScheme.onBackground,
+                        containerColor = MaterialTheme.colorScheme.surface
+                    )
+
                 ) {
-                    Image(
+                    Icon(
                         imageVector = Icons.Default.Add,
                         contentDescription = "Add image",
                         modifier = Modifier.size(18.dp)

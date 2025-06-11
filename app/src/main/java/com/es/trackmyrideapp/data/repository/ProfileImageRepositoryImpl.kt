@@ -1,7 +1,7 @@
 package com.es.trackmyrideapp.data.repository
 
 import com.es.trackmyrideapp.data.remote.api.ProfileImageApi
-import com.es.trackmyrideapp.data.remote.dto.ProfileImageRequest
+import com.es.trackmyrideapp.data.remote.dto.ProfileImageRequestDTO
 import com.es.trackmyrideapp.data.remote.mappers.Resource
 import com.es.trackmyrideapp.data.remote.mappers.toDomainModel
 import com.es.trackmyrideapp.domain.model.ProfileImage
@@ -13,7 +13,7 @@ class ProfileImageRepositoryImpl @Inject constructor(
     private val api: ProfileImageApi
 ) : ProfileImageRepository {
 
-    override suspend fun uploadImage(request: ProfileImageRequest): Resource<ProfileImage> =
+    override suspend fun uploadImage(request: ProfileImageRequestDTO): Resource<ProfileImage> =
         safeApiCall {
             api.uploadImage(request).toDomainModel()
         }

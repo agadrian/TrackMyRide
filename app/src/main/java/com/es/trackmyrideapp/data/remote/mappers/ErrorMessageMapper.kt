@@ -1,5 +1,6 @@
 package com.es.trackmyrideapp.data.remote.mappers
 
+import com.es.trackmyrideapp.core.states.AuthFlow
 import com.google.firebase.auth.FirebaseAuthActionCodeException
 import com.google.firebase.auth.FirebaseAuthEmailException
 import com.google.firebase.auth.FirebaseAuthException

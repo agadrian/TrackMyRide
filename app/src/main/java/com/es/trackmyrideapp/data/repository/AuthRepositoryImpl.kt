@@ -5,7 +5,7 @@ import com.es.trackmyrideapp.data.local.AuthPreferences
 import com.es.trackmyrideapp.data.remote.api.AuthApi
 import com.es.trackmyrideapp.data.remote.dto.UserRegistrationDTO
 import com.es.trackmyrideapp.data.remote.firebase.FirebaseAuthService
-import com.es.trackmyrideapp.data.remote.mappers.AuthFlow
+import com.es.trackmyrideapp.core.states.AuthFlow
 import com.es.trackmyrideapp.data.remote.mappers.ErrorMessageMapper
 import com.es.trackmyrideapp.data.remote.mappers.toDomain
 import com.es.trackmyrideapp.domain.model.AuthenticatedUser

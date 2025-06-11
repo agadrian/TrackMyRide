@@ -1,5 +1,6 @@
 package com.es.trackmyrideapp.data.remote
 
+import android.util.Log
 import com.es.trackmyrideapp.data.local.AuthPreferences
 import okhttp3.Interceptor
 import okhttp3.Response
@@ -11,11 +12,15 @@ class AuthInterceptor(private val authPreferences: AuthPreferences) : Intercepto
 
         if (request.url.encodedPath.endsWith("/auth/login")
             || request.url.encodedPath.endsWith("/auth/register")
-            || request.url.encodedPath.endsWith("/auth/refresh")) {
+            || request.url.encodedPath.endsWith("/auth/refresh")
+            || request.url.encodedPath.endsWith("/users/setPremium")
+            ) {
             return chain.proceed(request)
         }
 
         val jwtToken = authPreferences.getJwtToken()
+
+        Log.d("AuthInterceptor", "Interceptando petición a ${request.url}, token: $jwtToken")
 
         return if (!jwtToken.isNullOrBlank()) {
             val newRequest = request.newBuilder()

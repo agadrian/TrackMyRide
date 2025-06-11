@@ -15,18 +15,24 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.lifecycleScope
 import com.es.trackmyrideapp.BuildConfig
+import com.es.trackmyrideapp.data.local.AuthPreferences
 import com.es.trackmyrideapp.ui.viewmodels.SessionViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class PaymentWebViewActivity : AppCompatActivity() {
 
     private val sessionViewModel: SessionViewModel by viewModels()
+    private lateinit var authPreferences: AuthPreferences
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        authPreferences = AuthPreferences(this)
 
         val mainLayout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -126,13 +132,28 @@ class PaymentWebViewActivity : AppCompatActivity() {
         webView.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
                 if (url != null && url.contains("payment-success")) {
-                    sessionViewModel.activatePremiumUser()
-                    finish()
+                    val token = authPreferences.getJwtToken()
+                    if (!token.isNullOrBlank()) {
+                        sessionViewModel.activatePremiumUser(token)
+
+                        // Esperar a que el ViewModel indique que terminó
+                        lifecycleScope.launch {
+                            sessionViewModel.premiumActivated.collect { activated ->
+                                if (activated) {
+                                    sessionViewModel.resetPremiumActivationFlag()
+                                    finish()
+                                }
+                            }
+                        }
+                    } else {
+                        finish()
+                    }
                     return true
                 }
                 return false
             }
         }
+
 
         val paypalClientId = BuildConfig.PAYPAL_CLIENT_ID
         val htmlContent = """

@@ -1,5 +1,6 @@
 package com.es.trackmyrideapp.data.remote.api
 
+import com.es.trackmyrideapp.data.remote.dto.AuthResponseDTO
 import com.es.trackmyrideapp.data.remote.dto.IsPremiumResponseDTO
 import com.es.trackmyrideapp.data.remote.dto.UserResponseDTO
 import com.es.trackmyrideapp.data.remote.dto.UserUpdateDTO
@@ -7,6 +8,7 @@ import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.Header
 import retrofit2.http.PUT
 import retrofit2.http.Path
 
@@ -35,7 +37,7 @@ interface UserApi {
     suspend fun isUserPremium(): Response<IsPremiumResponseDTO>
 
     @PUT("users/setPremium")
-    suspend fun setUserPremium(): Response<Boolean>
+    suspend fun setUserPremium(@Header("Authorization") token: String): AuthResponseDTO
 
     // Cambiar el estado de premium de un usuario (solo admin)
     @PUT("/users/changeSubscriptionAdmin/{id}")

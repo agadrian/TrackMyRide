@@ -165,7 +165,7 @@ fun PremiumScreen(
                     ) {
                         Text("Premium", fontWeight = FontWeight.Bold, fontSize = 16.sp)
                         Spacer(Modifier.height(8.dp))
-                        FeatureRow("Extra images (+5)", true)
+                        FeatureRow("Extra images (+7)", true)
                         FeatureRow("Full routes history", true)
                         FeatureRow("Select Layers", true)
                         FeatureRow("Share routes", true)
@@ -179,6 +179,7 @@ fun PremiumScreen(
                     onclick = {
                         val intent = Intent(context, PaymentWebViewActivity::class.java)
                         context.startActivity(intent)
+                        //sessionViewModel.activatePremiumUser()
                     },
                     buttonColor = colorResource(R.color.orangeButton),
                     fontColor = colorResource(R.color.black),
