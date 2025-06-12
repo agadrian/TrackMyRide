@@ -1,6 +1,7 @@
 package com.es.trackmyrideapp.ui.screens.homeScreen
 import android.annotation.SuppressLint
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -32,6 +33,7 @@ import androidx.compose.ui.unit.sp
 import com.es.trackmyrideapp.LocalSessionViewModel
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapUiSettings
@@ -41,17 +43,15 @@ import com.google.maps.android.compose.rememberCameraPositionState
 @Composable
 @SuppressLint("MissingPermission") // El permiso ya llega aqui controlado
 fun MapScreen(
-    homeViewModel: HomeViewModel
+    homeViewModel: HomeViewModel,
+    onMapLoaded: () -> Unit
 ) {
     val sessionViewModel = LocalSessionViewModel.current
 
-    val cameraPositionState = rememberCameraPositionState()
     val mapType by sessionViewModel.mapType.collectAsState()
-    val isMapLoading by homeViewModel.mapLoading.collectAsState()
     val trackingState = homeViewModel.trackingState.value
     val routePoints = homeViewModel.routePoints.value
-    val currentLocationState = homeViewModel.currentLocation.value
-
+    val currentLocationState = homeViewModel.currentLocation.collectAsState()
 
     val elapsedTime = homeViewModel.elapsedTime.value  // Tiempo transcurrido
     val distance = homeViewModel.getRouteDistance()  // Distancia total de la ruta
@@ -61,25 +61,26 @@ fun MapScreen(
     val cameraTilt = homeViewModel.cameraTilt.value
     val bearing = homeViewModel.bearing.value
 
+    val currentLocation = currentLocationState.value
+    val isLocationReady = currentLocation != null
+    val cameraPositionState = rememberCameraPositionState {}
 
 
-    // Efecto para obtener ubicación inicial si no hay ninguna
-//    LaunchedEffect(Unit) {
-//        delay(300) // Pequeño delay para minimizar el microlag de cargar.
-//        Log.d("Tracking", "Obteniendo ubicación inicial")
-//        Log.d("Tracking", "Maptype: $mapType")
-//        if (currentLocationState == null) {
-//            homeViewModel.getLastKnownLocation()
-//        }
-//    }
+    LaunchedEffect(Unit) {
+        Log.d("flujotest", "Recomposicion de Mapscreen.Info: islocartionready? $isLocationReady. Tracking: $trackingState. currentlocatiron $currentLocation")
+    }
 
+
+    // Efecto para mover la cámara cuando cambia la ubicación actual
     LaunchedEffect(currentLocationState) {
-        currentLocationState?.let { location ->
+        Log.d("flujotest", "Currentlocation cambia en mapscreen: ${currentLocationState.value}")
+        currentLocationState.let { location ->
             val cameraPosition = CameraPosition.builder()
-                .target(location)
+                .target(location.value ?: LatLng(40.4168, -3.7038)) // En caso de nulo, madrid
                 .zoom(16f)
                 .build()
 
+            // Animación de movimiento de cámara
             cameraPositionState.animate(
                 CameraUpdateFactory.newCameraPosition(cameraPosition),
                 durationMs = 1000
@@ -88,6 +89,7 @@ fun MapScreen(
     }
 
 
+    // Control dinámico de la cámara según el estado de tracking o petición de reset
     LaunchedEffect(routePoints, trackingState, shouldResetCamera, currentLocationState, lastStopLocation) {
 
         val target = when {
@@ -98,7 +100,7 @@ fun MapScreen(
             trackingState && routePoints.isNotEmpty() -> routePoints.last()
 
             // Si no hay tracking ni reset, usar current location
-            !trackingState && !shouldResetCamera && currentLocationState != null -> currentLocationState
+            !trackingState && !shouldResetCamera && currentLocationState.value != null -> currentLocationState.value
 
             else -> null
         }
@@ -121,29 +123,17 @@ fun MapScreen(
     }
 
 
-//    // Centrar mapa en la ubicación actual, si no se esta grabando ni reseteandocamara
-//    LaunchedEffect(currentLocationState, trackingState, shouldResetCamera) {
-//        if (currentLocationState != null && !trackingState && !shouldResetCamera) {
-//            cameraPositionState.move(CameraUpdateFactory.newLatLngZoom(currentLocationState, 16f))
-//        }
-//    }
-
-
-
-    // Circularprogress
-    LaunchedEffect(isMapLoading, currentLocationState) {
-        if (isMapLoading || currentLocationState == null) {
-            sessionViewModel.showLoading()
-        }else{
-            sessionViewModel.hideLoading()
-        }
-    }
-
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
             Box(modifier = Modifier.weight(1f)) {
-                if (currentLocationState != null) {
+                LaunchedEffect(Unit) {
+                    Log.d("flujotest", "Fuera de isLocationReady: $isLocationReady")
+                }
+                if (isLocationReady) {
+                    LaunchedEffect(Unit) {
+                        Log.d("flujotest", "deentro de isLocationReady: $isLocationReady")
+                    }
                     GoogleMap(
                         modifier = Modifier.fillMaxSize(),
                         cameraPositionState = cameraPositionState,
@@ -156,7 +146,8 @@ fun MapScreen(
                             zoomControlsEnabled = true
                         ),
                         onMapLoaded = {
-                            homeViewModel.setMapLoaded()
+                            Log.d("flujotest", "Onmaploaded called Googlemaps")
+                            onMapLoaded()
                         }
 
 
@@ -169,6 +160,7 @@ fun MapScreen(
                                 width = 16f
                             )
                         }
+
                     }
                 }
             }

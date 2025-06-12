@@ -39,6 +39,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeoutOrNull
@@ -50,19 +51,17 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 import javax.inject.Inject
 import kotlin.coroutines.resume
-import kotlin.random.Random
 
 
 /**
  * FLUJO:
- * - Se intenta obtener la ubicacion conocida en el init, si no puede, solicita nuevas para obtener la inicial
- * - Al pulsar boton de innicar ruta, e activa toogletracking, que actualiza los estados, y llama a la funcion de startLocationUpdates
- * - Esta funcione mpieza a recibir ubicaciones. añadiendose a la lista de routepoints y actualizando la direcciond e la camara, dibujandose la polilyne etc.
- * - Al detener, se compruevba que hayan suficientes puntos o no para guardar la ruta, si los hay, se detiene la escucha de ubicaciones, se calcula los datos (tiempo, estadisticas, etc) y se guarda en la bd para posteriormente recuperarla en otr apantalla y poder visualzarla.
- * - Ademas, se centra la camara en el puntoa ctual, se limpian los estados para si se quiere grabar otra ruta, se resetea timer, y todo.
+ * - Se intenta obtener la ubicacion conocida, si no puede, solicita nuevas para obtener la inicial
+ * - Al pulsar boton de innicar ruta, se activa toogletracking, que actualiza los estados, y llama a la funcion de startLocationUpdates
+ * - Esta funcion empieza a recibir ubicaciones. añadiendose a la lista de routepoints y actualizando la direcciond e la camara, dibujandose la polilyne etc.
+ * - Al detener, se comprueba que hayan suficientes puntos o no para guardar la ruta, si los hay, se detiene la escucha de ubicaciones, se calcula los datos (tiempo, estadisticas, etc) y se guarda en la bd para posteriormente recuperarla en otra pantalla y poder visualzarla.
+ * - Ademas, se centra la camara en el punto actual, se limpian los estados para si se quiere grabar otra ruta, se resetea timer, etc.
  *
  */
-
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
@@ -75,13 +74,6 @@ class HomeViewModel @Inject constructor(
 
     private val routeTracker = RouteTracker()
 
-    private val _mapLoading = MutableStateFlow(true)
-    val mapLoading: StateFlow<Boolean> = _mapLoading
-
-    fun setMapLoaded() {
-        _mapLoading.value = false
-    }
-
     private val _elapsedTime = mutableStateOf(0L)
     val elapsedTime: State<Long> = _elapsedTime
 
@@ -91,15 +83,10 @@ class HomeViewModel @Inject constructor(
     private var _routePoints = mutableStateOf<List<LatLng>>(emptyList())
     val routePoints: State<List<LatLng>> = _routePoints
 
-
-    private val _currentLocation = mutableStateOf<LatLng?>(null)
-    val currentLocation: State<LatLng?> = _currentLocation
+    private val _currentLocation = MutableStateFlow<LatLng?>(null)
+    val currentLocation: StateFlow<LatLng?> = _currentLocation.asStateFlow()
 
     private var locationCallback: LocationCallback? = null
-
-    // Puntos gps acortados
-    private val _simplifiedRoutePoints = mutableStateOf<List<LatLng>>(emptyList())
-    val simplifiedRoutePoints: State<List<LatLng>> = _simplifiedRoutePoints
 
 
     // Velocidad
@@ -117,7 +104,6 @@ class HomeViewModel @Inject constructor(
     private val _shouldResetCamera = mutableStateOf(false)
     val shouldResetCamera: State<Boolean> = _shouldResetCamera
 
-
     // UI State
     private val _uiState = MutableStateFlow<UiState>(UiState.Idle)
     val uiState: StateFlow<UiState> = _uiState
@@ -130,7 +116,7 @@ class HomeViewModel @Inject constructor(
         _uiMessage.value = null
     }
 
-
+    // Controlar cuando mostrar mensajes o no para evitar bloqueos visuales
     private val _animationFinished = MutableStateFlow(false)
     val animationFinished: StateFlow<Boolean> = _animationFinished
 
@@ -144,12 +130,6 @@ class HomeViewModel @Inject constructor(
     fun resetAnimationFinishedFlag() {
         _animationFinished.value = false
     }
-
-//    init {
-//        getLastKnownLocation()
-//        //generateMockRouteFromStartPoint()
-//        //generateSampleRoute()
-//    }
 
 
     override fun onCleared() {
@@ -169,8 +149,13 @@ class HomeViewModel @Inject constructor(
     fun getLastKnownLocation() {
         fusedLocationProviderClient.lastLocation
             .addOnSuccessListener { location ->
-                location?.let {
-                    _currentLocation.value = LatLng(it.latitude, it.longitude)
+                if (location != null) {
+                    Log.d("Tracking", "Location obtenida correctamente. No es null. ${location.latitude}, ${location.longitude} ")
+                    _currentLocation.value = LatLng(location.latitude, location.longitude)
+                } else {
+                    Log.e("Tracking", "Error getting last location. Else del onsucces. Es null")
+                    // Si no hay ubicación conocida, solicitar actualización
+                    requestLocationUpdatesForInitialPosition()
                 }
             }
             .addOnFailureListener { e ->
@@ -507,10 +492,6 @@ class HomeViewModel @Inject constructor(
         return routeTracker.getDistanceMeters(_routePoints.value)
     }
 
-    /** Retorna la velocidad promedio en km/h */
-    fun getRouteAverageSpeed(): Double {
-        return routeTracker.getAverageSpeedKmh(_routePoints.value)
-    }
 
     /** Retorna el tiempo transcurrido en milisegundos */
     fun getElapsedTime(): Long {
@@ -528,20 +509,6 @@ class HomeViewModel @Inject constructor(
         return RouteSimplifier.compressRoute(points, tolerance)
     }
 
-
-    fun generateSampleRoute() {
-        val startLat = 40.730610 // Latitud inicial
-        val startLng = -73.935242 // Longitud inicial
-
-        val sampleRoute = List(100) { index ->
-            // Cambiar latitud y longitud de forma aleatoria
-            val randomLat = startLat + Random.nextDouble(-0.001, 0.01) // Variar la latitud aleatoriamente entre -0.001 y 0.001
-            val randomLng = startLng + Random.nextDouble(-0.001, 0.01) // Variar la longitud aleatoriamente entre -0.001 y 0.001
-
-            LatLng(randomLat, randomLng)
-        }
-        _routePoints.value = sampleRoute
-    }
 }
 
 

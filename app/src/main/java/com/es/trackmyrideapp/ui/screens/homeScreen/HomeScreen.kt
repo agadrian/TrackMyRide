@@ -1,5 +1,6 @@
 package com.es.trackmyrideapp.ui.screens.homeScreen
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -7,11 +8,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -41,28 +44,64 @@ fun HomeScreen(
     val animationFinished by homeViewModel.animationFinished.collectAsState()
     val shouldWaitForAnimation by homeViewModel.shouldWaitForAnimation.collectAsState()
 
-
-
+    // Manejador de permisos de ubicación
     val (permissionState, requestPermission) = rememberPermissionHandler(
         permission = AppPermission.Location
     )
 
+    val isMapReady = remember { mutableStateOf(false) }
+    val currentLocation by homeViewModel.currentLocation.collectAsState()
+
+    // Cargar mientras no hay permisos o ubicación
+    val showLoading = derivedStateOf {
+        !permissionState.isGranted || currentLocation == null
+    }
+    var showPermDialog by remember { mutableStateOf(false) }
+    var readyToRequestPermission by remember { mutableStateOf(false) }
 
 
+    // Retrasa la petición de permiso para evitar hacerlo inmediatamente al abrir
+    LaunchedEffect(Unit) {
+        if (!permissionState.isGranted &&
+            !permissionState.shouldShowBlockedDialog &&
+            !permissionState.shouldShowRationaleDialog
+        ) {
+            delay(2000L)
+            readyToRequestPermission = true
+        }
+    }
 
-//    LaunchedEffect(permissionState.isGranted) {
-//        Log.d("PERMISO", "permissionState: isGranted=${permissionState.isGranted}, rationale=${permissionState.shouldShowRationaleDialog}, blocked=${permissionState.shouldShowBlockedDialog}")
-//        if (permissionState.isGranted && homeViewModel.currentLocation.value == null) {
-//            homeViewModel.getLastKnownLocation()
-//        }
-//    }
 
+    // Solo si está listo y permiso no está concedido, pide el permiso
+    if (readyToRequestPermission && !permissionState.isGranted) {
+        LaunchedEffect(Unit) {
+            requestPermission()
+        }
+    }
+
+    // Si tenemos permiso, obtener ubicacion
     LaunchedEffect(permissionState.isGranted){
+        Log.d("Flujotest", "Launchedeffct de permission isgranted. Isgranted?: ${permissionState.isGranted}")
         if (permissionState.isGranted){
-            delay(200)
+            Log.d("Flujotest", "Launchedeffct de permission isgranted. Dentro de que ya es granted")
+            //delay(200)
+            showPermDialog = false
             homeViewModel.getLastKnownLocation()
         }
     }
+
+    val readyToShowMap = remember { mutableStateOf(false) }
+
+    // Solo mostrar el mapa cuando se tiene permiso y la ubicación actual
+    LaunchedEffect(permissionState.isGranted, currentLocation) {
+        if (permissionState.isGranted && currentLocation != null) {
+            delay(300)
+            readyToShowMap.value = true
+        }else {
+            readyToShowMap.value = false
+        }
+    }
+
 
 
     // Snackbar msg
@@ -95,14 +134,33 @@ fun HomeScreen(
     }
 
 
+    // Logs depuracion
+    SideEffect  {
+        Log.d("Flujotest", "Info. Showloading Valor: ${showLoading.value}, location: $currentLocation, isMapReady: ${isMapReady.value}. Permissionstate granted?: ${permissionState.isGranted}")
+    }
+
+    LaunchedEffect(permissionState) {
+        Log.d("Flujotest", "PERMISSION STATE: Granted: ${permissionState.isGranted}, Rationale: ${permissionState.shouldShowRationaleDialog}, Blocked: ${permissionState.shouldShowBlockedDialog}")
+    }
 
 
+    // Diálogo si el permiso fue bloqueado
+    if (showPermDialog) {
+        BlockedDialog(
+            onSettings = {
+                // Cuando el usuario dice "Already Enabled", intentamos volver a pedir permiso
+                requestPermission()
+            },
+            onCheckPermission = {
+                // Al pulsar "Already Enabled", vuelves a verificar permisos
+                requestPermission()
+            }
+        )
+    }
 
+
+    // Flujo principal de UI basado en el estado de permisos y carga
     when {
-        permissionState.isGranted -> {
-            MainContent(modifier, homeViewModel, bottomPadding)
-        }
-
         permissionState.shouldShowRationaleDialog -> {
             RationaleDialog(
                 onRetry = requestPermission,
@@ -110,28 +168,53 @@ fun HomeScreen(
             )
         }
 
-        permissionState.shouldShowBlockedDialog -> {
-            BlockedDialog(onSettings = requestPermission)
-        }
-
-        else -> {
+        permissionState.shouldShowSystemDialog -> {
             LaunchedEffect(Unit) {
                 requestPermission()
             }
         }
+
+        showLoading.value -> {
+            sessionViewModel.showLoading()
+        }
+
+        readyToShowMap.value -> {
+            Log.d("Flujotest", "Entrando a mostrar mainccontent en el when de homesscreen")
+            sessionViewModel.hideLoading()
+
+            MainContent(
+                modifier,
+                homeViewModel,
+                bottomPadding,
+                onMapLoaded = {
+                    isMapReady.value = true
+                    sessionViewModel.hideLoading()
+                }
+            )
+        }
+    }
+
+    // Controlar apertura del diálogo de bloqueo
+    LaunchedEffect(permissionState.shouldShowBlockedDialog) {
+        showPermDialog = permissionState.shouldShowBlockedDialog
     }
 }
+
 
 @Composable
 fun MainContent(
     modifier: Modifier,
     homeViewModel: HomeViewModel,
-    bottomPadding: Dp
+    bottomPadding: Dp,
+    onMapLoaded: () -> Unit = {}
 ) {
+
     Box(
-        modifier = modifier.fillMaxSize().background(Color.LightGray)
+        modifier = modifier
+            .fillMaxSize()
+            .background(Color.LightGray)
     ) {
-        MapScreen(homeViewModel)
+        MapScreen(homeViewModel, onMapLoaded)
 
         TrackingButton(
             homeViewModel = homeViewModel,
@@ -142,3 +225,4 @@ fun MainContent(
         )
     }
 }
+
