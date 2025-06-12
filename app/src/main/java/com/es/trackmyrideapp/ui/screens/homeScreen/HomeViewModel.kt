@@ -126,16 +126,30 @@ class HomeViewModel @Inject constructor(
     private val _uiMessage = MutableStateFlow<UiMessage?>(null)
     val uiMessage: StateFlow<UiMessage?> = _uiMessage
 
-
     fun consumeUiMessage() {
         _uiMessage.value = null
     }
 
-    init {
-        getLastKnownLocation()
-        //generateMockRouteFromStartPoint()
-        //generateSampleRoute()
+
+    private val _animationFinished = MutableStateFlow(false)
+    val animationFinished: StateFlow<Boolean> = _animationFinished
+
+    private val _shouldWaitForAnimation = MutableStateFlow(false)
+    val shouldWaitForAnimation: StateFlow<Boolean> = _shouldWaitForAnimation
+
+    fun notifyAnimationFinished() {
+        _animationFinished.value = true
     }
+
+    fun resetAnimationFinishedFlag() {
+        _animationFinished.value = false
+    }
+
+//    init {
+//        getLastKnownLocation()
+//        //generateMockRouteFromStartPoint()
+//        //generateSampleRoute()
+//    }
 
 
     override fun onCleared() {
@@ -404,18 +418,20 @@ class HomeViewModel @Inject constructor(
                         compressedPath = simplifyCurrentRoute(points)
                     )
 
-                    onComplete()
+
 
                     when (val createResult = createRouteUseCase(routeCreateDTO)){
                         is Resource.Success -> {
                             _uiState.value = UiState.Idle
                             _uiMessage.value = UiMessage("Route saved successfully", MessageType.INFO)
                             Log.d("Tracking", "Ruta enviada correctamente.")
+                            onComplete()
                         }
                         is Resource.Error -> {
                             _uiState.value = UiState.Idle
                             _uiMessage.value = UiMessage("Error saving route", MessageType.ERROR)
                             Log.e("Tracking", "Error al guardar ruta: ${createResult.message}. Code: ${createResult.code}")
+                            onComplete()
                         }
                     }
                 }

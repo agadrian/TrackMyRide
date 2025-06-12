@@ -1,7 +1,6 @@
 package com.es.trackmyrideapp.ui.screens.homeScreen
 import android.annotation.SuppressLint
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -38,7 +37,6 @@ import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
-import kotlinx.coroutines.delay
 
 @Composable
 @SuppressLint("MissingPermission") // El permiso ya llega aqui controlado
@@ -53,8 +51,6 @@ fun MapScreen(
     val trackingState = homeViewModel.trackingState.value
     val routePoints = homeViewModel.routePoints.value
     val currentLocationState = homeViewModel.currentLocation.value
-    val testPoints = homeViewModel.routePoints
-    val simplifiedPoints = homeViewModel.simplifiedRoutePoints.value
 
 
     val elapsedTime = homeViewModel.elapsedTime.value  // Tiempo transcurrido
@@ -66,27 +62,45 @@ fun MapScreen(
     val bearing = homeViewModel.bearing.value
 
 
+
     // Efecto para obtener ubicación inicial si no hay ninguna
-    LaunchedEffect(Unit) {
-        delay(300) // Pequeño delay para minimizar el microlag de cargar.
-        Log.d("Tracking", "Obteniendo ubicación inicial")
-        Log.d("Tracking", "Maptype: $mapType")
-        if (currentLocationState == null) {
-            homeViewModel.getLastKnownLocation()
+//    LaunchedEffect(Unit) {
+//        delay(300) // Pequeño delay para minimizar el microlag de cargar.
+//        Log.d("Tracking", "Obteniendo ubicación inicial")
+//        Log.d("Tracking", "Maptype: $mapType")
+//        if (currentLocationState == null) {
+//            homeViewModel.getLastKnownLocation()
+//        }
+//    }
+
+    LaunchedEffect(currentLocationState) {
+        currentLocationState?.let { location ->
+            val cameraPosition = CameraPosition.builder()
+                .target(location)
+                .zoom(16f)
+                .build()
+
+            cameraPositionState.animate(
+                CameraUpdateFactory.newCameraPosition(cameraPosition),
+                durationMs = 1000
+            )
         }
     }
 
 
-    LaunchedEffect(routePoints, trackingState, shouldResetCamera) {
+    LaunchedEffect(routePoints, trackingState, shouldResetCamera, currentLocationState, lastStopLocation) {
+
         val target = when {
-            // Al detener el tracking, usar lastStopLocation SI está disponible
+            // Si hay que resetear y hay una ubicación final registrada
             shouldResetCamera && lastStopLocation != null -> lastStopLocation
 
-            // Durante tracking, usar el último punto de la ruta
-            trackingState -> routePoints.lastOrNull()
+            // Si está activo el tracking, moverse al último punto de ruta
+            trackingState && routePoints.isNotEmpty() -> routePoints.last()
 
-            // Por defecto, usar currentLocation
-            else -> currentLocationState
+            // Si no hay tracking ni reset, usar current location
+            !trackingState && !shouldResetCamera && currentLocationState != null -> currentLocationState
+
+            else -> null
         }
 
         target?.let {
@@ -101,16 +115,18 @@ fun MapScreen(
                 CameraUpdateFactory.newCameraPosition(cameraPosition),
                 durationMs = 1000
             )
+
+            homeViewModel.notifyAnimationFinished()
         }
     }
 
 
-    // Centrar mapa en la ubicación actual, si no se esta grabando ni reseteandocamara
-    LaunchedEffect(currentLocationState, trackingState, shouldResetCamera) {
-        if (currentLocationState != null && !trackingState && !shouldResetCamera) {
-            cameraPositionState.move(CameraUpdateFactory.newLatLngZoom(currentLocationState, 16f))
-        }
-    }
+//    // Centrar mapa en la ubicación actual, si no se esta grabando ni reseteandocamara
+//    LaunchedEffect(currentLocationState, trackingState, shouldResetCamera) {
+//        if (currentLocationState != null && !trackingState && !shouldResetCamera) {
+//            cameraPositionState.move(CameraUpdateFactory.newLatLngZoom(currentLocationState, 16f))
+//        }
+//    }
 
 
 
