@@ -24,11 +24,8 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-     //private const val BASE_URL = "https://trackmyrideapi.onrender.com"
+     private const val BASE_URL = "https://trackmyrideapi.onrender.com"
 
-    //private const val BASE_URL = "http://10.0.2.2:8080"
-
-    private const val BASE_URL = "https://913d-2a0c-5a82-4181-e600-dfc-1b5d-14b7-2a87.ngrok-free.app"
 
     /**
      * Provee una instancia de Gson personalizada para serialización/deserialización,
