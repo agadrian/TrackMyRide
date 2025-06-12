@@ -31,6 +31,6 @@ class UploadImageToCloudinaryUseCase @Inject constructor() {
                     cont.resume(null, null)
                 }
             })
-            .dispatch()
+            .dispatch()// Dispara la operación de carga
     }
 }

@@ -38,6 +38,13 @@ object RouteSimplifier {
         return routeInBase64
     }
 
+
+    /**
+     * Descomprime una ruta codificada en Base64 a una lista de puntos LatLng.
+     *
+     * @param routeInBase64 Cadena Base64 que contiene la ruta comprimida.
+     * @return Lista de puntos LatLng reconstruida.
+     */
     fun decompressRoute(routeInBase64: String): List<LatLng> {
         // Base 64 a binaryDelta
         val binaryData = Base64.decode(routeInBase64, Base64.NO_WRAP)
@@ -48,6 +55,15 @@ object RouteSimplifier {
     }
 
 
+    /**
+     * Aplica delta encoding y compresión Zlib a la lista de puntos.
+     *
+     * Delta encoding guarda las diferencias entre puntos consecutivos para reducir redundancia.
+     * Luego se comprime con Zlib para optimizar espacio.
+     *
+     * @param points Lista de puntos a comprimir.
+     * @return Array de bytes comprimidos.
+     */
     private fun compressRouteWithDelta(points: List<LatLng>): ByteArray {
         if (points.isEmpty()) return byteArrayOf()
 
@@ -83,6 +99,13 @@ object RouteSimplifier {
         return output.toByteArray()
     }
 
+
+    /**
+     * Descomprime bytes comprimidos con Zlib y aplica delta decoding para reconstruir la lista de puntos.
+     *
+     * @param compressed Array de bytes comprimidos que contiene la ruta.
+     * @return Lista de puntos LatLng reconstruida.
+     */
     private fun decompressRouteWithDelta(compressed: ByteArray): List<LatLng> {
         val inflater = Inflater()
         inflater.setInput(compressed)
@@ -111,6 +134,7 @@ object RouteSimplifier {
     }
 
     /*
+    // Método opcional para generar rutas de ejemplo realistas (NO USADO)
     fun generateRealisticSampleRoute(startLat: Double, startLng: Double, pointCount: Int = 34): List<LatLng> {
         val route = mutableListOf<LatLng>()
 

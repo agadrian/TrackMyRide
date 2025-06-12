@@ -25,6 +25,7 @@ class RouteTracker {
     var startTimeMillis: Long = 0
     private var endTimeMillis: Long = 0
 
+    // Tiempo en milisegundos transcurrido desde que se inició el seguimiento
     private val _elapsedTime = MutableStateFlow(0L)
     val elapsedTime: StateFlow<Long> = _elapsedTime.asStateFlow()
 
@@ -33,6 +34,7 @@ class RouteTracker {
     private var previousLocation: LatLng? = null
     private var previousTime: Long = 0
 
+    // Velocidad actual observable por la UI
     private var _currentSpeedFlow = MutableStateFlow(0.0)
     val currentSpeedFlow: StateFlow<Double> = _currentSpeedFlow.asStateFlow()
 
@@ -43,13 +45,13 @@ class RouteTracker {
         _elapsedTime.value = 0
         Log.d("Tracking", "Timer iniciado en: $startTimeMillis (${Date(startTimeMillis)})")
 
-
+        // Cancelamos cualquier temporizador anterior antes de iniciar uno nuevo
         timerJob?.cancel()
         timerJob = scope.launch {
             while (isActive) {
                 _elapsedTime.value = System.currentTimeMillis() - startTimeMillis
                 Log.d("Tracking", "Timer update - elapsed: ${_elapsedTime.value} ms")
-                delay(1000)
+                delay(1000)// Actualiza el tiempo cada segundo
             }
         }
     }
@@ -65,6 +67,7 @@ class RouteTracker {
 
     fun getElapsedTimeMillis(): Long {
         val now = System.currentTimeMillis()
+        // Si se ha detenido el timer, usa el tiempo final para calcular el transcurrido
         val elapsed = if (endTimeMillis > 0) endTimeMillis - startTimeMillis
         else now - startTimeMillis
 
@@ -90,6 +93,7 @@ class RouteTracker {
     }
 
 
+    // Fórmula de Haversine para calcular la distancia entre dos coordenadas geográficas
     private fun distanceBetween(p1: LatLng, p2: LatLng): Double {
         val earthRadius = 6371000.0
         val dLat = Math.toRadians(p2.latitude - p1.latitude)
@@ -130,11 +134,12 @@ class RouteTracker {
         val currentTime = System.currentTimeMillis()
         Log.d("Tracking", "Update location: $newLocation en ${Date(currentTime)}")
 
+        // Solo calculamos si hay una ubicación previa registrada
         if (previousLocation != null && previousTime != 0L) {
             val distance = distanceBetween(previousLocation!!, newLocation)
             val timeDeltaMillis = currentTime - previousTime
 
-            // Si esta quieto mas de dos segudnos, poner velocidad a 0
+            // Si no ha habido suficiente movimiento, consideramos que está detenido
             if (distance < 0.4 && timeDeltaMillis > 2000){
                 _currentSpeedFlow.value = 0.0
                 Log.d("Tracking", "Velocidad puesta a 0 por inmovilidad.")
@@ -145,6 +150,7 @@ class RouteTracker {
                 if (timeDeltaHours > 0) {
                     val speedKmh = (distance / 1000.0) / timeDeltaHours
 
+                    // Si la velocidad supera un umbral absurdo, ignoramos el punto
                     if (speedKmh > MAX_REASONABLE_SPEED_KMH) {
                         Log.w("Tracking", "Velocidad irreal detectada: $speedKmh km/h. Ignorando punto.")
                         return
@@ -164,6 +170,8 @@ class RouteTracker {
                 }
             }
         }
+
+        // Actualizamos ubicación y tiempo para la próxima medición
         previousLocation = newLocation
         previousTime = currentTime
     }
@@ -176,10 +184,12 @@ class RouteTracker {
 
         val distanceKm = distance / 1000.0
 
+        // Si se proporciona eficiencia de consumo (km/l), se estima el combustible consumido
         val fuelConsumed = if (efficiency != null && efficiency > 0) {
             distanceKm / efficiency
         } else null
 
+        // Ritmo medio en minutos por kilómetro
         val pace = if (distanceKm > 0) {
             (elapsed / 1000.0 / distanceKm) / 60.0
         } else null

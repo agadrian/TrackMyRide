@@ -54,14 +54,26 @@ android {
         manifestPlaceholders["MAPS_API_KEY"] = localProperties.getProperty("MAPS_API_KEY", "")
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = file("C:\\Users\\adriag\\Desktop\\DAM\\2DAM\\Proyecto\\key_buena.jks")
+            storePassword = "WoTfk?63"
+            keyAlias = "apikey"
+            keyPassword = "WoTfk?63"
+        }
+    }
+
     buildTypes {
-        release {
+        getByName("release") {
+            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
         }
+
+
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8

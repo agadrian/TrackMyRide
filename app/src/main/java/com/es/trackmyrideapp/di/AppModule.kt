@@ -12,6 +12,9 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
+/**
+ * Proporcionar independencia generales de la APP
+ */
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {

@@ -8,6 +8,9 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
+/**
+ * Proporcionar independencia relacionada con el repositorio de Sesion
+ */
 @Module
 @InstallIn(SingletonComponent::class)
 object SessionModule {

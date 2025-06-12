@@ -31,6 +31,24 @@ import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
 
+/**
+ * MainActivity:
+ * Actividad principal de la aplicación, configurada para usar Hilt (@AndroidEntryPoint).
+ * Se encarga de manejar el estado de autenticación y el tema (claro/oscuro) de la app.
+ *
+ * - Inyecta ThemePreferences para gestionar las preferencias de tema.
+ * - Obtiene SessionViewModel para controlar estado de sesión y autenticación.
+ * - Usa SplashScreen que se mantiene mientras el estado de autenticación está en "Loading".
+ * - Habilita el modo edge-to-edge para UI inmersiva.
+ * - En Compose, configura el tema basado en la preferencia del usuario o el tema del sistema.
+ * - Observa el estado de autenticación y rol de usuario desde el ViewModel.
+ * - Según el estado y rol, define la pantalla inicial:
+ *    * Si no está autenticado: pantalla de Login.
+ *    * Si es ADMIN: pantalla AdminScreen.
+ *    * Si es usuario normal: pantalla Home.
+ * - Proporciona CompositionLocals para pasar tema y sesión a los composables hijos.
+ * - Muestra un indicador de carga si el estado sigue siendo Loading (por seguridad).
+ */
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     private val sessionViewModel: SessionViewModel by viewModels()

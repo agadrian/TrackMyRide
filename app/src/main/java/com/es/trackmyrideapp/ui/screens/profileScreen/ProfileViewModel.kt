@@ -110,9 +110,7 @@ class ProfileViewModel @Inject constructor(
         confirmPasswordError.value = null
         passwordDialogError.value = null
         showChangePasswordDialog.value = false
-
     }
-
 
     fun openChangePasswordDialog() {
         showChangePasswordDialog.value = true
@@ -148,6 +146,7 @@ class ProfileViewModel @Inject constructor(
         phoneError.value = validatePhone(newPhone)
     }
 
+    // Valida el formato del teléfono (permitiendo + y solo números)
     private fun validatePhone(value: String): String? {
         if (value.isBlank()) return null
 
@@ -318,6 +317,7 @@ class ProfileViewModel @Inject constructor(
         return valid
     }
 
+    // Reautentica al usuario con la contraseña actual y luego cambia la contraseña
     private fun reauthenticateAndChangePassword(current: String, new: String) {
         val user = FirebaseAuth.getInstance().currentUser
         val email = user?.email
@@ -342,6 +342,7 @@ class ProfileViewModel @Inject constructor(
             }
     }
 
+    // Actualiza la contraseña del usuario en Firebase
     private fun updatePassword(user: FirebaseUser, newPassword: String) {
         user.updatePassword(newPassword)
             .addOnCompleteListener { updateTask ->
@@ -370,6 +371,7 @@ class ProfileViewModel @Inject constructor(
     private val _profileImageUrl = MutableStateFlow<String?>(null)
     val profileImageUrl: StateFlow<String?> = _profileImageUrl
 
+    // Sube la imagen de perfil a Cloudinary y luego la guarda en backend
     fun uploadProfileImage(uri: Uri) {
         Log.d("flujotest", "uploasdprofileimage llamado ")
         viewModelScope.launch {
@@ -402,6 +404,7 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
+    // Obtiene la URL de la imagen de perfil para mostrarla en UI
     private fun fetchProfileImage() {
         Log.d("flujotest", "fetchprofileimage llamado ")
         viewModelScope.launch {

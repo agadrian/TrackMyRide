@@ -1,10 +1,10 @@
 package com.es.trackmyrideapp.data.repository
 
 import android.util.Log
+import com.es.trackmyrideapp.core.states.AuthFlow
 import com.es.trackmyrideapp.data.local.AuthPreferences
 import com.es.trackmyrideapp.data.remote.api.AuthApi
 import com.es.trackmyrideapp.data.remote.dto.RefreshTokenRequestDTO
-import com.es.trackmyrideapp.core.states.AuthFlow
 import com.es.trackmyrideapp.data.remote.mappers.ErrorMessageMapper
 import com.es.trackmyrideapp.data.remote.mappers.toDomain
 import com.es.trackmyrideapp.domain.model.AuthenticatedUser
@@ -18,6 +18,7 @@ class TokenRepositoryImpl @Inject constructor(
     private val authPreferences: AuthPreferences
 ) : TokenRepository {
 
+    // Mutex para evitar que múltiples peticiones de refreshToken se ejecuten al mismo tiempo
     private val refreshMutex = Mutex()
 
     override suspend fun refreshToken(): Result<AuthenticatedUser> {
@@ -32,12 +33,13 @@ class TokenRepositoryImpl @Inject constructor(
                 val authUser = response.body()?.toDomain()
                     ?: throw Exception("API refresh response body null")
 
+                // Guardar nuevos tokens en preferencias
                 authPreferences.setJwtToken(authUser.jwtToken)
                 authPreferences.setRefreshToken(authUser.refreshToken)
 
                 Result.success(authUser)
             } catch (e: Exception) {
-                Log.e("FlujoTest", "Error al refrescar token", e)
+                Log.e("TokenRepo", "Error al refrescar token", e)
                 Result.failure(Exception(ErrorMessageMapper.getMessage(e, AuthFlow.Refresh)))
             }
         }
@@ -47,10 +49,12 @@ class TokenRepositoryImpl @Inject constructor(
         return try {
             val jwt = authPreferences.getJwtToken() ?: return false
             val response = authApi.validateToken("Bearer $jwt")
-            Log.d("FlujoTest", "Es valido el jwt de shred ${response.isSuccessful}")
+
+            Log.d("TokenRepo", "¿JWT válido? => ${response.isSuccessful}")
+
             response.isSuccessful
         } catch (e: Exception) {
-            Log.d("FlujoTest", "isJwtTokenValid catch: ${e.message}")
+            Log.d("TokenRepo", "Error al validar JWT: ${e.message}")
             false
         }
     }

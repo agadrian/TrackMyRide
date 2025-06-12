@@ -4,7 +4,8 @@ import androidx.compose.runtime.compositionLocalOf
 import androidx.navigation.NavHostController
 import com.es.trackmyrideapp.ui.viewmodels.SessionViewModel
 
-// Variables globales
+// Constantes globales usadas en la App
+
 val LocalIsDarkTheme = compositionLocalOf { false}
 val LocalSessionViewModel = compositionLocalOf<SessionViewModel> { error("No SessionViewModel found") }
 val LocalNavController = compositionLocalOf<NavHostController> {

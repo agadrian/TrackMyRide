@@ -23,8 +23,17 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
-    private const val BASE_URL = "https://trackmyrideapi.onrender.com"
 
+     //private const val BASE_URL = "https://trackmyrideapi.onrender.com"
+
+    //private const val BASE_URL = "http://10.0.2.2:8080"
+
+    private const val BASE_URL = "https://913d-2a0c-5a82-4181-e600-dfc-1b5d-14b7-2a87.ngrok-free.app"
+
+    /**
+     * Provee una instancia de Gson personalizada para serialización/deserialización,
+     * incluyendo el adaptador de fechas LocalDateTime y el formato ISO-8601.
+     */
     @RequiresApi(Build.VERSION_CODES.O)
     @Provides
     @Singleton
@@ -33,12 +42,20 @@ object NetworkModule {
         .setDateFormat("yyyy-MM-dd'T'HH:mm:ss")
         .create()
 
+    /**
+     * Provee el interceptor que añade el token JWT en las cabeceras de las peticiones HTTP,
+     * salvo en las rutas de autenticación.
+     */
     @Provides
     @Singleton
     fun provideAuthInterceptor(authPreferences: AuthPreferences): AuthInterceptor {
         return AuthInterceptor(authPreferences)
     }
 
+    /**
+     * Provee un autenticador que intercepta errores 401 y fuerza un refresh del token,
+     * utilizando TokenRepository.
+     */
     @Provides
     @Singleton
     fun provideTokenAuthenticator(
@@ -47,6 +64,13 @@ object NetworkModule {
         return TokenAuthenticator(tokenRepository)
     }
 
+    /**
+     * Provee el cliente HTTP configurado con:
+     * - Timeout personalizados
+     * - Interceptor para tokens
+     * - Autenticador para renovar token si expira
+     * - Logging para depuración
+     */
     @Provides
     @Singleton
     fun provideOkHttpClient(
@@ -68,6 +92,12 @@ object NetworkModule {
             .build()
     }
 
+    /**
+     * Provee una instancia de Retrofit configurada con:
+     * - Cliente HTTP personalizado (con interceptor y autenticador)
+     * - Convertidor Gson para manejar JSON
+     * - URL base de la API
+     */
     @Provides
     @Singleton
     fun provideRetrofit(client: OkHttpClient, gson: Gson): Retrofit {

@@ -13,7 +13,7 @@ class TokenAuthenticator @Inject constructor(
 ) : Authenticator {
 
     override fun authenticate(route: Route?, response: Response): Request? {
-        if (responseCount(response) >= 2) return null
+        if (responseCount(response) >= 2) return null // Evita bucles infinitos de autenticación
 
         val newToken = try {
             runBlocking {
@@ -21,7 +21,7 @@ class TokenAuthenticator @Inject constructor(
                 if (result.isSuccess) result.getOrNull()?.jwtToken else null
             }
         } catch (e: Exception) {
-            null
+            null // Si falla la obtención del nuevo token, se retorna null
         }
 
         return newToken?.let {
@@ -31,6 +31,7 @@ class TokenAuthenticator @Inject constructor(
         }
     }
 
+    // Cuenta cuántas respuestas previas ha habido (por si ya intentó reautenticarse antes)
     private fun responseCount(response: Response): Int {
         var count = 1
         var prior = response.priorResponse

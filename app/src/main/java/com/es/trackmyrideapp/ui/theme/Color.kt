@@ -26,11 +26,7 @@ val surfaceVariantDark = hexToColor("#1E1E1E")
 val surfaceLight = hexToColor("#FFFFFF")
 val surfaceVariantLight = hexToColor("#F6F6F6")
 
-val greenBack = hexToColor("#97D099")
-val orangeButton = hexToColor("#F59E0B")
-val orangeOnBackground = hexToColor("#D97706")
-val orangeBackground = hexToColor("#FEF3C7")
-val redButton = hexToColor("#D40000")
+
 
 
 

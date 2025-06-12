@@ -22,16 +22,19 @@ fun rememberPermissionHandler(
     val context = LocalContext.current
     var state by remember { mutableStateOf(PermissionRequestState()) }
 
-    // Launcher que se utiliza para pedir múltiples permisos del sistema.
-    // Este se dispara cuando se quiere mostrar el diálogo de permisos (lo hace el LaunchedEffect).
-    // El bloque de callback (lambda) recibe un `result` con el resultado de cada permiso pedido.
-    //
-    // Dentro del callback:
-    // - Se comprueba si todos los permisos fueron concedidos (`allGranted`)
-    // - Se detecta si algún permiso fue denegado permanentemente (`permanentlyDenied`),
-    //   usando `shouldShowRequestPermissionRationale`
-    // - Según el resultado, se actualiza el estado `state`, que luego puede ser usado por la UI
-    //   para mostrar un diálogo de "rationale", "bloqueado", o simplemente continuar si está concedido.
+    /**
+     Launcher que se utiliza para pedir múltiples permisos del sistema.
+     Este se dispara cuando se quiere mostrar el diálogo de permisos (lo hace el LaunchedEffect).
+     El bloque de callback (lambda) recibe un `result` con el resultado de cada permiso pedido.
+
+     Dentro del callback:
+     - Se comprueba si todos los permisos fueron concedidos (`allGranted`)
+     - Se detecta si algún permiso fue denegado permanentemente (`permanentlyDenied`),
+       usando `shouldShowRequestPermissionRationale`
+     - Según el resultado, se actualiza el estado `state`, que luego puede ser usado por la UI
+       para mostrar un diálogo de "rationale", "bloqueado", o simplemente continuar si está concedido.
+     **/
+
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { result ->
@@ -69,7 +72,8 @@ fun rememberPermissionHandler(
         }
     }
 
-    // Comprobacion manual del estado. Revisa si tiene permisos y cambia el estado dependiendo de el resultado de esta comprobacion.
+    // Comprobacion: Si ya están todos los permisos, actualiza el estado como concedido.
+    //               Si no, cambia el estado para que se dispare el launcher en el próximo recomposition.
     val launchRequest = {
         val allGranted = permission.permissions.all {
             ContextCompat.checkSelfPermission(context, it) == android.content.pm.PackageManager.PERMISSION_GRANTED
@@ -87,11 +91,13 @@ fun rememberPermissionHandler(
         }
     }
 
-    // Lanza el dialogo de permisos si es necesario
+    // Lanza el dialogo de permisos solo si el estado indica que debe hacerlo.
+    // Esto se controla desde `launchRequest()`.
     if (state.shouldShowSystemDialog) {
         Log.d("PermissionHandler", "Launching system permission dialog with: ${permission.permissions}")
         LaunchedEffect(Unit) {
             launcher.launch(permission.permissions.toTypedArray())
+            // Se desactiva el trigger para evitar múltiples ejecuciones
             state = state.copy(shouldShowSystemDialog = false)
         }
     }

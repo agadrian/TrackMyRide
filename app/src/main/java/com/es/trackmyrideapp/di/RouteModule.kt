@@ -10,6 +10,9 @@ import dagger.hilt.components.SingletonComponent
 import retrofit2.Retrofit
 import javax.inject.Singleton
 
+/**
+ * Proporcionar independencia relacionada con las rutas
+ */
 @Module
 @InstallIn(SingletonComponent::class)
 object RouteModule {

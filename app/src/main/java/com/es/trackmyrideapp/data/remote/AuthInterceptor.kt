@@ -10,6 +10,7 @@ class AuthInterceptor(private val authPreferences: AuthPreferences) : Intercepto
     override fun intercept(chain: Interceptor.Chain): Response {
         val request = chain.request()
 
+        // Estas rutas no requieren autenticación, se permite la petición sin token
         if (request.url.encodedPath.endsWith("/auth/login")
             || request.url.encodedPath.endsWith("/auth/register")
             || request.url.encodedPath.endsWith("/auth/refresh")
@@ -23,6 +24,7 @@ class AuthInterceptor(private val authPreferences: AuthPreferences) : Intercepto
         Log.d("AuthInterceptor", "Interceptando petición a ${request.url}, token: $jwtToken")
 
         return if (!jwtToken.isNullOrBlank()) {
+            // Si hay token, se añade al header Authorization
             val newRequest = request.newBuilder()
                 .addHeader("Authorization", "Bearer $jwtToken")
                 .build()

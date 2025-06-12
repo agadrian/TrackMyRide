@@ -47,13 +47,11 @@ fun PremiumScreen(
     modifier: Modifier = Modifier
 ){
     val context = LocalContext.current
-
-    //  Llamo con launchedeffect a la api para comprobar el premium, y luego miro el estado obtenido
     val sessionViewModel = LocalSessionViewModel.current
     val isPremium by sessionViewModel.isPremium.collectAsState()
     val lifecycleOwner = LocalLifecycleOwner.current
 
-
+    // Observador del ciclo de vida para refrescar el estado premium cuando la pantalla se reanuda
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
@@ -190,6 +188,7 @@ fun PremiumScreen(
             }
         }
     }else{
+        // Usuario ya premium, mostrar pantalla alternativa
         PremiumActiveScreen(modifier)
     }
 

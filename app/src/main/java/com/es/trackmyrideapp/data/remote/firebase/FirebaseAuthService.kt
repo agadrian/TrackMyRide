@@ -30,6 +30,6 @@ class FirebaseAuthService @Inject constructor(
 
     suspend fun deleteCurrentUser() {
         val user = FirebaseAuth.getInstance().currentUser
-        user?.delete()?.await()
+        user?.delete()?.await() // Se asegura de esperar la operación de borrado del usuario actual
     }
 }

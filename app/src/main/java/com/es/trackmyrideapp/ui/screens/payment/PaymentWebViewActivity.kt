@@ -32,8 +32,10 @@ class PaymentWebViewActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Inicializar preferencias para obtener token JWT
         authPreferences = AuthPreferences(this)
 
+        // Layout principal vertical con gradiente de fondo y padding inferior
         val mainLayout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             layoutParams = LinearLayout.LayoutParams(
@@ -46,7 +48,7 @@ class PaymentWebViewActivity : AppCompatActivity() {
             )
             background = gradientDrawable
 
-            val paddingInDp = (24 * resources.displayMetrics.density).toInt() // por ejemplo, 24dp
+            val paddingInDp = (24 * resources.displayMetrics.density).toInt()
             setPadding(0, 0, 0, paddingInDp)
         }
 
@@ -60,6 +62,8 @@ class PaymentWebViewActivity : AppCompatActivity() {
             setBackgroundColor(Color.WHITE)
             elevation = 4f
         }
+
+        // Ajustar padding superior para evitar solaparse con la barra de estado
         ViewCompat.setOnApplyWindowInsetsListener(toolbar) { view, insets ->
             val statusBarHeight = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top
             view.setPadding(0, statusBarHeight, 0, 0)
@@ -79,6 +83,7 @@ class PaymentWebViewActivity : AppCompatActivity() {
             gravity = Gravity.CENTER_HORIZONTAL
         }
 
+        // Título grande en la pantalla
         val headerTextView = TextView(this).apply {
             text = "Almost there!"
             textSize = 26f
@@ -88,6 +93,7 @@ class PaymentWebViewActivity : AppCompatActivity() {
             setPadding(0, 0, 0, (8 * resources.displayMetrics.density).toInt())
         }
 
+        // Subtítulo explicativo
         val subtitleTextView = TextView(this).apply {
             text = "Complete your secure payment to unlock premium features"
             textSize = 16f
@@ -96,10 +102,11 @@ class PaymentWebViewActivity : AppCompatActivity() {
             setPadding(24, 0, 24, 0)
         }
 
+        // Añadir título y subtítulo al contenedor
         topContainer.addView(headerTextView)
         topContainer.addView(subtitleTextView)
 
-// WebView que ocupa el resto
+        // WebView que ocupará el espacio restante para mostrar el pago PayPal
         val webView = WebView(this).apply {
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
@@ -115,28 +122,31 @@ class PaymentWebViewActivity : AppCompatActivity() {
             setLayerType(View.LAYER_TYPE_SOFTWARE, null)
         }
 
-// Añadir vistas al layout
+        // Añadir toolbar, contenedor de textos y WebView al layout principal
         mainLayout.addView(toolbar)
         mainLayout.addView(topContainer)
         mainLayout.addView(webView)
 
         setContentView(mainLayout)
 
-        // Configuración del WebView
+        // Configuración del WebView para permitir JS y manejo correcto de la web
         val webSettings = webView.settings
         webSettings.javaScriptEnabled = true
         webSettings.domStorageEnabled = true
         webSettings.loadWithOverviewMode = true
         webSettings.useWideViewPort = true
 
+        // Interceptar URLs cargadas para detectar éxito de pago
         webView.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
+                // Detectar URL que indica pago exitoso
                 if (url != null && url.contains("payment-success")) {
                     val token = authPreferences.getJwtToken()
                     if (!token.isNullOrBlank()) {
+                        // Activar estado premium en ViewModel con token JWT
                         sessionViewModel.activatePremiumUser(token)
 
-                        // Esperar a que el ViewModel indique que terminó
+                        // Esperar resultado de activación premium y cerrar pantalla
                         lifecycleScope.launch {
                             sessionViewModel.premiumActivated.collect { activated ->
                                 if (activated) {
@@ -156,6 +166,8 @@ class PaymentWebViewActivity : AppCompatActivity() {
 
 
         val paypalClientId = BuildConfig.PAYPAL_CLIENT_ID
+
+        // HTML embebido con PayPal SDK para realizar el pago
         val htmlContent = """
     <!DOCTYPE html>
     <html>

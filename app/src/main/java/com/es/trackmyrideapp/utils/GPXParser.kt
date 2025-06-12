@@ -87,6 +87,14 @@ object GPXParser {
         return points
     }
 
+
+    /**
+     * Genera un contenido GPX en formato String a partir de una lista de puntos GPS (LatLng).
+     * Incluye la fecha y hora actual en cada punto.
+     *
+     * @param points Lista de puntos LatLng que se desean convertir a GPX.
+     * @return Cadena de texto con el contenido GPX generado.
+     */
     fun generateGpx(points: List<LatLng>): String {
         val date = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault()).format(Date())
         return buildString {
@@ -103,6 +111,14 @@ object GPXParser {
         }
     }
 
+
+    /**
+     * Comparte una ruta en formato GPX usando un Intent de Android.
+     * Guarda el archivo GPX en el almacenamiento privado de la app y lo comparte usando un FileProvider.
+     *
+     * @param context Contexto para acceder a recursos y lanzar el Intent.
+     * @param gpxContent Contenido GPX a compartir.
+     */
     fun shareRouteAsGpx(context: Context, gpxContent: String) {
         val fileName = "route_${System.currentTimeMillis()}.gpx"
         val file = File(context.getExternalFilesDir(null), fileName)
@@ -124,6 +140,17 @@ object GPXParser {
         context.startActivity(Intent.createChooser(intent, "Share route as GPX"))
     }
 
+
+
+    /**
+     * Guarda un archivo GPX en la carpeta de Descargas del dispositivo (Android Q y superiores).
+     * Usa MediaStore para insertar el archivo y hacerlo accesible para otras apps.
+     *
+     * @param context Contexto para acceder al ContentResolver.
+     * @param fileName Nombre del archivo GPX a guardar.
+     * @param gpxContent Contenido del archivo GPX.
+     * @return true si se guardó correctamente, false en caso de error.
+     */
     @RequiresApi(Build.VERSION_CODES.Q)
     fun saveGpxToDownloads(context: Context, fileName: String, gpxContent: String): Boolean {
         return try {

@@ -64,8 +64,6 @@ class AdminViewModel @Inject constructor(
                     _uiState.value = AdminUiState.Idle
                     _uiMessage.value = UiMessage(result.message, MessageType.ERROR)
                 }
-
-               
             }
         }
     }

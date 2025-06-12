@@ -63,7 +63,7 @@ fun Header(){
             text = "Track your journeys, analyze your routes, and share your adventures with friends and family.",
             fontSize = 15.sp,
             textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.onBackground //TODO: Check this color
+            color = MaterialTheme.colorScheme.onBackground
         )
 
         Spacer(Modifier.height(40.dp))

@@ -74,6 +74,7 @@ fun AppTopBar(
     val isEditingDetails by sessionViewModel.isEditingRouteDetails.collectAsState()
     val isEditingProfile by sessionViewModel.isEditingProfile.collectAsState()
 
+    // Determina el título según la pantalla actual
     val title = when {
         currentDestination == Home::class.qualifiedName -> "Home"
         currentDestination == ForgotPassword::class.qualifiedName -> "Reset Password"
@@ -86,6 +87,7 @@ fun AppTopBar(
         currentDestination == AdminScreen::class.qualifiedName -> "Admin Screen"
         else -> ""
     }
+
 
     val isTransparent = when (currentDestination) {
         Home::class.qualifiedName,
@@ -133,6 +135,7 @@ fun AppTopBar(
                 }
             },
             actions = {
+                // Acciones específicas según la pantalla actual
                 when  {
                     currentDestination == Home::class.qualifiedName -> {
                         Row(
@@ -174,6 +177,7 @@ fun AppTopBar(
                                     }
                                 }
 
+                                // Menú desplegable para elegir tipo de vehículo
                                 VehicleTypeDropdown(
                                     expanded = showVehicleTypeMenu,
                                     onDismissRequest = { showVehicleTypeMenu = false },
@@ -192,7 +196,7 @@ fun AppTopBar(
                                 Icon(Icons.Default.History, contentDescription = "History")
                             }
 
-                            // MapType Button
+                            // Botón para cambiar el tipo de mapa
                             Box {
                                 IconButton(onClick = { showMapTypeMenu = true }) {
                                     Icon(Icons.Default.Layers, contentDescription = "Layers")
@@ -219,6 +223,7 @@ fun AppTopBar(
                         }
                     }
 
+                    // Alterna edición de detalles de una ruta
                     currentDestination?.startsWith(RouteDetails::class.qualifiedName ?: "") == true -> {
                         IconButton(
                             onClick = { sessionViewModel.toggleEditingRouteDetails() }
@@ -230,6 +235,7 @@ fun AppTopBar(
                         }
                     }
 
+                    // Alterna edición de perfil
                     currentDestination == Profile::class.qualifiedName -> {
                         IconButton(
                             onClick = { sessionViewModel.toggleEditingProfile() }
@@ -241,6 +247,7 @@ fun AppTopBar(
                         }
                     }
 
+                    // Acciones del panel de administración
                     currentDestination == AdminScreen::class.qualifiedName -> {
                         // Para refresh lista usuarios
                         IconButton(onClick = {
@@ -259,6 +266,7 @@ fun AppTopBar(
             }
         )
 
+        // Línea divisora inferior del TopAppBar
         HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.onBackground)
     }
 }

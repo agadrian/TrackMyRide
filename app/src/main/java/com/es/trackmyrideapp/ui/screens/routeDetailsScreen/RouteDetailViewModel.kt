@@ -189,6 +189,9 @@ class RouteDetailViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Comprobar is puede o no añadir mas imagenes dependiendo de el plan premium o no
+     */
     fun canAddMoreImages(isPremium: Boolean, currentImageCount: Int): Boolean {
         val maxImages = if (isPremium) RouteDetailsConstants.MAX_IMAGES_PREMIUM else RouteDetailsConstants.MAX_IMAGES_NO_PREMIUM
         return if (currentImageCount < maxImages) {
@@ -273,7 +276,6 @@ class RouteDetailViewModel @Inject constructor(
                 is Resource.Error -> {
                     Log.e("RouteDetailVM", "Error loading route: ${result.message}")
                     _uiState.value = UiState.Idle
-                    // TODO("Usar ApiErrorHandler")
                 }
             }
         }
@@ -284,7 +286,7 @@ class RouteDetailViewModel @Inject constructor(
         return if (!encoded.isNullOrEmpty()) {
             try {
                 val puntosDecoded = RouteSimplifier.decompressRoute(encoded)
-                Log.d("decoded", "Puntos decoded: $puntosDecoded")
+                Log.d("FlujoTest", "Puntos decoded: $puntosDecoded")
                 puntosDecoded
             } catch (e: Exception) {
                 Log.e("FlujoTest", "Error decoding route: ${e.message}")
@@ -314,13 +316,14 @@ class RouteDetailViewModel @Inject constructor(
                 is Resource.Error -> {
                     _uiMessage.value = UiMessage("Error updating route: ${result.message}", MessageType.ERROR)
                     _uiState.value = UiState.Idle
-                    // TODO("Usar ApiErrorHandler")
                 }
             }
         }
     }
 
-
+    /**
+     * Descarga la ruta como GPX
+     */
     fun shareRouteAsGpx(context: Context) {
         val points = routePoints.value
         if (points.isEmpty()) {
@@ -519,7 +522,6 @@ class RouteDetailViewModel @Inject constructor(
             }
         }
     }
-
 
 
     private fun validatePinTitle(value: String): String? {

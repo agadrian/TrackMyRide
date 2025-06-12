@@ -12,6 +12,9 @@ import dagger.hilt.components.SingletonComponent
 import retrofit2.Retrofit
 import javax.inject.Singleton
 
+/**
+ * Proporcionar independencia relacionadas con la autenticación
+ */
 @Module
 @InstallIn(SingletonComponent::class)
 object AuthModule {

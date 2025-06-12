@@ -2,6 +2,9 @@ package com.es.trackmyrideapp.ui.permissions
 
 import android.os.Build
 
+/**
+ * Permisos que se usarán a lo largo de la App
+ */
 sealed class AppPermission {
     abstract val permissions: List<String>
 
