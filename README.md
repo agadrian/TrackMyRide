@@ -4,7 +4,7 @@ Este repositorio contiene el código fuente del proyecto **TrackMyRide**.
 
 Toda la documentación del proyecto se encuentra en el siguiente archivo PDF incluido en este repositorio:
 
-[TrackMyRide_Documentacion.pdf](doc/Memoria_TrackMyRide.pdf)
+[Memoria TrackMyRide](doc/Memoria_TrackMyRide.pdf)
 
 ---
 
