@@ -1,15 +1,17 @@
 # TrackMyRide
 
-Este repositorio contiene el código fuente del proyecto **TrackMyRide**.
+Este repositorio contiene el código fuente correspondiente a la APpp realizada con Jetpack Compose del proyecto **TrackMyRide**.
 
-Toda la documentación del proyecto se encuentra en el siguiente archivo PDF incluido en este repositorio:
+Toda la documentación del proyecto completo se encuentra en el siguiente archivo PDF incluido en este repositorio:
 
 [Memoria TrackMyRide](doc/Memoria_TrackMyRide.pdf)
 
 ---
 
 **Autor:** Adrián Arroyo Gómez
+
 **Fecha de entrega:** 12 de junio de 2025  
+
 **Proyecto:** TrackMyRide
 
 ---
